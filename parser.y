@@ -2,6 +2,7 @@
 
 #include <iostream>
 
+#include "ast.cpp"
 #include "lex.yy.c"
 
 extern int yylex();
@@ -11,9 +12,14 @@ void yyerror(const char *err);
 
 %union {
   int ival;
+  ExprNode* expr;
+  std::vector<ExprNode*>* exprs;
 }
 
 %token <ival> NUM
+
+%type <expr> expr
+%type <exprs> exprs
 
 %left '+' '-'
 %left '*' '/'
@@ -21,18 +27,25 @@ void yyerror(const char *err);
 %start entry
 
 %%
-entry: exprs {}
+entry: exprs {
+               auto* program = new ProgramNode{$1};
+               program->Dump();
+               delete program;
+             }
      ;
 
-exprs: exprs expr
-     | epsilon
+exprs: exprs expr {
+                    $1->push_back($2);
+                    $$ = $1;
+                  }
+     | epsilon { $$ = new std::vector<ExprNode*>{}; }
      ;
 
-expr: NUM { std::cout << $1 << std::endl; }
-    | expr '+' expr { std::cout << '+' << std::endl; }
-    | expr '-' expr { std::cout << '-' << std::endl; }
-    | expr '*' expr { std::cout << '*' << std::endl; }
-    | expr '/' expr { std::cout << '/' << std::endl; }
+expr: NUM { $$ = new IntConstExprNode{$1}; }
+    | expr '+' expr { $$ = new PlusExprNode{$1, $3}; }
+    | expr '-' expr { $$ = new SubExprNode{$1, $3}; }
+    | expr '*' expr { $$ = new MulExprNode{$1, $3}; }
+    | expr '/' expr { $$ = new DivExprNode{$1, $3}; }
     ;
 
 epsilon: /* empty */ ;
