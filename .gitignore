@@ -30,3 +30,13 @@
 *.exe
 *.out
 *.app
+vitaminc
+
+# Yacc debug output
+*.output
+
+# Yacc
+y.tab.*
+
+# Lex
+lex.yy.*
