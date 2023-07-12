@@ -12,7 +12,7 @@ all: $(TARGET) test
 test: $(TARGET)
 	./$(TARGET) < test/int.c
 
-$(TARGET): lex.yy.c y.tab.c
+$(TARGET): lex.yy.c y.tab.c ast.cpp
 	$(CXX) $(CXXFLAG) y.tab.c -o $@
 
 lex.yy.c: lexer.l
