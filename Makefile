@@ -15,13 +15,10 @@ test: $(TARGET)
 $(TARGET): lex.yy.c y.tab.c
 	$(CXX) $(CXXFLAG) y.tab.c -o $@
 
-lex.yy.c: lexer.l y.tab.h
+lex.yy.c: lexer.l
 	$(LEX) -o $@ $^
 
 y.tab.c: parser.y
-	$(YACC) $(YACCFLAG) $^ -o $@
-
-y.tab.h: parser.y
 	$(YACC) $(YACCFLAG) $^ -o $@
 
 clean:
