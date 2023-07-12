@@ -25,8 +25,7 @@ integer [0-9]+
 
 %%
 
-int yywrap()
-{
+int yywrap() {
   return(1);
 }
 

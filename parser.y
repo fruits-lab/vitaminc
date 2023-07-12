@@ -31,12 +31,12 @@ expr: NUM { std::cout << $1 << std::endl; }
 epsilon: /* empty */ ;
 %%
 
-void yyerror(const char *err){
+void yyerror(const char *err) {
   std::cout << err << std::endl;
 }
 
-int main(int argc, char **argv){
-  if (yyparse() == 1){
+int main(int argc, char **argv) {
+  if (yyparse() == 1) {
       yyerror("parsing error");
   }
   yylex_destroy();
