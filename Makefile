@@ -1,14 +1,28 @@
+TARGET := vitaminc
 CXX := g++
-QBE := $(shell command -v qbe 2> /dev/null)
+CXXFLAG = -g3 -std=c++14
+LEX = lex
+YACC = yacc
+YACCFLAG = -v -t -y -d
 
-.PHONY: all clean
+.PHONY: all clean test
 
-all:
-ifndef QBE
-	$(error "qbe is not available please install qbe, https://c9x.me/compile/releases.html")
-else
-	qbe -o out.s hello.ssa && cc out.s -o hello.o
-endif
+all: $(TARGET) test
+
+test: $(TARGET)
+	./$(TARGET) < test/int.c
+
+$(TARGET): lex.yy.c y.tab.c
+	$(CXX) $(CXXFLAG) y.tab.c -o $@
+
+lex.yy.c: lexer.l
+	$(LEX) -o $@ $^
+
+y.tab.c: parser.y
+	$(YACC) $(YACCFLAG) $^ -o $@
+
+y.tab.h: parser.y
+	$(YACC) $(YACCFLAG) $^ -o $@
 
 clean:
-	rm -rf *.s *.o
+	rm -rf *.s *.o lex.yy.c y.tab.c y.tab.h *.output $(TARGET)
