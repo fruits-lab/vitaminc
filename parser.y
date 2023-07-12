@@ -15,6 +15,9 @@ void yyerror(const char *err);
 
 %token <ival> NUM
 
+%left '+' '-'
+%left '*' '/'
+
 %start entry
 
 %%
@@ -26,6 +29,10 @@ exprs: exprs expr
      ;
 
 expr: NUM { std::cout << $1 << std::endl; }
+    | expr '+' expr { std::cout << '+' << std::endl; }
+    | expr '-' expr { std::cout << '-' << std::endl; }
+    | expr '*' expr { std::cout << '*' << std::endl; }
+    | expr '/' expr { std::cout << '/' << std::endl; }
     ;
 
 epsilon: /* empty */ ;
