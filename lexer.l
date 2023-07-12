@@ -15,18 +15,18 @@ operator [-+*/]
 %%
 
 {integer} {
-            yylval.ival = std::atoi(yytext);
-            return(NUM);
-          }
+    yylval.ival = std::atoi(yytext);
+    return(NUM);
+  }
 
 {operator} { return yytext[0]; }
 
 [ \t\r]   {}
 
-.         {
-            std::cout << "Invalid input: " << yytext << std::endl;
-            std::exit(-1);
-          }
+. {
+    std::cout << "Invalid input: " << yytext << std::endl;
+    std::exit(-1);
+  }
 
 %%
 
