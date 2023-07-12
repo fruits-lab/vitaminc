@@ -1,7 +1,7 @@
 %{
 
-#include <iostream>
 #include <cstdlib>
+#include <iostream>
 
 #include "y.tab.h"
 
@@ -12,7 +12,7 @@ integer [0-9]+
 %%
 
 {integer} {
-            yylval.ival = atoi(yytext);
+            yylval.ival = std::atoi(yytext);
             return(NUM);
           }
 
@@ -20,7 +20,7 @@ integer [0-9]+
 
 .         {
             std::cout << "Invalid input: " << yytext << std::endl;
-            exit(-1);
+            std::exit(-1);
           }
 
 %%
