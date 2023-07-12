@@ -8,6 +8,9 @@
 %}
 
 integer [0-9]+
+/* minus sign (-) must be the first or last one since it has special meaning
+   when it's in the middle */
+operator [-+*/]
 
 %%
 
@@ -15,6 +18,8 @@ integer [0-9]+
             yylval.ival = std::atoi(yytext);
             return(NUM);
           }
+
+{operator} { return yytext[0]; }
 
 [ \t\r]   {}
 
@@ -28,5 +33,3 @@ integer [0-9]+
 int yywrap() {
   return(1);
 }
-
-
