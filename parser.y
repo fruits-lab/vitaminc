@@ -28,25 +28,25 @@ void yyerror(const char *err);
 
 %%
 entry: exprs {
-               auto* program = new ProgramNode{$1};
-               program->Dump();
-               delete program;
-             }
-     ;
+    auto* program = new ProgramNode{$1};
+    program->Dump();
+    delete program;
+  }
+  ;
 
 exprs: exprs expr {
-                    $1->push_back($2);
-                    $$ = $1;
-                  }
-     | epsilon { $$ = new std::vector<ExprNode*>{}; }
-     ;
+    $1->push_back($2);
+    $$ = $1;
+  }
+  | epsilon { $$ = new std::vector<ExprNode*>{}; }
+  ;
 
 expr: NUM { $$ = new IntConstExprNode{$1}; }
-    | expr '+' expr { $$ = new PlusExprNode{$1, $3}; }
-    | expr '-' expr { $$ = new SubExprNode{$1, $3}; }
-    | expr '*' expr { $$ = new MulExprNode{$1, $3}; }
-    | expr '/' expr { $$ = new DivExprNode{$1, $3}; }
-    ;
+  | expr '+' expr { $$ = new PlusExprNode{$1, $3}; }
+  | expr '-' expr { $$ = new SubExprNode{$1, $3}; }
+  | expr '*' expr { $$ = new MulExprNode{$1, $3}; }
+  | expr '/' expr { $$ = new DivExprNode{$1, $3}; }
+  ;
 
 epsilon: /* empty */ ;
 %%
