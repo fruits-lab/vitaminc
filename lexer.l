@@ -1,5 +1,9 @@
 %{
 
+// Give Flex the prototype of yylex we want.
+# define YY_DECL \
+  yy::parser::symbol_type yylex()
+
 #include <cstdlib>
 #include <iostream>
 
@@ -15,8 +19,7 @@ operator [-+*/]
 %%
 
 {integer} {
-    yylval.ival = std::atoi(yytext);
-    return(NUM);
+    return yy::parser::make_NUM(std::atoi(yytext));
   }
 
 {operator} { return yytext[0]; }

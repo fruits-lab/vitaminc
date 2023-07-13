@@ -5,21 +5,23 @@
 #include "ast.cpp"
 #include "lex.yy.c"
 
-extern int yylex();
-extern int yylex_destroy(void);
-void yyerror(const char *err);
 %}
 
-%union {
-  int ival;
-  ExprNode* expr;
-  std::vector<ExprNode*>* exprs;
-}
+%skeleton "lalr1.cc"
+%require "3.2"
+%language "c++"
 
-%token <ival> NUM
+// Use complete symbols (parser::symbol_type).
+%define api.token.constructor
+// Allow non-pointer-based rich types.
+%define api.value.type variant
+// Check whether symbols are constructed and destructed using RTTI.
+%define parse.assert
 
-%type <expr> expr
-%type <exprs> exprs
+%token <int> NUM
+
+%nterm <ExprNode*> expr
+%nterm <std::vector<ExprNode*>*> exprs
 
 %left '+' '-'
 %left '*' '/'
@@ -51,15 +53,15 @@ expr: NUM { $$ = new IntConstExprNode{$1}; }
 epsilon: /* empty */ ;
 %%
 
-void yyerror(const char *err) {
+void yy::parser::error(const std::string& err) {
   std::cout << err << std::endl;
 }
 
 int main(int argc, char **argv) {
-  if (yyparse() == 1) {
-      yyerror("parsing error");
-  }
+  yy::parser parser{};
+  int ret = parser.parse();
+
   yylex_destroy();
 
-  return 0;
+  return ret;
 }

@@ -2,8 +2,9 @@ TARGET := vitaminc
 CXX := g++
 CXXFLAG = -g3 -std=c++14
 LEX = lex
-YACC = yacc
-YACCFLAG = -v -t -y -d
+# C++ features are used, yacc doesn't suffice
+YACC = bison
+YACCFLAG = -v -t -d
 
 .PHONY: all clean test
 
