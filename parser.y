@@ -1,6 +1,7 @@
 %{
 
 #include <iostream>
+#include <memory>
 #include <utility>
 
 #include "ast.cpp"
@@ -25,8 +26,8 @@
 
 %token <int> NUM
 
-%nterm <ExprNode*> expr
-%nterm <std::vector<ExprNode*>> exprs
+%nterm <std::unique_ptr<ExprNode>> expr
+%nterm <std::vector<std::unique_ptr<ExprNode>>> exprs
 
 %left '+' '-'
 %left '*' '/'
@@ -35,9 +36,8 @@
 
 %%
 entry: exprs {
-    auto* program = new ProgramNode{$1};
+    auto program = std::make_unique<ProgramNode>($1);
     program->Dump();
-    delete program;
   }
   ;
 
@@ -46,14 +46,14 @@ exprs: exprs expr {
     exprs.push_back($2);
     $$ = std::move(exprs);
   }
-  | epsilon { $$ = std::vector<ExprNode*>{}; }
+  | epsilon { $$ = std::vector<std::unique_ptr<ExprNode>>{}; }
   ;
 
-expr: NUM { $$ = new IntConstExprNode{$1}; }
-  | expr '+' expr { $$ = new PlusExprNode{$1, $3}; }
-  | expr '-' expr { $$ = new SubExprNode{$1, $3}; }
-  | expr '*' expr { $$ = new MulExprNode{$1, $3}; }
-  | expr '/' expr { $$ = new DivExprNode{$1, $3}; }
+expr: NUM { $$ = std::make_unique<IntConstExprNode>($1); }
+  | expr '+' expr { $$ = std::make_unique<PlusExprNode>($1, $3); }
+  | expr '-' expr { $$ = std::make_unique<SubExprNode>($1, $3); }
+  | expr '*' expr { $$ = std::make_unique<MulExprNode>($1, $3); }
+  | expr '/' expr { $$ = std::make_unique<DivExprNode>($1, $3); }
   ;
 
 epsilon: /* empty */ ;

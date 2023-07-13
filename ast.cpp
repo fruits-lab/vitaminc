@@ -1,4 +1,5 @@
 #include <iostream>
+#include <memory>
 #include <utility>
 #include <vector>
 
@@ -16,25 +17,19 @@ class ExprNode : public AstNode {};
 /// @brief Root of the entire program.
 class ProgramNode : public AstNode {
  public:
-  ProgramNode(const std::vector<ExprNode*>& exprs) : exprs_{exprs} {}  // lvalue
-  ProgramNode(std::vector<ExprNode*>&& exprs)
-      : exprs_{std::move(exprs)} {}  // rvalue
+  /// @note vector of move-only elements are move-only
+  ProgramNode(std::vector<std::unique_ptr<ExprNode>>&& exprs)
+      : exprs_{std::move(exprs)} {}
 
   void Dump() const override {
-    for (auto* expr : exprs_) {
+    for (const auto& expr : exprs_) {
       expr->Dump();
       std::cout << std::endl;
     }
   }
 
-  ~ProgramNode() {
-    for (auto* expr : exprs_) {
-      delete expr;
-    }
-  }
-
  protected:
-  std::vector<ExprNode*> exprs_;
+  std::vector<std::unique_ptr<ExprNode>> exprs_;
 };
 
 class IntConstExprNode : public ExprNode {
@@ -52,7 +47,8 @@ class IntConstExprNode : public ExprNode {
 /// @note This is an abstract class.
 class BinaryExprNode : public ExprNode {
  public:
-  BinaryExprNode(ExprNode* lhs, ExprNode* rhs) : lhs_{lhs}, rhs_{rhs} {}
+  BinaryExprNode(std::unique_ptr<ExprNode> lhs, std::unique_ptr<ExprNode> rhs)
+      : lhs_{std::move(lhs)}, rhs_{std::move(rhs)} {}
 
   void Dump() const override {
     lhs_->Dump();
@@ -60,14 +56,9 @@ class BinaryExprNode : public ExprNode {
     rhs_->Dump();
   }
 
-  ~BinaryExprNode() {
-    delete lhs_;
-    delete rhs_;
-  }
-
  protected:
-  ExprNode* lhs_;
-  ExprNode* rhs_;
+  std::unique_ptr<ExprNode> lhs_;
+  std::unique_ptr<ExprNode> rhs_;
 
   virtual char Op_() const = 0;
 };
