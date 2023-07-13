@@ -1,4 +1,5 @@
 #include <iostream>
+#include <utility>
 #include <vector>
 
 /// @brief The most general base node of the Abstract Syntax Tree.
@@ -15,24 +16,25 @@ class ExprNode : public AstNode {};
 /// @brief Root of the entire program.
 class ProgramNode : public AstNode {
  public:
-  ProgramNode(std::vector<ExprNode*>* exprs) : exprs_{exprs} {}
+  ProgramNode(const std::vector<ExprNode*>& exprs) : exprs_{exprs} {}  // lvalue
+  ProgramNode(std::vector<ExprNode*>&& exprs)
+      : exprs_{std::move(exprs)} {}  // rvalue
 
   void Dump() const override {
-    for (auto* expr : *exprs_) {
+    for (auto* expr : exprs_) {
       expr->Dump();
       std::cout << std::endl;
     }
   }
 
   ~ProgramNode() {
-    for (auto* expr : *exprs_) {
+    for (auto* expr : exprs_) {
       delete expr;
     }
-    delete exprs_;
   }
 
  protected:
-  std::vector<ExprNode*>* exprs_;
+  std::vector<ExprNode*> exprs_;
 };
 
 class IntConstExprNode : public ExprNode {
