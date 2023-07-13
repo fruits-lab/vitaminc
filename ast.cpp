@@ -3,11 +3,18 @@
 #include <utility>
 #include <vector>
 
+// 80 spaces for padding      01234567890123456789012345678901234567890123456789012345678901234567890123456789
+static const char* padding = "                                                                                ";
+
+/// @param n The length of the padding, saturated on the boundary of [0, 80].
+static const char* Pad(int n);
+
 /// @brief The most general base node of the Abstract Syntax Tree.
 /// @note This is an abstract class.
 class AstNode {
  public:
-  virtual void Dump() const = 0;
+  /// @param pad The length of the padding.
+  virtual void Dump(int pad) const = 0;
   virtual ~AstNode() = default;
 };
 
@@ -21,10 +28,9 @@ class ProgramNode : public AstNode {
   ProgramNode(std::vector<std::unique_ptr<ExprNode>>&& exprs)
       : exprs_{std::move(exprs)} {}
 
-  void Dump() const override {
+  void Dump(int pad) const override {
     for (const auto& expr : exprs_) {
-      expr->Dump();
-      std::cout << std::endl;
+      expr->Dump(pad);
     }
   }
 
@@ -36,8 +42,8 @@ class IntConstExprNode : public ExprNode {
  public:
   IntConstExprNode(int val) : val_{val} {}
 
-  void Dump() const override {
-    std::cout << val_;
+  void Dump(int pad) const override {
+    std::cout << Pad(pad) << val_ << std::endl;
   }
 
  protected:
@@ -50,10 +56,11 @@ class BinaryExprNode : public ExprNode {
   BinaryExprNode(std::unique_ptr<ExprNode> lhs, std::unique_ptr<ExprNode> rhs)
       : lhs_{std::move(lhs)}, rhs_{std::move(rhs)} {}
 
-  void Dump() const override {
-    lhs_->Dump();
-    std::cout << ' ' << Op_() << ' ';
-    rhs_->Dump();
+  void Dump(int pad) const override {
+    std::cout << Pad(pad) << '(' << Op_() << std::endl;
+    lhs_->Dump(pad + 2);
+    rhs_->Dump(pad + 2);
+    std::cout << Pad(pad) << ')' << std::endl;
   }
 
  protected:
@@ -98,3 +105,12 @@ class DivExprNode : public BinaryExprNode {
     return '/';
   }
 };
+
+static const char* Pad(int n) {
+  if (n > 80) {
+    n = 80;
+  } else if (n < 0) {
+    n = 0;
+  }
+  return padding + (80 - n);
+}
