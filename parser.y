@@ -1,6 +1,7 @@
 %{
 
 #include <iostream>
+#include <utility>
 
 #include "ast.cpp"
 #include "lex.yy.c"
@@ -17,11 +18,15 @@
 %define api.value.type variant
 // Check whether symbols are constructed and destructed using RTTI.
 %define parse.assert
+// Copy may be expensive when using rich types, such as std::vector.
+// Also with automove, smart pointers can be moved implicity without boilerplate std::move.
+// NOTE: can no longer reference a $x twice since it's moved in the first place.
+%define api.value.automove
 
 %token <int> NUM
 
 %nterm <ExprNode*> expr
-%nterm <std::vector<ExprNode*>*> exprs
+%nterm <std::vector<ExprNode*>> exprs
 
 %left '+' '-'
 %left '*' '/'
@@ -37,10 +42,11 @@ entry: exprs {
   ;
 
 exprs: exprs expr {
-    $1->push_back($2);
-    $$ = $1;
+    auto exprs = $1;
+    exprs.push_back($2);
+    $$ = std::move(exprs);
   }
-  | epsilon { $$ = new std::vector<ExprNode*>{}; }
+  | epsilon { $$ = std::vector<ExprNode*>{}; }
   ;
 
 expr: NUM { $$ = new IntConstExprNode{$1}; }
