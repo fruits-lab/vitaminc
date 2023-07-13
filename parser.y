@@ -37,7 +37,7 @@
 %%
 entry: exprs {
     auto program = std::make_unique<ProgramNode>($1);
-    program->Dump();
+    program->Dump(0);
   }
   ;
 
