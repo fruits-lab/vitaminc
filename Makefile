@@ -4,7 +4,8 @@ CXXFLAG = -g3 -std=c++14 -Wall
 LEX = lex
 # C++ features are used, yacc doesn't suffice
 YACC = bison
-YACCFLAG = -v -t -d
+# -d: generate header with default name
+YACCFLAG = --verbose --debug -d
 
 .PHONY: all clean test
 
