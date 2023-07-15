@@ -1,6 +1,6 @@
 TARGET := vitaminc
 CXX := g++
-CXXFLAG = -g3 -std=c++14
+CXXFLAG = -g3 -std=c++14 -Wall
 LEX = lex
 # C++ features are used, yacc doesn't suffice
 YACC = bison
