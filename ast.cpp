@@ -17,7 +17,7 @@ extern std::ofstream output;
 /// @note This is an abstract class.
 class AstNode {
  public:
-  virtual void CodeGen() = 0;
+  virtual void CodeGen() const = 0;
   /// @param pad The length of the padding.
   virtual void Dump(int pad) const = 0;
   virtual ~AstNode() = default;
@@ -33,7 +33,7 @@ class ProgramNode : public AstNode {
   ProgramNode(std::vector<std::unique_ptr<ExprNode>>&& exprs)
       : exprs_{std::move(exprs)} {}
 
-  void CodeGen() {
+  void CodeGen() const override {
     /* qbe main */
     output << "export function w $main() {" << std::endl;
     output << "@start" << std::endl;
@@ -59,7 +59,7 @@ class IntConstExprNode : public ExprNode {
  public:
   IntConstExprNode(int val) : val_{val} {}
 
-  void CodeGen() override {}
+  void CodeGen() const override {}
   void Dump(int pad) const override {
     std::cout << Pad(pad) << val_ << std::endl;
   }
@@ -74,7 +74,7 @@ class BinaryExprNode : public ExprNode {
   BinaryExprNode(std::unique_ptr<ExprNode> lhs, std::unique_ptr<ExprNode> rhs)
       : lhs_{std::move(lhs)}, rhs_{std::move(rhs)} {}
 
-  void CodeGen() override {}
+  void CodeGen() const override {}
   void Dump(int pad) const override {
     std::cout << Pad(pad) << '(' << Op_() << std::endl;
     lhs_->Dump(pad + 2);
