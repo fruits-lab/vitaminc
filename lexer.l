@@ -26,6 +26,7 @@ integer [0-9]+
 /* minus sign (-) must be the first or last one since it has special meaning
    when it's in the middle */
 operator [-+*/]
+bracket [\(\)\{\}\[\]]
 
 %%
 
@@ -34,8 +35,17 @@ operator [-+*/]
   }
 
 {operator} { return yytext[0]; }
+{bracket} { return yytext[0]; }
 
-[ \t\r]   {}
+";" { return yytext[0]; }
+
+int { return yy::parser::make_INT(); }
+main { return yy::parser::make_MAIN(); }
+return { return yy::parser::make_RETURN(); }
+
+<<EOF>> { return yy::parser::make_EOF(); }
+
+[ \t\r] {}
 
 \n {}
 
