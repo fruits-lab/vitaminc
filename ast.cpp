@@ -9,6 +9,9 @@ static const char* padding = "                                                  
 /// @param n The length of the padding, saturated on the boundary of [0, 80].
 static const char* Pad(int n);
 
+/// @brief qbe intermediate file
+extern std::ofstream output;
+
 /// @brief The most general base node of the Abstract Syntax Tree.
 /// @note This is an abstract class.
 class AstNode {

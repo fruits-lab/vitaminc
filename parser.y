@@ -1,5 +1,6 @@
 %{
 
+#include <fstream>
 #include <iostream>
 #include <memory>
 #include <utility>
@@ -7,6 +8,7 @@
 #include "ast.cpp"
 #include "lex.yy.c"
 
+std::ofstream output;
 %}
 
 %skeleton "lalr1.cc"
@@ -64,10 +66,13 @@ void yy::parser::error(const std::string& err) {
 }
 
 int main(int argc, char **argv) {
+  /* TODO: read input parameter */
+  output.open("test.ssa");
   yy::parser parser{};
   int ret = parser.parse();
 
   yylex_destroy();
+  output.close();
 
   return ret;
 }
