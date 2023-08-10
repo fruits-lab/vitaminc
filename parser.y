@@ -38,6 +38,7 @@ std::ofstream output;
 
 %nterm <std::unique_ptr<ExprNode>> expr
 %nterm <std::vector<std::unique_ptr<ExprNode>>> exprs
+%nterm <std::vector<std::unique_ptr<ExprNode>>> main_func
 
 %left '+' '-'
 %left '*' '/'
@@ -45,10 +46,19 @@ std::ofstream output;
 %start entry
 
 %%
-entry: exprs {
+entry: main_func {
     auto program = std::make_unique<ProgramNode>($1);
     program->Dump(0);
+    program->CodeGen();
   }
+  ;
+
+/* TODO: parse stmts */
+main_func: INT MAIN '(' ')' '{' exprs return '}' { $$ = $6; }
+  ;
+
+/* TODO: move to stmt */
+return: RETURN exprs ';' {}
   ;
 
 exprs: exprs expr {
