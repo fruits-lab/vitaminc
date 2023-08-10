@@ -12,7 +12,8 @@ YACCFLAG = --verbose --debug -d
 all: $(TARGET) test
 
 test: $(TARGET)
-	./$(TARGET) < test/int.c
+	./$(TARGET) < test/arithmetic.c
+	qbe -o out.s test.ssa && cc out.s -o a.o && ./a.o
 
 $(TARGET): lex.yy.c y.tab.c ast.cpp
 	$(CXX) $(CXXFLAG) y.tab.c -o $@
