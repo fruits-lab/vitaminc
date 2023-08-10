@@ -25,8 +25,16 @@ std::ofstream output;
 // Also with automove, smart pointers can be moved implicity without boilerplate std::move.
 // NOTE: can no longer reference a $x twice since it's moved in the first place.
 %define api.value.automove
+// This guarantees that headers do not conflict when included together.
+%define api.token.prefix {TOK_}
 
 %token <int> NUM
+%token
+  INT
+  MAIN
+  RETURN
+  EOF 0
+;
 
 %nterm <std::unique_ptr<ExprNode>> expr
 %nterm <std::vector<std::unique_ptr<ExprNode>>> exprs
