@@ -25,4 +25,4 @@ y.tab.c: parser.y
 	$(YACC) $(YACCFLAG) $^ -o $@
 
 clean:
-	rm -rf *.s *.o lex.yy.c y.tab.c y.tab.h *.output $(TARGET)
+	rm -rf *.s *.o lex.yy.c y.tab.c y.tab.h *.output *.ssa $(TARGET)
