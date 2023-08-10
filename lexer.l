@@ -40,7 +40,7 @@ operator [-+*/]
 \n {}
 
 . {
-    std::cout << "Invalid input: " << yytext << std::endl;
+    std::cerr << "Invalid input: " << yytext << std::endl;
     std::exit(-1);
   }
 

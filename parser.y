@@ -60,7 +60,7 @@ epsilon: /* empty */ ;
 %%
 
 void yy::parser::error(const std::string& err) {
-  std::cout << err << std::endl;
+  std::cerr << err << std::endl;
 }
 
 int main(int argc, char **argv) {
