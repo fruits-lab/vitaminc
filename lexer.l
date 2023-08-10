@@ -50,7 +50,7 @@ return { return yy::parser::make_RETURN(); }
 \n {}
 
 . {
-    std::cout << "Invalid input: " << yytext << std::endl;
+    std::cerr << "Invalid input: " << yytext << std::endl;
     std::exit(-1);
   }
 
