@@ -1,0 +1,17 @@
+BasedOnStyle: Google
+Language: Cpp
+
+# separate the signature from the body
+AllowShortFunctionsOnASingleLine: Empty
+# separate the predicate from the body
+AllowShortIfStatementsOnASingleLine: false
+AllowShortLoopsOnASingleLine: false
+
+# if true, pointer and reference alignment styles are going to be updated
+# according to the preferences found in the file, which may lead to possible
+# inconsistencies across the project
+DerivePointerAlignment: false
+PointerAlignment: Left
+
+# make git diff clean
+AlignEscapedNewlines: DontAlign
