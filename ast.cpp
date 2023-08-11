@@ -4,8 +4,13 @@
 #include <utility>
 #include <vector>
 
+// clang-format off
+// Not to format the padding to emphasize the actual length.
+
 // 80 spaces for padding      01234567890123456789012345678901234567890123456789012345678901234567890123456789
 static const char* padding = "                                                                                ";
+
+// clang-format on
 
 /// @param n The length of the padding, saturated on the boundary of [0, 80].
 static const char* Pad(int n);
