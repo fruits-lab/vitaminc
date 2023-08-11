@@ -71,7 +71,7 @@ exprs: exprs expr {
   | epsilon { $$ = std::vector<std::unique_ptr<ExprNode>>{}; }
   ;
 
-expr: ID {}
+expr: ID { $$ = std::make_unique<IdExprNode>($1); }
   | NUM { $$ = std::make_unique<IntConstExprNode>($1); }
   | expr '+' expr { $$ = std::make_unique<PlusExprNode>($1, $3); }
   | expr '-' expr { $$ = std::make_unique<SubExprNode>($1, $3); }
