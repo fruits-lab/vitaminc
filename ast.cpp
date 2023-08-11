@@ -55,6 +55,18 @@ class ProgramNode : public AstNode {
   std::vector<std::unique_ptr<ExprNode>> exprs_;
 };
 
+class IdExprNode : public ExprNode {
+ public:
+  IdExprNode(const std::string& id) : id_{id} {}
+  void CodeGen() const override {}
+  void Dump(int pad) const override {
+    std::cout << Pad(pad) << id_ << std::endl;
+  }
+
+ protected:
+  std::string id_;
+};
+
 class IntConstExprNode : public ExprNode {
  public:
   IntConstExprNode(int val) : val_{val} {}
