@@ -40,3 +40,9 @@ y.tab.*
 
 # Lex
 lex.yy.*
+
+# Assembly files
+*.s
+
+# QBE IR files
+*.ssa
