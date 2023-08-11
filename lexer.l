@@ -22,6 +22,11 @@
 #define LINENO (yylineno - 1)
 %}
 
+/* You can include letters, decimal digits, and the underscore character '_'
+   in identifiers. The first character of an identifier cannot be a digit.
+   Reference:
+   https://www.gnu.org/software/gnu-c-manual/gnu-c-manual.html#Identifiers */
+identifier [a-zA-Z_][0-9a-zA-Z_]*
 integer [0-9]+
 /* minus sign (-) must be the first or last one since it has special meaning
    when it's in the middle */
@@ -29,6 +34,10 @@ operator [-+*/]
 bracket [\(\)\{\}\[\]]
 
 %%
+
+{identifier} {
+    return yy::parser::make_ID(yytext);
+  }
 
 {integer} {
     return yy::parser::make_NUM(std::atoi(yytext));

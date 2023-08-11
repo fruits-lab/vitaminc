@@ -3,6 +3,7 @@
 #include <fstream>
 #include <iostream>
 #include <memory>
+#include <string>
 #include <utility>
 
 #include "ast.cpp"
@@ -29,6 +30,7 @@ std::ofstream output;
 %define api.token.prefix {TOK_}
 
 %token <int> NUM
+%token <std::string> ID
 %token
   INT
   MAIN
@@ -69,7 +71,8 @@ exprs: exprs expr {
   | epsilon { $$ = std::vector<std::unique_ptr<ExprNode>>{}; }
   ;
 
-expr: NUM { $$ = std::make_unique<IntConstExprNode>($1); }
+expr: ID {}
+  | NUM { $$ = std::make_unique<IntConstExprNode>($1); }
   | expr '+' expr { $$ = std::make_unique<PlusExprNode>($1, $3); }
   | expr '-' expr { $$ = std::make_unique<SubExprNode>($1, $3); }
   | expr '*' expr { $$ = std::make_unique<MulExprNode>($1, $3); }
