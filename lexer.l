@@ -35,6 +35,20 @@ bracket [\(\)\{\}\[\]]
 
 %%
 
+  /* delimiters */
+";" { return yytext[0]; }
+
+  /* operators */
+{operator} { return yytext[0]; }
+
+  /* keywords */
+int { return yy::parser::make_INT(); }
+main { return yy::parser::make_MAIN(); }
+return { return yy::parser::make_RETURN(); }
+
+  /* brackets */
+{bracket} { return yytext[0]; }
+
 {identifier} {
     return yy::parser::make_ID(yytext);
   }
@@ -42,15 +56,6 @@ bracket [\(\)\{\}\[\]]
 {integer} {
     return yy::parser::make_NUM(std::atoi(yytext));
   }
-
-{operator} { return yytext[0]; }
-{bracket} { return yytext[0]; }
-
-";" { return yytext[0]; }
-
-int { return yy::parser::make_INT(); }
-main { return yy::parser::make_MAIN(); }
-return { return yy::parser::make_RETURN(); }
 
 <<EOF>> { return yy::parser::make_EOF(); }
 
