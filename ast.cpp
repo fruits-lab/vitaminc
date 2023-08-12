@@ -92,6 +92,29 @@ class ReturnStmtNode : public StmtNode {
   std::vector<std::unique_ptr<ExprNode>> exprs_;
 };
 
+/// @note Any expression can be turned into a statement by adding a semicolon
+/// to the end of the expression.
+class ExprStmtNode : public StmtNode {
+ public:
+  ExprStmtNode(std::vector<std::unique_ptr<ExprNode>>&& exprs)
+      : exprs_{std::move(exprs)} {}
+
+  void CodeGen() const override {
+    for (const auto& expr : exprs_) {
+      expr->CodeGen();
+    }
+  }
+
+  void Dump(int pad) const override {
+    for (const auto& expr : exprs_) {
+      expr->Dump(pad);
+    }
+  }
+
+ protected:
+  std::vector<std::unique_ptr<ExprNode>> exprs_;
+};
+
 class IdExprNode : public ExprNode {
  public:
   IdExprNode(const std::string& id) : id_{id} {}
