@@ -29,6 +29,8 @@ class AstNode {
 };
 
 /// @note This is an abstract class.
+class StmtNode : public AstNode {};
+/// @note This is an abstract class.
 class ExprNode : public AstNode {};
 
 /// @brief Root of the entire program.
@@ -45,9 +47,29 @@ class ProgramNode : public AstNode {
     for (const auto& expr : exprs_) {
       expr->CodeGen();
     }
-    /* TODO: move to return stmt node */
-    output << " ret 0" << std::endl;
     output << "}";
+  }
+
+  void Dump(int pad) const override {
+    for (const auto& expr : exprs_) {
+      expr->Dump(pad);
+    }
+  }
+
+ protected:
+  std::vector<std::unique_ptr<ExprNode>> exprs_;
+};
+
+class ReturnStmtNode : public StmtNode {
+ public:
+  ReturnStmtNode(std::vector<std::unique_ptr<ExprNode>>&& exprs)
+      : exprs_{std::move(exprs)} {}
+
+  void CodeGen() const override {
+    output << " ret ";
+    for (const auto& expr : exprs_) {
+      expr->CodeGen();
+    }
   }
 
   void Dump(int pad) const override {
