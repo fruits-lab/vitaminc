@@ -10,5 +10,6 @@ int main () {
   A * _CD
   1 - FEd * abc + 4 / Ffa
 
+  ;
   return 0;
 }

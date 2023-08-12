@@ -55,13 +55,16 @@ entry: main_func {
   }
   ;
 
-/* TODO: parse stmts */
-main_func: INT MAIN '(' ')' '{' exprs return '}' { $$ = $6; }
+main_func: INT MAIN '(' ')' '{' exprs stmts '}' { $$ = $6; }
   ;
 
-/* TODO: move to stmt */
-return: RETURN exprs ';' {}
-  ;
+stmts: stmts stmt
+     | epsilon
+     ;
+
+stmt: ';' { /* no operation */ }
+    | RETURN exprs ';' {}
+    ;
 
 exprs: exprs expr {
     auto exprs = $1;
