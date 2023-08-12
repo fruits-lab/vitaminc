@@ -72,47 +72,36 @@ class NullStmtNode : public StmtNode {
 
 class ReturnStmtNode : public StmtNode {
  public:
-  ReturnStmtNode(std::vector<std::unique_ptr<ExprNode>>&& exprs)
-      : exprs_{std::move(exprs)} {}
+  ReturnStmtNode(std::unique_ptr<ExprNode> expr) : expr_{std::move(expr)} {}
 
   void CodeGen() const override {
     output << " ret ";
-    for (const auto& expr : exprs_) {
-      expr->CodeGen();
-    }
+    expr_->CodeGen();
   }
 
   void Dump(int pad) const override {
-    for (const auto& expr : exprs_) {
-      expr->Dump(pad);
-    }
+    std::cout << Pad(pad) << "(ret" << std::endl;
+    expr_->Dump(pad + 2);
+    std::cout << Pad(pad) << ')' << std::endl;
   }
 
  protected:
-  std::vector<std::unique_ptr<ExprNode>> exprs_;
+  std::unique_ptr<ExprNode> expr_;
 };
 
 /// @note Any expression can be turned into a statement by adding a semicolon
 /// to the end of the expression.
 class ExprStmtNode : public StmtNode {
  public:
-  ExprStmtNode(std::vector<std::unique_ptr<ExprNode>>&& exprs)
-      : exprs_{std::move(exprs)} {}
+  ExprStmtNode(std::unique_ptr<ExprNode> expr) : expr_{std::move(expr)} {}
 
-  void CodeGen() const override {
-    for (const auto& expr : exprs_) {
-      expr->CodeGen();
-    }
-  }
-
+  void CodeGen() const override {}
   void Dump(int pad) const override {
-    for (const auto& expr : exprs_) {
-      expr->Dump(pad);
-    }
+    expr_->Dump(pad);
   }
 
  protected:
-  std::vector<std::unique_ptr<ExprNode>> exprs_;
+  std::unique_ptr<ExprNode> expr_;
 };
 
 class IdExprNode : public ExprNode {

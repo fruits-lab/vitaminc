@@ -39,7 +39,6 @@ std::ofstream output;
 ;
 
 %nterm <std::unique_ptr<ExprNode>> expr
-%nterm <std::vector<std::unique_ptr<ExprNode>>> exprs
 %nterm <std::unique_ptr<StmtNode>> stmt
 %nterm <std::vector<std::unique_ptr<StmtNode>>> stmts
 %nterm <std::vector<std::unique_ptr<StmtNode>>> main_func
@@ -69,17 +68,9 @@ stmts: stmts stmt {
   ;
 
 stmt: ';' { $$ = std::make_unique<NullStmtNode>(); }
-    | RETURN exprs ';' { $$ = std::make_unique<ReturnStmtNode>($2); }
-    | exprs ';' { $$ = std::make_unique<ExprStmtNode>($1); }
+    | RETURN expr ';' { $$ = std::make_unique<ReturnStmtNode>($2); }
+    | expr ';' { $$ = std::make_unique<ExprStmtNode>($1); }
     ;
-
-exprs: exprs expr {
-    auto exprs = $1;
-    exprs.push_back($2);
-    $$ = std::move(exprs);
-  }
-  | epsilon { $$ = std::vector<std::unique_ptr<ExprNode>>{}; }
-  ;
 
 expr: ID { $$ = std::make_unique<IdExprNode>($1); }
   | NUM { $$ = std::make_unique<IntConstExprNode>($1); }
