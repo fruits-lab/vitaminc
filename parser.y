@@ -70,6 +70,7 @@ stmts: stmts stmt {
 
 stmt: ';' { $$ = std::make_unique<NullStmtNode>(); }
     | RETURN exprs ';' { $$ = std::make_unique<ReturnStmtNode>($2); }
+    | expr ';' {}
     ;
 
 exprs: exprs expr {
