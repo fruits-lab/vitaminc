@@ -37,27 +37,37 @@ class ExprNode : public AstNode {};
 class ProgramNode : public AstNode {
  public:
   /// @note vector of move-only elements are move-only
-  ProgramNode(std::vector<std::unique_ptr<ExprNode>>&& exprs)
-      : exprs_{std::move(exprs)} {}
+  ProgramNode(std::vector<std::unique_ptr<StmtNode>>&& stmts)
+      : stmts_{std::move(stmts)} {}
 
   void CodeGen() const override {
     /* qbe main */
     output << "export function w $main() {" << std::endl;
     output << "@start" << std::endl;
-    for (const auto& expr : exprs_) {
-      expr->CodeGen();
+    for (const auto& stmt : stmts_) {
+      stmt->CodeGen();
     }
     output << "}";
   }
 
   void Dump(int pad) const override {
-    for (const auto& expr : exprs_) {
-      expr->Dump(pad);
+    for (const auto& stmt : stmts_) {
+      stmt->Dump(pad);
     }
   }
 
  protected:
-  std::vector<std::unique_ptr<ExprNode>> exprs_;
+  std::vector<std::unique_ptr<StmtNode>> stmts_;
+};
+
+class NullStmtNode : public StmtNode {
+ public:
+  NullStmtNode() = default;
+
+  void CodeGen() const override {}
+  void Dump(int pad) const override {
+    std::cout << Pad(pad) << "()" << std::endl;
+  }
 };
 
 class ReturnStmtNode : public StmtNode {
@@ -98,7 +108,10 @@ class IntConstExprNode : public ExprNode {
  public:
   IntConstExprNode(int val) : val_{val} {}
 
-  void CodeGen() const override {}
+  void CodeGen() const override {
+    output << val_ << std::endl;
+  }
+
   void Dump(int pad) const override {
     std::cout << Pad(pad) << val_ << std::endl;
   }
