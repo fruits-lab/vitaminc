@@ -40,6 +40,8 @@ std::ofstream output;
 
 %nterm <std::unique_ptr<ExprNode>> expr
 %nterm <std::vector<std::unique_ptr<ExprNode>>> exprs
+%nterm <std::unique_ptr<StmtNode>> stmt
+%nterm <std::vector<std::unique_ptr<StmtNode>>> stmts
 %nterm <std::vector<std::unique_ptr<ExprNode>>> main_func
 
 %left '+' '-'
@@ -58,12 +60,16 @@ entry: main_func {
 main_func: INT MAIN '(' ')' '{' exprs stmts '}' { $$ = $6; }
   ;
 
-stmts: stmts stmt
-     | epsilon
-     ;
+stmts: stmts stmt {
+    auto stmts = $1;
+    stmts.push_back($2);
+    $$ = std::move(stmts);
+  }
+  | epsilon { $$ = std::vector<std::unique_ptr<StmtNode>>{}; }
+  ;
 
 stmt: ';' { /* no operation */ }
-    | RETURN exprs ';' {}
+    | RETURN exprs ';' { $$ = std::make_unique<ReturnStmtNode>($2); }
     ;
 
 exprs: exprs expr {
