@@ -34,6 +34,8 @@ operator [-+*/]
 bracket [\(\)\{\}\[\]]
 
 %%
+  /* C headers */
+"#include".* {}
 
   /* delimiters */
 ";" { return yytext[0]; }
