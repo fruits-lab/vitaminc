@@ -1,4 +1,12 @@
 int main() {
+  int a;
+  int _b = 3;
+  int A;
+  int _CD = 10;
+  int FEd = 1 + 5;
+  int abc = A + 2;
+  int Ffa = 3 * _b / abc;
+
   1 + 2;
   1 - 2;
   1 * 2;
