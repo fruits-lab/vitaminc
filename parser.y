@@ -56,8 +56,18 @@ entry: main_func {
   }
   ;
 
-main_func: INT MAIN '(' ')' '{' stmts '}' { $$ = $6; }
+  /* TODO: mix declarations and statements in compound statement */
+main_func: INT MAIN '(' ')' '{' decls stmts '}' { $$ = $7; }
   ;
+
+decls: decls decl
+     | epsilon
+     ;
+
+  /* TODO: parse multiple data types and id list */
+decl: INT ID ';'
+    | INT ID '=' expr ';'
+    ;
 
 stmts: stmts stmt {
     auto stmts = $1;
