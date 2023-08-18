@@ -40,6 +40,7 @@ std::ofstream output;
 
 %nterm <std::unique_ptr<ExprNode>> expr
 %nterm <std::unique_ptr<DeclNode>> decl
+%nterm <std::vector<std::unique_ptr<DeclNode>>> decls
 %nterm <std::unique_ptr<StmtNode>> stmt
 %nterm <std::vector<std::unique_ptr<StmtNode>>> stmts
 %nterm <std::vector<std::unique_ptr<StmtNode>>> main_func
@@ -61,9 +62,13 @@ entry: main_func {
 main_func: INT MAIN '(' ')' '{' decls stmts '}' { $$ = $7; }
   ;
 
-decls: decls decl
-     | epsilon
-     ;
+decls: decls decl {
+    auto decls = $1;
+    decls.push_back($2);
+    $$ = std::move(decls);
+  }
+  | epsilon { $$ = std::vector<std::unique_ptr<DeclNode>>{}; }
+  ;
 
   /* TODO: parse multiple data types and id list */
 decl: INT ID ';' { $$ = std::make_unique<DeclNoInitNode>($2); }
