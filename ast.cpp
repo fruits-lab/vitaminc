@@ -29,6 +29,8 @@ class AstNode {
 };
 
 /// @note This is an abstract class.
+class DeclNode : public AstNode {};
+/// @note This is an abstract class.
 class StmtNode : public AstNode {};
 /// @note This is an abstract class.
 class ExprNode : public AstNode {};
@@ -58,6 +60,19 @@ class ProgramNode : public AstNode {
 
  protected:
   std::vector<std::unique_ptr<StmtNode>> stmts_;
+};
+
+class DeclNoInitNode : public DeclNode {
+ public:
+  DeclNoInitNode(const std::string& id) : id_{id} {}
+
+  void CodeGen() const override {}
+  void Dump(int pad) const override {
+    std::cout << Pad(pad) << id_ << std::endl;
+  }
+
+ protected:
+  std::string id_;
 };
 
 class NullStmtNode : public StmtNode {

@@ -39,6 +39,7 @@ std::ofstream output;
 ;
 
 %nterm <std::unique_ptr<ExprNode>> expr
+%nterm <std::unique_ptr<DeclNode>> decl
 %nterm <std::unique_ptr<StmtNode>> stmt
 %nterm <std::vector<std::unique_ptr<StmtNode>>> stmts
 %nterm <std::vector<std::unique_ptr<StmtNode>>> main_func
@@ -65,7 +66,7 @@ decls: decls decl
      ;
 
   /* TODO: parse multiple data types and id list */
-decl: INT ID ';'
+decl: INT ID ';' { $$ = std::make_unique<DeclNoInitNode>($2); }
     | INT ID '=' expr ';'
     ;
 
