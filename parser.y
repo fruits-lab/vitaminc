@@ -67,7 +67,7 @@ decls: decls decl
 
   /* TODO: parse multiple data types and id list */
 decl: INT ID ';' { $$ = std::make_unique<DeclNoInitNode>($2); }
-    | INT ID '=' expr ';'
+    | INT ID '=' expr ';' { $$ = std::make_unique<DeclWithInitNode>($2, $4); }
     ;
 
 stmts: stmts stmt {

@@ -75,6 +75,23 @@ class DeclNoInitNode : public DeclNode {
   std::string id_;
 };
 
+class DeclWithInitNode : public DeclNode {
+ public:
+  DeclWithInitNode(const std::string& id, std::unique_ptr<ExprNode> expr)
+      : id_{id}, expr_{std::move(expr)} {}
+
+  void CodeGen() const override {}
+  void Dump(int pad) const override {
+    std::cout << Pad(pad) << '(' << id_ << '=' << std::endl;
+    expr_->Dump(pad + 2);
+    std::cout << Pad(pad) << ')' << std::endl;
+  }
+
+ protected:
+  std::string id_;
+  std::unique_ptr<ExprNode> expr_;
+};
+
 class NullStmtNode : public StmtNode {
  public:
   NullStmtNode() = default;
