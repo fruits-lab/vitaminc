@@ -68,7 +68,15 @@ class BlockStmtNode : public StmtNode {
             std::vector<std::unique_ptr<StmtNode>>&& stmts)
       : decls_{std::move(decls)}, stmts_{std::move(stmts)} {}
 
-  void CodeGen() const override {}
+  void CodeGen() const override {
+    for (const auto& decl : decls_) {
+      decl->CodeGen();
+    }
+    for (const auto& stmt : stmts_) {
+      stmt->CodeGen();
+    }
+  }
+
   void Dump(int pad) const override {
     for (const auto& decl : decls_) {
       decl->Dump(pad);
