@@ -43,7 +43,7 @@ std::ofstream output;
 %nterm <std::vector<std::unique_ptr<DeclNode>>> decls
 %nterm <std::unique_ptr<StmtNode>> stmt
 %nterm <std::vector<std::unique_ptr<StmtNode>>> stmts
-%nterm <std::unique_ptr<BlockNode>> main_func
+%nterm <std::unique_ptr<StmtNode>> main_func
 
 %left '+' '-'
 %left '*' '/'
@@ -60,8 +60,7 @@ entry: main_func {
 
   /* TODO: mix declarations and statements in compound statement */
 main_func: INT MAIN '(' ')' '{' decls stmts '}' {
-    auto block = std::make_unique<BlockNode>($6, $7);
-    block->Dump(0);
+    $$ = std::make_unique<BlockStmtNode>($6, $7);
   }
   ;
 
