@@ -89,7 +89,7 @@ class DeclNoInitNode : public DeclNode {
 
   void CodeGen() const override {}
   void Dump(int pad) const override {
-    std::cout << Pad(pad) << id_ << std::endl;
+    std::cout << Pad(pad) << '(' << id_ << ')' << std::endl;
   }
 
  protected:
@@ -103,7 +103,7 @@ class DeclWithInitNode : public DeclNode {
 
   void CodeGen() const override {}
   void Dump(int pad) const override {
-    std::cout << Pad(pad) << '(' << id_ << '=' << std::endl;
+    std::cout << Pad(pad) << '(' << id_ << " =" << std::endl;
     expr_->Dump(pad + 2);
     std::cout << Pad(pad) << ')' << std::endl;
   }
