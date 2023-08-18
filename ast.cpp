@@ -39,7 +39,7 @@ class ExprNode : public AstNode {};
 class ProgramNode : public AstNode {
  public:
   /// @note vector of move-only elements are move-only
-  ProgramNode(std::unique_ptr<StmtNode> block) : block_{std::move(block)} {}
+  ProgramNode(std::unique_ptr<BlockStmtNode> block) : block_{std::move(block)} {}
 
   void CodeGen() const override {
     /* qbe main */
@@ -54,7 +54,7 @@ class ProgramNode : public AstNode {
   }
 
  protected:
-  std::unique_ptr<StmtNode> block_;
+  std::unique_ptr<BlockStmtNode> block_;
 };
 
 /// @brief A block is a set of declarations and statements.
