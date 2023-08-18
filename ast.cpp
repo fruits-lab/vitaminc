@@ -62,6 +62,26 @@ class ProgramNode : public AstNode {
   std::vector<std::unique_ptr<StmtNode>> stmts_;
 };
 
+class BlockNode: public AstNode {
+ public:
+  BlockNode(std::vector<std::unique_ptr<DeclNode>>&& decls, std::vector<std::unique_ptr<StmtNode>>&& stmts)
+      : decls_{std::move(decls)}, stmts_{std::move(stmts)} {}
+
+  void CodeGen() const override {}
+  void Dump(int pad) const override {
+    for (const auto& decl : decls_) {
+      decl->Dump(pad);
+    }
+    for (const auto& stmt : stmts_) {
+      stmt->Dump(pad);
+    }
+  }
+
+ protected:
+  std::vector<std::unique_ptr<DeclNode>> decls_;
+  std::vector<std::unique_ptr<StmtNode>> stmts_;
+};
+
 class DeclNoInitNode : public DeclNode {
  public:
   DeclNoInitNode(const std::string& id) : id_{id} {}
