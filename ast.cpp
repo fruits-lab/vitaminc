@@ -54,28 +54,6 @@ class DeclNode : public AstNode {
   std::unique_ptr<ExprNode> init_;
 };
 
-/// @brief Root of the entire program.
-class ProgramNode : public AstNode {
- public:
-  /// @note vector of move-only elements are move-only
-  ProgramNode(std::unique_ptr<BlockStmtNode> block) : block_{std::move(block)} {}
-
-  void CodeGen() const override {
-    /* qbe main */
-    output << "export function w $main() {" << std::endl;
-    output << "@start" << std::endl;
-    block_->CodeGen();
-    output << "}";
-  }
-
-  void Dump(int pad) const override {
-    block_->Dump(pad);
-  }
-
- protected:
-  std::unique_ptr<BlockStmtNode> block_;
-};
-
 /// @brief A block is a set of declarations and statements.
 class BlockStmtNode : public StmtNode {
  public:
@@ -104,6 +82,29 @@ class BlockStmtNode : public StmtNode {
  protected:
   std::vector<std::unique_ptr<DeclNode>> decls_;
   std::vector<std::unique_ptr<StmtNode>> stmts_;
+};
+
+/// @brief Root of the entire program.
+class ProgramNode : public AstNode {
+ public:
+  /// @note vector of move-only elements are move-only
+  ProgramNode(std::unique_ptr<BlockStmtNode> block)
+      : block_{std::move(block)} {}
+
+  void CodeGen() const override {
+    /* qbe main */
+    output << "export function w $main() {" << std::endl;
+    output << "@start" << std::endl;
+    block_->CodeGen();
+    output << "}";
+  }
+
+  void Dump(int pad) const override {
+    block_->Dump(pad);
+  }
+
+ protected:
+  std::unique_ptr<BlockStmtNode> block_;
 };
 
 class NullStmtNode : public StmtNode {
