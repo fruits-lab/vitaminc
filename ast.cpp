@@ -45,16 +45,12 @@ class ProgramNode : public AstNode {
     /* qbe main */
     output << "export function w $main() {" << std::endl;
     output << "@start" << std::endl;
-    for (const auto& stmt : stmts_) {
-      stmt->CodeGen();
-    }
+    block_->CodeGen();
     output << "}";
   }
 
   void Dump(int pad) const override {
-    for (const auto& stmt : stmts_) {
-      stmt->Dump(pad);
-    }
+    block_->Dump(pad);
   }
 
  protected:
