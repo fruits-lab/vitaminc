@@ -29,11 +29,30 @@ class AstNode {
 };
 
 /// @note This is an abstract class.
-class DeclNode : public AstNode {};
-/// @note This is an abstract class.
 class StmtNode : public AstNode {};
 /// @note This is an abstract class.
 class ExprNode : public AstNode {};
+
+/// @note This is an abstract class.
+class DeclNode : public AstNode {
+ public:
+  DeclNode(const std::string& id, std::unique_ptr<ExprNode> init = {})
+      : id_{id}, init_{std::move(init)} {}
+
+  void CodeGen() const override {}
+  void Dump(int pad) const override {
+    std::cout << Pad(pad) << '(' << id_;
+    if (init_) {
+      std::cout << " =" << std::endl;
+      init_->Dump(pad + 2);
+    }
+    std::cout << ')' << std::endl;
+  }
+
+ protected:
+  std::string id_;
+  std::unique_ptr<ExprNode> init_;
+};
 
 /// @brief Root of the entire program.
 class ProgramNode : public AstNode {
@@ -61,7 +80,7 @@ class ProgramNode : public AstNode {
 class BlockStmtNode : public StmtNode {
  public:
   BlockStmtNode(std::vector<std::unique_ptr<DeclNode>>&& decls,
-            std::vector<std::unique_ptr<StmtNode>>&& stmts)
+                std::vector<std::unique_ptr<StmtNode>>&& stmts)
       : decls_{std::move(decls)}, stmts_{std::move(stmts)} {}
 
   void CodeGen() const override {
@@ -85,36 +104,6 @@ class BlockStmtNode : public StmtNode {
  protected:
   std::vector<std::unique_ptr<DeclNode>> decls_;
   std::vector<std::unique_ptr<StmtNode>> stmts_;
-};
-
-class DeclNoInitNode : public DeclNode {
- public:
-  DeclNoInitNode(const std::string& id) : id_{id} {}
-
-  void CodeGen() const override {}
-  void Dump(int pad) const override {
-    std::cout << Pad(pad) << '(' << id_ << ')' << std::endl;
-  }
-
- protected:
-  std::string id_;
-};
-
-class DeclWithInitNode : public DeclNode {
- public:
-  DeclWithInitNode(const std::string& id, std::unique_ptr<ExprNode> expr)
-      : id_{id}, expr_{std::move(expr)} {}
-
-  void CodeGen() const override {}
-  void Dump(int pad) const override {
-    std::cout << Pad(pad) << '(' << id_ << " =" << std::endl;
-    expr_->Dump(pad + 2);
-    std::cout << Pad(pad) << ')' << std::endl;
-  }
-
- protected:
-  std::string id_;
-  std::unique_ptr<ExprNode> expr_;
 };
 
 class NullStmtNode : public StmtNode {
