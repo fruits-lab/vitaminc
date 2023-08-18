@@ -43,7 +43,7 @@ std::ofstream output;
 %nterm <std::vector<std::unique_ptr<DeclNode>>> decls
 %nterm <std::unique_ptr<StmtNode>> stmt
 %nterm <std::vector<std::unique_ptr<StmtNode>>> stmts
-%nterm <std::unique_ptr<StmtNode>> main_func
+%nterm <std::unique_ptr<BlockStmtNode>> main_func
 
 %left '+' '-'
 %left '*' '/'
