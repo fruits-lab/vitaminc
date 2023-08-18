@@ -39,8 +39,7 @@ class ExprNode : public AstNode {};
 class ProgramNode : public AstNode {
  public:
   /// @note vector of move-only elements are move-only
-  ProgramNode(std::vector<std::unique_ptr<StmtNode>>&& stmts)
-      : stmts_{std::move(stmts)} {}
+  ProgramNode(std::unique_ptr<StmtNode> block) : block_{std::move(block)} {}
 
   void CodeGen() const override {
     /* qbe main */
@@ -59,12 +58,14 @@ class ProgramNode : public AstNode {
   }
 
  protected:
-  std::vector<std::unique_ptr<StmtNode>> stmts_;
+  std::unique_ptr<StmtNode> block_;
 };
 
-class BlockNode: public AstNode {
+/// @brief A block is a set of declarations and statements.
+class BlockStmtNode : public StmtNode {
  public:
-  BlockNode(std::vector<std::unique_ptr<DeclNode>>&& decls, std::vector<std::unique_ptr<StmtNode>>&& stmts)
+  BlockStmtNode(std::vector<std::unique_ptr<DeclNode>>&& decls,
+            std::vector<std::unique_ptr<StmtNode>>&& stmts)
       : decls_{std::move(decls)}, stmts_{std::move(stmts)} {}
 
   void CodeGen() const override {}
