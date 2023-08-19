@@ -12,8 +12,7 @@ YACCFLAG = --verbose --debug -d
 all: $(TARGET) test
 
 test: $(TARGET)
-	./$(TARGET) < test/arithmetic.c
-	qbe -o out.s test.ssa && cc out.s -o a.o && ./a.o
+	make -C test/
 
 $(TARGET): lex.yy.c y.tab.c ast.cpp
 	$(CXX) $(CXXFLAG) y.tab.c -o $@
@@ -26,3 +25,4 @@ y.tab.c: parser.y
 
 clean:
 	rm -rf *.s *.o lex.yy.c y.tab.c y.tab.h *.output *.ssa $(TARGET)
+	make -C test/ clean
