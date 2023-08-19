@@ -2,15 +2,22 @@
 
 #include <fstream>
 #include <iostream>
-#include <memory>
-#include <string>
 #include <utility>
 
-#include "ast.cpp"
 #include "lex.yy.c"
 
 std::ofstream output;
 %}
+
+// Dependency code required for the value and location types;
+// inserts verbatim to the header file.
+%code requires {
+  #include <memory>
+  #include <string>
+  #include <vector>
+
+  #include "ast.cpp"
+}
 
 %skeleton "lalr1.cc"
 %require "3.2"
