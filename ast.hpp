@@ -1,3 +1,6 @@
+#ifndef AST_HPP_
+#define AST_HPP_
+
 #include <fstream>
 #include <iostream>
 #include <memory>
@@ -244,3 +247,5 @@ static const char* Pad(int n) {
   }
   return padding + (80 - n);
 }
+
+#endif  // AST_HPP_
