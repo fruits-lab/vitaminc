@@ -4,6 +4,7 @@
 #include <iostream>
 #include <utility>
 
+#include "ast.hpp"
 #include "lex.yy.c"
 
 std::ofstream output;
