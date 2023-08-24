@@ -4,7 +4,6 @@
 #include <iostream>
 #include <utility>
 
-#include "ast.hpp"
 #include "lex.yy.c"
 
 std::ofstream output;
@@ -17,7 +16,7 @@ std::ofstream output;
   #include <string>
   #include <vector>
 
-  #include "ast.cpp"
+  #include "ast.hpp"
 }
 
 %skeleton "lalr1.cc"
