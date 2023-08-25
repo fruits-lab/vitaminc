@@ -14,8 +14,8 @@ all: $(TARGET) test
 test: $(TARGET)
 	make -C test/
 
-$(TARGET): lex.yy.c y.tab.c ast.hpp
-	$(CXX) $(CXXFLAG) y.tab.c -o $@
+$(TARGET): main.cpp lex.yy.c y.tab.c ast.hpp
+	$(CXX) $(CXXFLAG) $< y.tab.c -o $@
 
 lex.yy.c: lexer.l
 	$(LEX) -o $@ $^
