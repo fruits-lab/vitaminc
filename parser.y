@@ -6,7 +6,7 @@
 
 #include "lex.yy.c"
 
-std::ofstream output;
+extern std::ofstream output;
 %}
 
 // Dependency code required for the value and location types;
@@ -110,16 +110,4 @@ epsilon: /* empty */ ;
 
 void yy::parser::error(const std::string& err) {
   std::cerr << err << std::endl;
-}
-
-int main(int argc, char **argv) {
-  /* TODO: read input parameter */
-  output.open("test.ssa");
-  yy::parser parser{};
-  int ret = parser.parse();
-
-  yylex_destroy();
-  output.close();
-
-  return ret;
 }
