@@ -33,6 +33,8 @@ integer [0-9]+
 operator [-+*/=]
 bracket [\(\)\{\}\[\]]
 
+%x C_COMMENT CXX_COMMENT
+
 %%
 
   /* delimiters */
@@ -56,6 +58,21 @@ return { return yy::parser::make_RETURN(); }
 {integer} {
     return yy::parser::make_NUM(std::atoi(yytext));
   }
+
+  /* comments */
+"/*" {
+    BEGIN(C_COMMENT);
+  }
+<C_COMMENT>"*/" {
+    BEGIN(INITIAL);
+  }
+"//" {
+    BEGIN(CXX_COMMENT);
+  }
+<CXX_COMMENT>\n {
+    BEGIN(INITIAL);
+  }
+<C_COMMENT,CXX_COMMENT>.|\n { /* eat up */ }
 
 <<EOF>> { return yy::parser::make_EOF(); }
 
