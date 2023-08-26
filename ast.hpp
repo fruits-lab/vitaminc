@@ -7,6 +7,10 @@
 #include <utility>
 #include <vector>
 
+#include "env.hpp"
+#include "symbol.hpp"
+#include "type.hpp"
+
 // clang-format off
 // Not to format the padding to emphasize the actual length.
 
@@ -28,21 +32,27 @@ class AstNode {
   virtual void CodeGen() const = 0;
   /// @param pad The length of the padding.
   virtual void Dump(int pad) const = 0;
+  /// @brief A modifying pass; resolves the type of expressions.
+  virtual void CheckType(Environment&) = 0;
   virtual ~AstNode() = default;
 };
 
 /// @note This is an abstract class.
 class StmtNode : public AstNode {};
-/// @note This is an abstract class.
-class ExprNode : public AstNode {};
 
 /// @note This is an abstract class.
+class ExprNode : public AstNode {
+ public:
+  ExprType type = ExprType::KUnknown;
+};
+
 class DeclNode : public AstNode {
  public:
   DeclNode(const std::string& id, std::unique_ptr<ExprNode> init = {})
       : id_{id}, init_{std::move(init)} {}
 
   void CodeGen() const override {}
+
   void Dump(int pad) const override {
     std::cout << Pad(pad) << '(' << id_;
     if (init_) {
@@ -50,6 +60,22 @@ class DeclNode : public AstNode {
       init_->Dump(pad + 2);
     }
     std::cout << ')' << std::endl;
+  }
+
+  void CheckType(Environment& env) override {
+    if (init_) {
+      init_->CheckType(env);
+    }
+
+    if (env.Probe(id_)) {
+      // TODO: redefinition of 'id_'
+    } else {
+      auto symbol = std::make_unique<SymbolEntry>();
+      symbol->id = id_;
+      // Since we now only have int type, no logic required.
+      symbol->expr_type = ExprType::KInt;
+      env.Add(std::move(symbol));
+    }
   }
 
  protected:
@@ -82,6 +108,17 @@ class BlockStmtNode : public StmtNode {
     }
   }
 
+  void CheckType(Environment& env) override {
+    env.EnterScope();
+    for (auto& decl : decls_) {
+      decl->CheckType(env);
+    }
+    for (auto& stmt : stmts_) {
+      stmt->CheckType(env);
+    }
+    env.ExitScope();
+  }
+
  protected:
   std::vector<std::unique_ptr<DeclNode>> decls_;
   std::vector<std::unique_ptr<StmtNode>> stmts_;
@@ -106,6 +143,10 @@ class ProgramNode : public AstNode {
     block_->Dump(pad);
   }
 
+  void CheckType(Environment& env) override {
+    block_->CheckType(env);
+  }
+
  protected:
   std::unique_ptr<BlockStmtNode> block_;
 };
@@ -115,9 +156,12 @@ class NullStmtNode : public StmtNode {
   NullStmtNode() = default;
 
   void CodeGen() const override {}
+
   void Dump(int pad) const override {
     std::cout << Pad(pad) << "()" << std::endl;
   }
+
+  void CheckType(Environment& env) override {}
 };
 
 class ReturnStmtNode : public StmtNode {
@@ -135,6 +179,13 @@ class ReturnStmtNode : public StmtNode {
     std::cout << Pad(pad) << ')' << std::endl;
   }
 
+  void CheckType(Environment& env) override {
+    expr_->CheckType(env);
+    if (expr_->type != ExprType::KInt) {
+      // TODO: return value type does not match the function type
+    }
+  }
+
  protected:
   std::unique_ptr<ExprNode> expr_;
 };
@@ -146,8 +197,13 @@ class ExprStmtNode : public StmtNode {
   ExprStmtNode(std::unique_ptr<ExprNode> expr) : expr_{std::move(expr)} {}
 
   void CodeGen() const override {}
+
   void Dump(int pad) const override {
     expr_->Dump(pad);
+  }
+
+  void CheckType(Environment& env) override {
+    expr_->CheckType(env);
   }
 
  protected:
@@ -157,9 +213,19 @@ class ExprStmtNode : public StmtNode {
 class IdExprNode : public ExprNode {
  public:
   IdExprNode(const std::string& id) : id_{id} {}
+
   void CodeGen() const override {}
+
   void Dump(int pad) const override {
     std::cout << Pad(pad) << id_ << std::endl;
+  }
+
+  void CheckType(Environment& env) override {
+    if (auto symbol = env.LookUp(id_)) {
+      type = symbol->expr_type;
+    } else {
+      // TODO: 'id_' undeclared
+    }
   }
 
  protected:
@@ -178,6 +244,10 @@ class IntConstExprNode : public ExprNode {
     std::cout << Pad(pad) << val_ << std::endl;
   }
 
+  void CheckType(Environment& env) override {
+    type = ExprType::KInt;
+  }
+
  protected:
   int val_;
 };
@@ -189,11 +259,22 @@ class BinaryExprNode : public ExprNode {
       : lhs_{std::move(lhs)}, rhs_{std::move(rhs)} {}
 
   void CodeGen() const override {}
+
   void Dump(int pad) const override {
     std::cout << Pad(pad) << '(' << Op_() << std::endl;
     lhs_->Dump(pad + 2);
     rhs_->Dump(pad + 2);
     std::cout << Pad(pad) << ')' << std::endl;
+  }
+
+  void CheckType(Environment& env) {
+    lhs_->CheckType(env);
+    rhs_->CheckType(env);
+    if (lhs_->type != rhs_->type) {
+      // TODO: invalid operands to binary +
+    } else {
+      type = lhs_->type;
+    }
   }
 
  protected:
