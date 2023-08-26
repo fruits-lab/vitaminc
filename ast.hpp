@@ -217,7 +217,8 @@ class IdExprNode : public ExprNode {
   void CodeGen() const override {}
 
   void Dump(int pad) const override {
-    std::cout << Pad(pad) << id_ << std::endl;
+    std::cout << Pad(pad) << id_ << ": " << ExprTypeToCString(type)
+              << std::endl;
   }
 
   void CheckType(Environment& env) override {
@@ -241,7 +242,7 @@ class IntConstExprNode : public ExprNode {
   }
 
   void Dump(int pad) const override {
-    std::cout << Pad(pad) << val_ << std::endl;
+    std::cout << Pad(pad) << val_ << ": " << ExprTypeToCString(type) << std::endl;
   }
 
   void CheckType(Environment& env) override {
@@ -264,7 +265,8 @@ class BinaryExprNode : public ExprNode {
     std::cout << Pad(pad) << '(' << Op_() << std::endl;
     lhs_->Dump(pad + 2);
     rhs_->Dump(pad + 2);
-    std::cout << Pad(pad) << ')' << std::endl;
+    std::cout << Pad(pad) << ')' << ": " << ExprTypeToCString(type)
+              << std::endl;
   }
 
   void CheckType(Environment& env) {

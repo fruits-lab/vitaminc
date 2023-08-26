@@ -8,4 +8,14 @@ enum class ExprType {
   KInt,
 };
 
+// FIXME: multiple definition error without inline
+inline const char* ExprTypeToCString(ExprType type) {
+  switch (type) {
+    case ExprType::KInt:
+      return "int";
+    case ExprType::KUnknown:
+    default:
+      return "unknown";
+  }
+}
 #endif  // TYPE_HPP_

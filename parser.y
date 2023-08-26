@@ -4,6 +4,7 @@
 #include <iostream>
 #include <utility>
 
+#include "env.hpp"
 #include "lex.yy.c"
 
 extern std::ofstream output;
@@ -60,6 +61,8 @@ extern std::ofstream output;
 %%
 entry: main_func {
     auto program = std::make_unique<ProgramNode>($1);
+    auto env = Environment{};
+    program->CheckType(env);
     program->Dump(0);
     program->CodeGen();
   }
