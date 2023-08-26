@@ -1,12 +1,12 @@
 (i =
-  1
+  1: int
 )
 (j =
-  2
+  2: int
 )
 (ret
   (+
-    i
-    j
-  )
+    i: int
+    j: int
+  ): int
 )

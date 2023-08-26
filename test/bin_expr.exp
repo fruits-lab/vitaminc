@@ -1,29 +1,29 @@
 (+
-  1
-  2
-)
+  1: int
+  2: int
+): int
 (-
-  1
-  2
-)
+  1: int
+  2: int
+): int
 (*
-  1
-  2
-)
+  1: int
+  2: int
+): int
 (/
-  1
-  2
-)
+  1: int
+  2: int
+): int
 (+
   (-
-    1
+    1: int
     (*
-      2
-      3
-    )
-  )
+      2: int
+      3: int
+    ): int
+  ): int
   (/
-    4
-    5
-  )
-)
+    4: int
+    5: int
+  ): int
+): int

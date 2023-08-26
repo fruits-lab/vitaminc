@@ -1,11 +1,11 @@
 int main() {
-  _;
-  __;
-  i;
-  _1;
-  _i;
-  _i1;
-  _i1_;
-  _I;
-  _I1;
+  int _;
+  int __;
+  int i;
+  int _1;
+  int _i;
+  int _i1;
+  int _i1_;
+  int _I;
+  int _I1;
 }
