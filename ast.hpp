@@ -55,7 +55,7 @@ class DeclNode : public AstNode {
   void CodeGen() const override {}
 
   void Dump(int pad) const override {
-    std::cout << Pad(pad) << '(' << id_;
+    std::cout << Pad(pad) << '(' << id_ << ": " << ExprTypeToCString(type_);
     if (init_) {
       std::cout << " =" << std::endl;
       init_->Dump(pad + 2);
