@@ -1,7 +1,7 @@
-(i =
+(i: int =
   1: int
 )
-(j =
+(j: int =
   2: int
 )
 (ret

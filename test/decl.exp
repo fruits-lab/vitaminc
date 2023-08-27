@@ -1,4 +1,4 @@
-(i =
+(i: int =
   0: int
 )
-(j)
+(j: int)
