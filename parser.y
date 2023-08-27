@@ -6,6 +6,7 @@
 
 #include "env.hpp"
 #include "lex.yy.c"
+#include "type.hpp"
 
 extern std::ofstream output;
 %}
@@ -83,8 +84,8 @@ decls: decls decl {
   ;
 
   /* TODO: parse multiple data types and id list */
-decl: INT ID ';' { $$ = std::make_unique<DeclNode>($2); }
-    | INT ID '=' expr ';' { $$ = std::make_unique<DeclNode>($2, $4); }
+decl: INT ID ';' { $$ = std::make_unique<DeclNode>($2, ExprType::KInt); }
+    | INT ID '=' expr ';' { $$ = std::make_unique<DeclNode>($2, ExprType::KInt, $4); }
     ;
 
 stmts: stmts stmt {
