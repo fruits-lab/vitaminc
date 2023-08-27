@@ -75,8 +75,7 @@ class DeclNode : public AstNode {
     if (env.Probe(id_)) {
       // TODO: redefinition of 'id_'
     } else {
-      auto symbol = std::make_unique<SymbolEntry>();
-      symbol->id = id_;
+      auto symbol = std::make_unique<SymbolEntry>(id_);
       symbol->expr_type = type_;
       env.Add(std::move(symbol));
     }
