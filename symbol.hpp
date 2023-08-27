@@ -11,6 +11,8 @@
 struct SymbolEntry {
   std::string id;
   ExprType expr_type;
+
+  SymbolEntry(std::string id) : id{id} {}
 };
 
 class SymbolTable {
