@@ -4,7 +4,7 @@
 /// @note C has a lots of primitive type. We might need to use classes to
 /// implement type coercion rules.
 enum class ExprType {
-  KUnknown,
+  KUnknown = 0,  // HACK: default initialized to 0 -> unknown
   KInt,
 };
 
