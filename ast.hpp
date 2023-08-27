@@ -48,8 +48,9 @@ class ExprNode : public AstNode {
 
 class DeclNode : public AstNode {
  public:
-  DeclNode(const std::string& id, std::unique_ptr<ExprNode> init = {})
-      : id_{id}, init_{std::move(init)} {}
+  DeclNode(const std::string& id, ExprType decl_type,
+           std::unique_ptr<ExprNode> init = {})
+      : id_{id}, type_{decl_type}, init_{std::move(init)} {}
 
   void CodeGen() const override {}
 
@@ -65,6 +66,10 @@ class DeclNode : public AstNode {
   void CheckType(Environment& env) override {
     if (init_) {
       init_->CheckType(env);
+      if (init_->type != type_) {
+        // TODO: incompatible types when initializing type 'type_' using type
+        // 'init_->type'
+      }
     }
 
     if (env.Probe(id_)) {
@@ -72,14 +77,14 @@ class DeclNode : public AstNode {
     } else {
       auto symbol = std::make_unique<SymbolEntry>();
       symbol->id = id_;
-      // Since we now only have int type, no logic required.
-      symbol->expr_type = ExprType::KInt;
+      symbol->expr_type = type_;
       env.Add(std::move(symbol));
     }
   }
 
  protected:
   std::string id_;
+  ExprType type_;
   std::unique_ptr<ExprNode> init_;
 };
 
@@ -242,7 +247,8 @@ class IntConstExprNode : public ExprNode {
   }
 
   void Dump(int pad) const override {
-    std::cout << Pad(pad) << val_ << ": " << ExprTypeToCString(type) << std::endl;
+    std::cout << Pad(pad) << val_ << ": " << ExprTypeToCString(type)
+              << std::endl;
   }
 
   void CheckType(Environment& env) override {
