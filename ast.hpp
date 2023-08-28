@@ -7,7 +7,7 @@
 #include <utility>
 #include <vector>
 
-#include "env.hpp"
+#include "scope.hpp"
 #include "symbol.hpp"
 #include "type.hpp"
 
@@ -33,7 +33,7 @@ class AstNode {
   /// @param pad The length of the padding.
   virtual void Dump(int pad) const = 0;
   /// @brief A modifying pass; resolves the type of expressions.
-  virtual void CheckType(Environment&) = 0;
+  virtual void CheckType(ScopeStack&) = 0;
   virtual ~AstNode() = default;
 };
 
@@ -63,7 +63,7 @@ class DeclNode : public AstNode {
     std::cout << ')' << std::endl;
   }
 
-  void CheckType(Environment& env) override {
+  void CheckType(ScopeStack& env) override {
     if (init_) {
       init_->CheckType(env);
       if (init_->type != type_) {
@@ -112,15 +112,15 @@ class BlockStmtNode : public StmtNode {
     }
   }
 
-  void CheckType(Environment& env) override {
-    env.EnterScope();
+  void CheckType(ScopeStack& env) override {
+    env.PushScope();
     for (auto& decl : decls_) {
       decl->CheckType(env);
     }
     for (auto& stmt : stmts_) {
       stmt->CheckType(env);
     }
-    env.ExitScope();
+    env.PopScope();
   }
 
  protected:
@@ -147,7 +147,7 @@ class ProgramNode : public AstNode {
     block_->Dump(pad);
   }
 
-  void CheckType(Environment& env) override {
+  void CheckType(ScopeStack& env) override {
     block_->CheckType(env);
   }
 
@@ -165,7 +165,7 @@ class NullStmtNode : public StmtNode {
     std::cout << Pad(pad) << "()" << std::endl;
   }
 
-  void CheckType(Environment& env) override {}
+  void CheckType(ScopeStack& env) override {}
 };
 
 class ReturnStmtNode : public StmtNode {
@@ -183,7 +183,7 @@ class ReturnStmtNode : public StmtNode {
     std::cout << Pad(pad) << ')' << std::endl;
   }
 
-  void CheckType(Environment& env) override {
+  void CheckType(ScopeStack& env) override {
     expr_->CheckType(env);
     if (expr_->type != ExprType::KInt) {
       // TODO: return value type does not match the function type
@@ -206,7 +206,7 @@ class ExprStmtNode : public StmtNode {
     expr_->Dump(pad);
   }
 
-  void CheckType(Environment& env) override {
+  void CheckType(ScopeStack& env) override {
     expr_->CheckType(env);
   }
 
@@ -225,7 +225,7 @@ class IdExprNode : public ExprNode {
               << std::endl;
   }
 
-  void CheckType(Environment& env) override {
+  void CheckType(ScopeStack& env) override {
     if (auto symbol = env.LookUp(id_)) {
       type = symbol->expr_type;
     } else {
@@ -250,7 +250,7 @@ class IntConstExprNode : public ExprNode {
               << std::endl;
   }
 
-  void CheckType(Environment& env) override {
+  void CheckType(ScopeStack& env) override {
     type = ExprType::KInt;
   }
 
@@ -274,7 +274,7 @@ class BinaryExprNode : public ExprNode {
               << std::endl;
   }
 
-  void CheckType(Environment& env) {
+  void CheckType(ScopeStack& env) {
     lhs_->CheckType(env);
     rhs_->CheckType(env);
     if (lhs_->type != rhs_->type) {

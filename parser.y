@@ -4,8 +4,8 @@
 #include <iostream>
 #include <utility>
 
-#include "env.hpp"
 #include "lex.yy.c"
+#include "scope.hpp"
 #include "type.hpp"
 
 extern std::ofstream output;
@@ -62,8 +62,8 @@ extern std::ofstream output;
 %%
 entry: main_func {
     auto program = std::make_unique<ProgramNode>($1);
-    auto env = Environment{};
-    program->CheckType(env);
+    auto scopes = ScopeStack{};
+    program->CheckType(scopes);
     program->Dump(0);
     program->CodeGen();
   }

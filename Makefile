@@ -14,7 +14,7 @@ all: $(TARGET) test
 test: $(TARGET)
 	make -C test/
 
-$(TARGET): main.cpp lex.yy.c y.tab.c ast.hpp type.hpp env.hpp symbol.hpp
+$(TARGET): main.cpp lex.yy.c y.tab.c ast.hpp type.hpp scope.hpp symbol.hpp
 	$(CXX) $(CXXFLAG) $< y.tab.c -o $@
 
 lex.yy.c: lexer.l
