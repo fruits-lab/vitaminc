@@ -10,16 +10,14 @@
 #include "symbol.hpp"
 
 /// @brief Manages scopes and symbol tables.
-class Environment {
+class ScopeStack {
  public:
-  /// @brief A new scope is added to the top of the environment.
-  void EnterScope() {
+  void PushScope() {
     scopes_.push_back(std::make_unique<SymbolTable>());
   }
 
-  /// @brief The top-most scope is removed from the environment.
   /// @throws `NotInScopeError`
-  void ExitScope() {
+  void PopScope() {
     TopScope_();  // ensure in scope
     scopes_.pop_back();
   }
