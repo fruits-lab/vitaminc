@@ -275,7 +275,7 @@ class BinaryExprNode : public ExprNode {
               << std::endl;
   }
 
-  void CheckType(ScopeStack& env) {
+  void CheckType(ScopeStack& env) override {
     lhs_->CheckType(env);
     rhs_->CheckType(env);
     if (lhs_->type != rhs_->type) {
