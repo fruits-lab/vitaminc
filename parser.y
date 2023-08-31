@@ -2,13 +2,15 @@
 
 #include <fstream>
 #include <iostream>
+#include <memory>
 #include <utility>
 
+#include "ast.hpp"
 #include "lex.yy.c"
-#include "scope.hpp"
 #include "type.hpp"
 
 extern std::ofstream output;
+extern std::unique_ptr<AstNode> program;
 %}
 
 // Dependency code required for the value and location types;
@@ -61,11 +63,7 @@ extern std::ofstream output;
 
 %%
 entry: main_func {
-    auto program = std::make_unique<ProgramNode>($1);
-    auto scopes = ScopeStack{};
-    program->CheckType(scopes);
-    program->Dump(0);
-    program->CodeGen();
+    program = std::make_unique<ProgramNode>($1);
   }
   ;
 
