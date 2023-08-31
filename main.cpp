@@ -20,8 +20,7 @@ int main(int argc, char** argv) {
 
   yylex_destroy();
 
-  // 1 if parsing failed because of invalid input;
-  // 2 if parsing failed due to memory exhaustion.
+  // 0 on success, 1 otherwise
   if (ret) {
     return ret;
   }
