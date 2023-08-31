@@ -4,6 +4,7 @@
 #include <iostream>
 #include <memory>
 #include <utility>
+#include <vector>
 
 #include "ast.hpp"
 #include "lex.yy.c"
