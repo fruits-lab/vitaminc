@@ -1,6 +1,5 @@
 %{
 
-#include <fstream>
 #include <iostream>
 #include <memory>
 #include <utility>
@@ -10,7 +9,6 @@
 #include "lex.yy.c"
 #include "type.hpp"
 
-extern std::ofstream output;
 extern std::unique_ptr<AstNode> program;
 %}
 
