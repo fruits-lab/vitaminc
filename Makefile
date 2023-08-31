@@ -1,11 +1,11 @@
 TARGET := vitaminc
 CXX := g++
-CXXFLAG = -g3 -std=c++14 -Wall
+CXXFLAGS = -g3 -std=c++14 -Wall
 LEX = lex
 # C++ features are used, yacc doesn't suffice
 YACC = bison
 # -d: generate header with default name
-YACCFLAG = --verbose --debug -d
+YFLAGS = --verbose --debug -d
 
 .PHONY: all clean test
 
@@ -15,13 +15,13 @@ test: $(TARGET)
 	make -C test/
 
 $(TARGET): main.cpp lex.yy.c y.tab.c ast.hpp type.hpp scope.hpp symbol.hpp
-	$(CXX) $(CXXFLAG) $< y.tab.c -o $@
+	$(CXX) $(CXXFLAGS) $< y.tab.c -o $@
 
 lex.yy.c: lexer.l
 	$(LEX) -o $@ $^
 
 y.tab.c: parser.y
-	$(YACC) $(YACCFLAG) $^ -o $@
+	$(YACC) $(YFLAGS) $^ -o $@
 
 clean:
 	rm -rf *.s *.o lex.yy.c y.tab.c y.tab.h *.output *.ssa $(TARGET)
