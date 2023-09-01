@@ -20,6 +20,7 @@ int main(int argc, char** argv) {
   // clang-format off
   cmd_options.add_options()
       ("o, output", "Write output to <file>", cxxopts::value<std::string>()->default_value("test.ssa"), "<file>")
+      ("d, dump", "Dump the abstract syntax tree", cxxopts::value<bool>()->default_value("false"))
       ("h, help", "Display available options")
       ;
   // clang-format on
@@ -44,7 +45,9 @@ int main(int argc, char** argv) {
   // perform analyses and transformations on the ast
   auto scopes = ScopeStack{};
   program->CheckType(scopes);
-  program->Dump(0);
+  if (args["dump"].as<bool>()) {
+    program->Dump(0);
+  }
   program->CodeGen();
 
   output.close();
