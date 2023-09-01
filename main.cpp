@@ -1,4 +1,7 @@
+#include <cstdlib>
+#include <cxxopts.hpp>
 #include <fstream>
+#include <iostream>
 #include <memory>
 
 #include "ast.hpp"
@@ -13,8 +16,21 @@ auto program = std::unique_ptr<AstNode>{};
 extern void yylex_destroy();
 
 int main(int argc, char** argv) {
-  /* TODO: read input parameter */
-  output.open("test.ssa");
+  auto cmd_options = cxxopts::Options{argv[0], "A simple C compiler."};
+  // clang-format off
+  cmd_options.add_options()
+      ("o, output", "Write output to <file>", cxxopts::value<std::string>()->default_value("test.ssa"), "<file>")
+      ("h, help", "Display available options")
+      ;
+  // clang-format on
+
+  auto args = cmd_options.parse(argc, argv);
+  if (args.count("help")) {
+    std::cerr << cmd_options.help() << std::endl;
+    std::exit(0);
+  }
+
+  output.open(args["output"].as<std::string>());
   yy::parser parser{};
   int ret = parser.parse();
 
