@@ -1,5 +1,5 @@
-#ifndef ENV_HPP_
-#define ENV_HPP_
+#ifndef SCOPE_HPP_
+#define SCOPE_HPP_
 
 #include <memory>
 #include <stdexcept>
@@ -62,4 +62,4 @@ class ScopeStack {
   }
 };
 
-#endif  // ENV_HPP_
+#endif  // SCOPE_HPP_
