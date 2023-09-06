@@ -44,7 +44,7 @@ class StmtNode : public AstNode {};
 /// @note This is an abstract class.
 class ExprNode : public AstNode {
  public:
-  ExprType type = ExprType::KUnknown;
+  ExprType type = ExprType::kUnknown;
 };
 
 class DeclNode : public AstNode {
@@ -186,7 +186,7 @@ class ReturnStmtNode : public StmtNode {
 
   void CheckType(ScopeStack& env) override {
     expr_->CheckType(env);
-    if (expr_->type != ExprType::KInt) {
+    if (expr_->type != ExprType::kInt) {
       // TODO: return value type does not match the function type
     }
   }
@@ -252,7 +252,7 @@ class IntConstExprNode : public ExprNode {
   }
 
   void CheckType(ScopeStack& env) override {
-    type = ExprType::KInt;
+    type = ExprType::kInt;
   }
 
  protected:
