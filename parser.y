@@ -81,8 +81,8 @@ decls: decls decl {
   ;
 
   /* TODO: parse multiple data types and id list */
-decl: INT ID ';' { $$ = std::make_unique<DeclNode>($2, ExprType::KInt); }
-    | INT ID '=' expr ';' { $$ = std::make_unique<DeclNode>($2, ExprType::KInt, $4); }
+decl: INT ID ';' { $$ = std::make_unique<DeclNode>($2, ExprType::kInt); }
+    | INT ID '=' expr ';' { $$ = std::make_unique<DeclNode>($2, ExprType::kInt, $4); }
     ;
 
 stmts: stmts stmt {
