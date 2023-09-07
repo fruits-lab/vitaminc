@@ -3,6 +3,7 @@
 
 #include <fstream>
 #include <iostream>
+#include <map>
 #include <memory>
 #include <string>
 #include <utility>
@@ -26,16 +27,36 @@ static const char* Pad(int n);
 /// @brief qbe intermediate file
 extern std::ofstream output;
 
+/// @brief Returns the next local number and increment it by 1. The first number
+/// will be 1.
+static int NextLocalNum() {
+  /// @brief temporary index under a scope
+  static int next_local_num = 1;
+  return next_local_num++;
+}
+
+/// @brief Returns the for function-scope temporary with sigil (`%`).
+static std::string PrefixSigil(int local_num) {
+  return "%." + std::to_string(local_num);
+}
+/// @brief map
+static std::map<std::string, int> id_to_num{};
+
 /// @brief The most general base node of the Abstract Syntax Tree.
 /// @note This is an abstract class.
 class AstNode {
  public:
-  virtual void CodeGen() const = 0;
+  virtual int CodeGen() const = 0;
   /// @param pad The length of the padding.
   virtual void Dump(int pad) const = 0;
   /// @brief A modifying pass; resolves the type of expressions.
   virtual void CheckType(ScopeStack&) = 0;
   virtual ~AstNode() = default;
+
+ protected:
+  /// @note Return this if the local number is not expected to be used, e.g.
+  /// StmtNode.
+  static const int kDummyLocalNum_ = -1;
 };
 
 /// @note This is an abstract class.
@@ -53,7 +74,19 @@ class DeclNode : public AstNode {
            std::unique_ptr<ExprNode> init = {})
       : id_{id}, type_{decl_type}, init_{std::move(init)} {}
 
-  void CodeGen() const override {}
+  int CodeGen() const override {
+    int id_num = NextLocalNum();
+    output << PrefixSigil(id_num) << " =l alloc4 4" << std::endl;
+
+    if (init_) {
+      int init_num = init_->CodeGen();
+      output << "storew " << PrefixSigil(init_num) << ", "
+             << PrefixSigil(id_num) << std::endl;
+    }
+
+    id_to_num[id_] = id_num;
+    return kDummyLocalNum_;
+  }
 
   void Dump(int pad) const override {
     std::cout << Pad(pad) << '(' << id_ << ": " << ExprTypeToCString(type_);
@@ -95,13 +128,16 @@ class BlockStmtNode : public StmtNode {
                 std::vector<std::unique_ptr<StmtNode>>&& stmts)
       : decls_{std::move(decls)}, stmts_{std::move(stmts)} {}
 
-  void CodeGen() const override {
+  int CodeGen() const override {
+    output << "@start" << std::endl;
     for (const auto& decl : decls_) {
       decl->CodeGen();
     }
     for (const auto& stmt : stmts_) {
       stmt->CodeGen();
     }
+
+    return kDummyLocalNum_;
   }
 
   void Dump(int pad) const override {
@@ -136,12 +172,13 @@ class ProgramNode : public AstNode {
   ProgramNode(std::unique_ptr<BlockStmtNode> block)
       : block_{std::move(block)} {}
 
-  void CodeGen() const override {
+  int CodeGen() const override {
     /* qbe main */
     output << "export function w $main() {" << std::endl;
-    output << "@start" << std::endl;
     block_->CodeGen();
     output << "}";
+
+    return kDummyLocalNum_;
   }
 
   void Dump(int pad) const override {
@@ -160,7 +197,9 @@ class NullStmtNode : public StmtNode {
  public:
   NullStmtNode() = default;
 
-  void CodeGen() const override {}
+  int CodeGen() const override {
+    return kDummyLocalNum_;
+  }
 
   void Dump(int pad) const override {
     std::cout << Pad(pad) << "()" << std::endl;
@@ -173,9 +212,10 @@ class ReturnStmtNode : public StmtNode {
  public:
   ReturnStmtNode(std::unique_ptr<ExprNode> expr) : expr_{std::move(expr)} {}
 
-  void CodeGen() const override {
-    output << " ret ";
-    expr_->CodeGen();
+  int CodeGen() const override {
+    int ret_num = expr_->CodeGen();
+    output << " ret " << PrefixSigil(ret_num) << std::endl;
+    return kDummyLocalNum_;
   }
 
   void Dump(int pad) const override {
@@ -201,7 +241,11 @@ class ExprStmtNode : public StmtNode {
  public:
   ExprStmtNode(std::unique_ptr<ExprNode> expr) : expr_{std::move(expr)} {}
 
-  void CodeGen() const override {}
+  int CodeGen() const override {
+    expr_->CodeGen();
+
+    return kDummyLocalNum_;
+  }
 
   void Dump(int pad) const override {
     expr_->Dump(pad);
@@ -219,7 +263,13 @@ class IdExprNode : public ExprNode {
  public:
   IdExprNode(const std::string& id) : id_{id} {}
 
-  void CodeGen() const override {}
+  int CodeGen() const override {
+    int id_num = id_to_num.at(id_);
+    int reg_num = NextLocalNum();
+    output << PrefixSigil(reg_num) << " =w loadw " << PrefixSigil(id_num)
+           << std::endl;
+    return reg_num;
+  }
 
   void Dump(int pad) const override {
     std::cout << Pad(pad) << id_ << ": " << ExprTypeToCString(type)
@@ -242,8 +292,10 @@ class IntConstExprNode : public ExprNode {
  public:
   IntConstExprNode(int val) : val_{val} {}
 
-  void CodeGen() const override {
-    output << val_ << std::endl;
+  int CodeGen() const override {
+    int num = NextLocalNum();
+    output << PrefixSigil(num) << " =w add 0, " << val_ << std::endl;
+    return num;
   }
 
   void Dump(int pad) const override {
@@ -265,7 +317,16 @@ class BinaryExprNode : public ExprNode {
   BinaryExprNode(std::unique_ptr<ExprNode> lhs, std::unique_ptr<ExprNode> rhs)
       : lhs_{std::move(lhs)}, rhs_{std::move(rhs)} {}
 
-  void CodeGen() const override {}
+  int CodeGen() const override {
+    int left_num = lhs_->CodeGen();
+    int right_num = rhs_->CodeGen();
+    int num = NextLocalNum();
+    output << PrefixSigil(num) << " =w " << OpName_() << " "
+           << PrefixSigil(left_num) << ", " << PrefixSigil(right_num)
+           << std::endl;
+
+    return num;
+  }
 
   void Dump(int pad) const override {
     std::cout << Pad(pad) << '(' << Op_() << std::endl;
@@ -289,6 +350,7 @@ class BinaryExprNode : public ExprNode {
   std::unique_ptr<ExprNode> lhs_;
   std::unique_ptr<ExprNode> rhs_;
 
+  virtual std::string OpName_() const = 0;
   virtual char Op_() const = 0;
 };
 
@@ -296,6 +358,10 @@ class PlusExprNode : public BinaryExprNode {
   using BinaryExprNode::BinaryExprNode;
 
  protected:
+  std::string OpName_() const override {
+    return "add";
+  }
+
   char Op_() const override {
     return '+';
   }
@@ -305,6 +371,10 @@ class SubExprNode : public BinaryExprNode {
   using BinaryExprNode::BinaryExprNode;
 
  protected:
+  std::string OpName_() const override {
+    return "sub";
+  }
+
   char Op_() const override {
     return '-';
   }
@@ -314,6 +384,10 @@ class MulExprNode : public BinaryExprNode {
   using BinaryExprNode::BinaryExprNode;
 
  protected:
+  std::string OpName_() const override {
+    return "mul";
+  }
+
   char Op_() const override {
     return '*';
   }
@@ -323,6 +397,10 @@ class DivExprNode : public BinaryExprNode {
   using BinaryExprNode::BinaryExprNode;
 
  protected:
+  std::string OpName_() const override {
+    return "div";
+  }
+
   char Op_() const override {
     return '/';
   }
