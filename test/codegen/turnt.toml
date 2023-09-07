@@ -1,0 +1,2 @@
+command = "../../vitaminc -o test.ssa < {filename} && qbe -o out.s test.ssa && cc out.s -o a.o && ./a.o; echo $?"
+output.exp = "-"
