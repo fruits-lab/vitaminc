@@ -294,7 +294,7 @@ class IntConstExprNode : public ExprNode {
 
   int CodeGen() const override {
     int num = NextLocalNum();
-    output << PrefixSigil(num) << " =w add 0, " << val_ << std::endl;
+    output << PrefixSigil(num) << " =w copy " << val_ << std::endl;
     return num;
   }
 
