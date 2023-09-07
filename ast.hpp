@@ -35,6 +35,10 @@ static int NextLocalNum() {
   return next_local_num++;
 }
 
+/// @note Return this if the local number is not expected to be used, e.g.
+/// StmtNode.
+static const int kDummyLocalNum = -1;
+
 /// @brief Returns the for function-scope temporary with sigil (`%`).
 static std::string PrefixSigil(int local_num) {
   return "%." + std::to_string(local_num);
@@ -52,11 +56,6 @@ class AstNode {
   /// @brief A modifying pass; resolves the type of expressions.
   virtual void CheckType(ScopeStack&) = 0;
   virtual ~AstNode() = default;
-
- protected:
-  /// @note Return this if the local number is not expected to be used, e.g.
-  /// StmtNode.
-  static const int kDummyLocalNum_ = -1;
 };
 
 /// @note This is an abstract class.
@@ -85,7 +84,7 @@ class DeclNode : public AstNode {
     }
 
     id_to_num[id_] = id_num;
-    return kDummyLocalNum_;
+    return kDummyLocalNum;
   }
 
   void Dump(int pad) const override {
@@ -137,7 +136,7 @@ class BlockStmtNode : public StmtNode {
       stmt->CodeGen();
     }
 
-    return kDummyLocalNum_;
+    return kDummyLocalNum;
   }
 
   void Dump(int pad) const override {
@@ -178,7 +177,7 @@ class ProgramNode : public AstNode {
     block_->CodeGen();
     output << "}";
 
-    return kDummyLocalNum_;
+    return kDummyLocalNum;
   }
 
   void Dump(int pad) const override {
@@ -198,7 +197,7 @@ class NullStmtNode : public StmtNode {
   NullStmtNode() = default;
 
   int CodeGen() const override {
-    return kDummyLocalNum_;
+    return kDummyLocalNum;
   }
 
   void Dump(int pad) const override {
@@ -215,7 +214,7 @@ class ReturnStmtNode : public StmtNode {
   int CodeGen() const override {
     int ret_num = expr_->CodeGen();
     output << " ret " << PrefixSigil(ret_num) << std::endl;
-    return kDummyLocalNum_;
+    return kDummyLocalNum;
   }
 
   void Dump(int pad) const override {
@@ -244,7 +243,7 @@ class ExprStmtNode : public StmtNode {
   int CodeGen() const override {
     expr_->CodeGen();
 
-    return kDummyLocalNum_;
+    return kDummyLocalNum;
   }
 
   void Dump(int pad) const override {
