@@ -35,15 +35,15 @@ static int NextLocalNum() {
   return next_local_num++;
 }
 
-/// @note Return this if the local number is not expected to be used, e.g.
-/// StmtNode.
+/// @note Use this as the return local number if the it's not expected to be
+/// used, e.g., `StmtNode`.
 static const int kDummyLocalNum = -1;
 
-/// @brief Returns the for function-scope temporary with sigil (`%`).
+/// @brief Returns the function-scope temporary with sigil (`%`).
 static std::string PrefixSigil(int local_num) {
   return "%." + std::to_string(local_num);
 }
-/// @brief map
+
 static std::map<std::string, int> id_to_num{};
 
 /// @brief The most general base node of the Abstract Syntax Tree.
@@ -82,7 +82,7 @@ class DeclNode : public AstNode {
       output << "storew " << PrefixSigil(init_num) << ", "
              << PrefixSigil(id_num) << std::endl;
     }
-
+    // Set up the number of the id so we know were to load it back.
     id_to_num[id_] = id_num;
     return kDummyLocalNum;
   }
@@ -172,7 +172,6 @@ class ProgramNode : public AstNode {
       : block_{std::move(block)} {}
 
   int CodeGen() const override {
-    /* qbe main */
     output << "export function w $main() {" << std::endl;
     block_->CodeGen();
     output << "}";
@@ -263,6 +262,8 @@ class IdExprNode : public ExprNode {
   IdExprNode(const std::string& id) : id_{id} {}
 
   int CodeGen() const override {
+    /// @brief Plays the role of a "pointer". Its value has to be loaded to
+    /// the register before use.
     int id_num = id_to_num.at(id_);
     int reg_num = NextLocalNum();
     output << PrefixSigil(reg_num) << " =w loadw " << PrefixSigil(id_num)
@@ -349,7 +350,9 @@ class BinaryExprNode : public ExprNode {
   std::unique_ptr<ExprNode> lhs_;
   std::unique_ptr<ExprNode> rhs_;
 
+  /// @brief The name of the operator used in the QBE IR, e.g., `add`.
   virtual std::string OpName_() const = 0;
+  /// @brief The mathematical symbol of the operator, e.g., `+`.
   virtual char Op_() const = 0;
 };
 
