@@ -7,8 +7,12 @@
 
 SOURCES=$(find "$(git rev-parse --show-toplevel)" | grep -E "\.(c|h)pp\$")
 
-# reports violations
-clang-format --dry-run "${SOURCES}"
-
-VIOLATION_COUNT="$(clang-format --output-replacements-xml "${SOURCES}" | grep -E -c "</replacement>")"
-exit "$VIOLATION_COUNT"
+total_violation_count=0
+for file in $SOURCES; do
+  # reports violations
+  clang-format --dry-run "$file"
+  # count violations
+  violation_count=$(clang-format --output-replacements-xml "$file" | grep -E -c "</replacement>")
+  total_violation_count=$((total_violation_count + violation_count))
+done
+exit "$total_violation_count"
