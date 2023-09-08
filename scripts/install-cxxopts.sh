@@ -4,4 +4,5 @@ wget https://github.com/jarro2783/cxxopts/archive/refs/tags/v3.1.1.tar.gz -O - |
   cd cxxopts-3.1.1/ &&
   mkdir build/ &&
   cmake -B build/ . &&
-  sudo make -C build/ install
+  sudo make -C build/ install &&
+  rm -rf cxxopts-3.1.1/
