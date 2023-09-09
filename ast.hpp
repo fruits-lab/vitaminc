@@ -1,50 +1,13 @@
 #ifndef AST_HPP_
 #define AST_HPP_
 
-#include <fstream>
-#include <iostream>
-#include <map>
 #include <memory>
 #include <string>
 #include <utility>
 #include <vector>
 
 #include "scope.hpp"
-#include "symbol.hpp"
 #include "type.hpp"
-
-// clang-format off
-// Not to format the padding to emphasize the actual length.
-
-// 80 spaces for padding      01234567890123456789012345678901234567890123456789012345678901234567890123456789
-static const char* padding = "                                                                                ";
-
-// clang-format on
-
-/// @param n The length of the padding, saturated on the boundary of [0, 80].
-static const char* Pad(int n);
-
-/// @brief qbe intermediate file
-extern std::ofstream output;
-
-/// @brief Returns the next local number and increment it by 1. The first number
-/// will be 1.
-static int NextLocalNum() {
-  /// @brief temporary index under a scope
-  static int next_local_num = 1;
-  return next_local_num++;
-}
-
-/// @note Use this as the return local number if the it's not expected to be
-/// used, e.g., `StmtNode`.
-static const int kDummyLocalNum = -1;
-
-/// @brief Returns the function-scope temporary with sigil (`%`).
-static std::string PrefixSigil(int local_num) {
-  return "%." + std::to_string(local_num);
-}
-
-static std::map<std::string, int> id_to_num{};
 
 /// @brief The most general base node of the Abstract Syntax Tree.
 /// @note This is an abstract class.
@@ -73,46 +36,11 @@ class DeclNode : public AstNode {
            std::unique_ptr<ExprNode> init = {})
       : id_{id}, type_{decl_type}, init_{std::move(init)} {}
 
-  int CodeGen() const override {
-    int id_num = NextLocalNum();
-    output << PrefixSigil(id_num) << " =l alloc4 4" << std::endl;
+  int CodeGen() const override;
 
-    if (init_) {
-      int init_num = init_->CodeGen();
-      output << "storew " << PrefixSigil(init_num) << ", "
-             << PrefixSigil(id_num) << std::endl;
-    }
-    // Set up the number of the id so we know were to load it back.
-    id_to_num[id_] = id_num;
-    return kDummyLocalNum;
-  }
+  void Dump(int pad) const override;
 
-  void Dump(int pad) const override {
-    std::cout << Pad(pad) << '(' << id_ << ": " << ExprTypeToCString(type_);
-    if (init_) {
-      std::cout << " =" << std::endl;
-      init_->Dump(pad + 2);
-    }
-    std::cout << ')' << std::endl;
-  }
-
-  void CheckType(ScopeStack& env) override {
-    if (init_) {
-      init_->CheckType(env);
-      if (init_->type != type_) {
-        // TODO: incompatible types when initializing type 'type_' using type
-        // 'init_->type'
-      }
-    }
-
-    if (env.Probe(id_)) {
-      // TODO: redefinition of 'id_'
-    } else {
-      auto symbol = std::make_unique<SymbolEntry>(id_);
-      symbol->expr_type = type_;
-      env.Add(std::move(symbol));
-    }
-  }
+  void CheckType(ScopeStack& env) override;
 
  protected:
   std::string id_;
@@ -127,37 +55,11 @@ class BlockStmtNode : public StmtNode {
                 std::vector<std::unique_ptr<StmtNode>>&& stmts)
       : decls_{std::move(decls)}, stmts_{std::move(stmts)} {}
 
-  int CodeGen() const override {
-    output << "@start" << std::endl;
-    for (const auto& decl : decls_) {
-      decl->CodeGen();
-    }
-    for (const auto& stmt : stmts_) {
-      stmt->CodeGen();
-    }
+  int CodeGen() const override;
 
-    return kDummyLocalNum;
-  }
+  void Dump(int pad) const override;
 
-  void Dump(int pad) const override {
-    for (const auto& decl : decls_) {
-      decl->Dump(pad);
-    }
-    for (const auto& stmt : stmts_) {
-      stmt->Dump(pad);
-    }
-  }
-
-  void CheckType(ScopeStack& env) override {
-    env.PushScope();
-    for (auto& decl : decls_) {
-      decl->CheckType(env);
-    }
-    for (auto& stmt : stmts_) {
-      stmt->CheckType(env);
-    }
-    env.PopScope();
-  }
+  void CheckType(ScopeStack& env) override;
 
  protected:
   std::vector<std::unique_ptr<DeclNode>> decls_;
@@ -171,21 +73,11 @@ class ProgramNode : public AstNode {
   ProgramNode(std::unique_ptr<BlockStmtNode> block)
       : block_{std::move(block)} {}
 
-  int CodeGen() const override {
-    output << "export function w $main() {" << std::endl;
-    block_->CodeGen();
-    output << "}";
+  int CodeGen() const override;
 
-    return kDummyLocalNum;
-  }
+  void Dump(int pad) const override;
 
-  void Dump(int pad) const override {
-    block_->Dump(pad);
-  }
-
-  void CheckType(ScopeStack& env) override {
-    block_->CheckType(env);
-  }
+  void CheckType(ScopeStack& env) override;
 
  protected:
   std::unique_ptr<BlockStmtNode> block_;
@@ -193,41 +85,22 @@ class ProgramNode : public AstNode {
 
 class NullStmtNode : public StmtNode {
  public:
-  NullStmtNode() = default;
+  int CodeGen() const override;
 
-  int CodeGen() const override {
-    return kDummyLocalNum;
-  }
+  void Dump(int pad) const override;
 
-  void Dump(int pad) const override {
-    std::cout << Pad(pad) << "()" << std::endl;
-  }
-
-  void CheckType(ScopeStack& env) override {}
+  void CheckType(ScopeStack& env) override;
 };
 
 class ReturnStmtNode : public StmtNode {
  public:
   ReturnStmtNode(std::unique_ptr<ExprNode> expr) : expr_{std::move(expr)} {}
 
-  int CodeGen() const override {
-    int ret_num = expr_->CodeGen();
-    output << " ret " << PrefixSigil(ret_num) << std::endl;
-    return kDummyLocalNum;
-  }
+  int CodeGen() const override;
 
-  void Dump(int pad) const override {
-    std::cout << Pad(pad) << "(ret" << std::endl;
-    expr_->Dump(pad + 2);
-    std::cout << Pad(pad) << ')' << std::endl;
-  }
+  void Dump(int pad) const override;
 
-  void CheckType(ScopeStack& env) override {
-    expr_->CheckType(env);
-    if (expr_->type != ExprType::kInt) {
-      // TODO: return value type does not match the function type
-    }
-  }
+  void CheckType(ScopeStack& env) override;
 
  protected:
   std::unique_ptr<ExprNode> expr_;
@@ -239,19 +112,11 @@ class ExprStmtNode : public StmtNode {
  public:
   ExprStmtNode(std::unique_ptr<ExprNode> expr) : expr_{std::move(expr)} {}
 
-  int CodeGen() const override {
-    expr_->CodeGen();
+  int CodeGen() const override;
 
-    return kDummyLocalNum;
-  }
+  void Dump(int pad) const override;
 
-  void Dump(int pad) const override {
-    expr_->Dump(pad);
-  }
-
-  void CheckType(ScopeStack& env) override {
-    expr_->CheckType(env);
-  }
+  void CheckType(ScopeStack& env) override;
 
  protected:
   std::unique_ptr<ExprNode> expr_;
@@ -261,28 +126,11 @@ class IdExprNode : public ExprNode {
  public:
   IdExprNode(const std::string& id) : id_{id} {}
 
-  int CodeGen() const override {
-    /// @brief Plays the role of a "pointer". Its value has to be loaded to
-    /// the register before use.
-    int id_num = id_to_num.at(id_);
-    int reg_num = NextLocalNum();
-    output << PrefixSigil(reg_num) << " =w loadw " << PrefixSigil(id_num)
-           << std::endl;
-    return reg_num;
-  }
+  int CodeGen() const override;
 
-  void Dump(int pad) const override {
-    std::cout << Pad(pad) << id_ << ": " << ExprTypeToCString(type)
-              << std::endl;
-  }
+  void Dump(int pad) const override;
 
-  void CheckType(ScopeStack& env) override {
-    if (auto symbol = env.LookUp(id_)) {
-      type = symbol->expr_type;
-    } else {
-      // TODO: 'id_' undeclared
-    }
-  }
+  void CheckType(ScopeStack& env) override;
 
  protected:
   std::string id_;
@@ -292,20 +140,11 @@ class IntConstExprNode : public ExprNode {
  public:
   IntConstExprNode(int val) : val_{val} {}
 
-  int CodeGen() const override {
-    int num = NextLocalNum();
-    output << PrefixSigil(num) << " =w copy " << val_ << std::endl;
-    return num;
-  }
+  int CodeGen() const override;
 
-  void Dump(int pad) const override {
-    std::cout << Pad(pad) << val_ << ": " << ExprTypeToCString(type)
-              << std::endl;
-  }
+  void Dump(int pad) const override;
 
-  void CheckType(ScopeStack& env) override {
-    type = ExprType::kInt;
-  }
+  void CheckType(ScopeStack& env) override;
 
  protected:
   int val_;
@@ -317,34 +156,11 @@ class BinaryExprNode : public ExprNode {
   BinaryExprNode(std::unique_ptr<ExprNode> lhs, std::unique_ptr<ExprNode> rhs)
       : lhs_{std::move(lhs)}, rhs_{std::move(rhs)} {}
 
-  int CodeGen() const override {
-    int left_num = lhs_->CodeGen();
-    int right_num = rhs_->CodeGen();
-    int num = NextLocalNum();
-    output << PrefixSigil(num) << " =w " << OpName_() << " "
-           << PrefixSigil(left_num) << ", " << PrefixSigil(right_num)
-           << std::endl;
+  int CodeGen() const override;
 
-    return num;
-  }
+  void Dump(int pad) const override;
 
-  void Dump(int pad) const override {
-    std::cout << Pad(pad) << '(' << Op_() << std::endl;
-    lhs_->Dump(pad + 2);
-    rhs_->Dump(pad + 2);
-    std::cout << Pad(pad) << ')' << ": " << ExprTypeToCString(type)
-              << std::endl;
-  }
-
-  void CheckType(ScopeStack& env) override {
-    lhs_->CheckType(env);
-    rhs_->CheckType(env);
-    if (lhs_->type != rhs_->type) {
-      // TODO: invalid operands to binary +
-    } else {
-      type = lhs_->type;
-    }
-  }
+  void CheckType(ScopeStack& env) override;
 
  protected:
   std::unique_ptr<ExprNode> lhs_;
@@ -360,61 +176,36 @@ class PlusExprNode : public BinaryExprNode {
   using BinaryExprNode::BinaryExprNode;
 
  protected:
-  std::string OpName_() const override {
-    return "add";
-  }
+  std::string OpName_() const override;
 
-  char Op_() const override {
-    return '+';
-  }
+  char Op_() const override;
 };
 
 class SubExprNode : public BinaryExprNode {
   using BinaryExprNode::BinaryExprNode;
 
  protected:
-  std::string OpName_() const override {
-    return "sub";
-  }
+  std::string OpName_() const override;
 
-  char Op_() const override {
-    return '-';
-  }
+  char Op_() const override;
 };
 
 class MulExprNode : public BinaryExprNode {
   using BinaryExprNode::BinaryExprNode;
 
  protected:
-  std::string OpName_() const override {
-    return "mul";
-  }
+  std::string OpName_() const override;
 
-  char Op_() const override {
-    return '*';
-  }
+  char Op_() const override;
 };
 
 class DivExprNode : public BinaryExprNode {
   using BinaryExprNode::BinaryExprNode;
 
  protected:
-  std::string OpName_() const override {
-    return "div";
-  }
+  std::string OpName_() const override;
 
-  char Op_() const override {
-    return '/';
-  }
+  char Op_() const override;
 };
-
-static const char* Pad(int n) {
-  if (n > 80) {
-    n = 80;
-  } else if (n < 0) {
-    n = 0;
-  }
-  return padding + (80 - n);
-}
 
 #endif  // AST_HPP_
