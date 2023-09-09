@@ -5,4 +5,4 @@ test:
 	qbe -o out.s test.ssa && cc out.s -o a.o && ./a.o
 
 clean:
-	rm -f *.s *o *.ssa
+	rm -f *.s **/*.s *.o **/*.o *.ssa **/*.ssa
