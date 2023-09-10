@@ -12,23 +12,26 @@
 #include "symbol.hpp"
 #include "type.hpp"
 
+/// @brief qbe intermediate file
+extern std::ofstream output;
+
+namespace {
+
 // clang-format off
 // Not to format the padding to emphasize the actual length.
 
-// 80 spaces for padding      01234567890123456789012345678901234567890123456789012345678901234567890123456789
-static const char* padding = "                                                                                ";
+// 80 spaces for padding
+//                     01234567890123456789012345678901234567890123456789012345678901234567890123456789
+const char* padding = "                                                                                ";
 
 // clang-format on
 
 /// @param n The length of the padding, saturated on the boundary of [0, 80].
-static const char* Pad(int n);
-
-/// @brief qbe intermediate file
-extern std::ofstream output;
+const char* Pad(int n);
 
 /// @brief Returns the next local number and increment it by 1. The first number
 /// will be 1.
-static int NextLocalNum() {
+int NextLocalNum() {
   /// @brief temporary index under a scope
   static int next_local_num = 1;
   return next_local_num++;
@@ -36,14 +39,16 @@ static int NextLocalNum() {
 
 /// @note Use this as the return local number if the it's not expected to be
 /// used, e.g., `StmtNode`.
-static const int kDummyLocalNum = -1;
+const int kDummyLocalNum = -1;
 
 /// @brief Returns the function-scope temporary with sigil (`%`).
-static std::string PrefixSigil(int local_num) {
+std::string PrefixSigil(int local_num) {
   return "%." + std::to_string(local_num);
 }
 
-static std::map<std::string, int> id_to_num{};
+std::map<std::string, int> id_to_num{};
+
+}  // namespace
 
 int DeclNode::CodeGen() const {
   int id_num = NextLocalNum();
@@ -275,7 +280,9 @@ char DivExprNode::Op_() const {
   return '/';
 }
 
-static const char* Pad(int n) {
+namespace {
+
+const char* Pad(int n) {
   if (n > 80) {
     n = 80;
   } else if (n < 0) {
@@ -283,3 +290,5 @@ static const char* Pad(int n) {
   }
   return padding + (80 - n);
 }
+
+}  // namespace
