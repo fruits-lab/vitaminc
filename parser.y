@@ -104,6 +104,7 @@ expr: ID { $$ = std::make_unique<IdExprNode>($1); }
   | expr '-' expr { $$ = std::make_unique<SubExprNode>($1, $3); }
   | expr '*' expr { $$ = std::make_unique<MulExprNode>($1, $3); }
   | expr '/' expr { $$ = std::make_unique<DivExprNode>($1, $3); }
+  | '(' expr ')' { $$ = $2; }
   ;
 
 epsilon: /* empty */ ;
