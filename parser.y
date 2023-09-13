@@ -45,6 +45,10 @@ extern std::unique_ptr<AstNode> program;
   INT
   MAIN
   RETURN
+  EQ
+  NE
+  LE
+  GE
   EOF 0
 ;
 
@@ -55,6 +59,8 @@ extern std::unique_ptr<AstNode> program;
 %nterm <std::vector<std::unique_ptr<StmtNode>>> stmts
 %nterm <std::unique_ptr<BlockStmtNode>> main_func
 
+%left EQ NE
+%left '<' '>' LE GE
 %left '+' '-'
 %left '*' '/'
 
