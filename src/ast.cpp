@@ -280,6 +280,58 @@ std::string DivExprNode::Op_() const {
   return "/";
 }
 
+std::string GreaterExprNode::OpName_() const {
+  // for signed greater
+  return "sgt";
+}
+
+std::string GreaterExprNode::Op_() const {
+  return ">";
+}
+
+std::string GreaterEqualExprNode::OpName_() const {
+  // for signed greater or equal
+  return "sge";
+}
+
+std::string GreaterEqualExprNode::Op_() const {
+  return ">=";
+}
+
+std::string LessExprNode::OpName_() const {
+  // for signed less
+  return "slt";
+}
+
+std::string LessExprNode::Op_() const {
+  return "<";
+}
+
+std::string LessEqualExprNode::OpName_() const {
+  // for signed less or equal
+  return "sle";
+}
+
+std::string LessEqualExprNode::Op_() const {
+  return "<=";
+}
+
+std::string EqualExprNode::OpName_() const {
+  return "eq";
+}
+
+std::string EqualExprNode::Op_() const {
+  return "==";
+}
+
+std::string NotEqualExprNode::OpName_() const {
+  return "ne";
+}
+
+std::string NotEqualExprNode::Op_() const {
+  return "!=";
+}
+
 namespace {
 
 const char* Pad(int n) {
