@@ -252,32 +252,32 @@ std::string PlusExprNode::OpName_() const {
   return "add";
 }
 
-char PlusExprNode::Op_() const {
-  return '+';
+std::string PlusExprNode::Op_() const {
+  return "+";
 }
 
 std::string SubExprNode::OpName_() const {
   return "sub";
 }
 
-char SubExprNode::Op_() const {
-  return '-';
+std::string SubExprNode::Op_() const {
+  return "-";
 }
 
 std::string MulExprNode::OpName_() const {
   return "mul";
 }
 
-char MulExprNode::Op_() const {
-  return '*';
+std::string MulExprNode::Op_() const {
+  return "*";
 }
 
 std::string DivExprNode::OpName_() const {
   return "div";
 }
 
-char DivExprNode::Op_() const {
-  return '/';
+std::string DivExprNode::Op_() const {
+  return "/";
 }
 
 namespace {

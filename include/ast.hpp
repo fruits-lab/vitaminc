@@ -169,7 +169,7 @@ class BinaryExprNode : public ExprNode {
   /// @brief The name of the operator used in the QBE IR, e.g., `add`.
   virtual std::string OpName_() const = 0;
   /// @brief The mathematical symbol of the operator, e.g., `+`.
-  virtual char Op_() const = 0;
+  virtual std::string Op_() const = 0;
 };
 
 class PlusExprNode : public BinaryExprNode {
@@ -178,7 +178,7 @@ class PlusExprNode : public BinaryExprNode {
  protected:
   std::string OpName_() const override;
 
-  char Op_() const override;
+  std::string Op_() const override;
 };
 
 class SubExprNode : public BinaryExprNode {
@@ -187,7 +187,7 @@ class SubExprNode : public BinaryExprNode {
  protected:
   std::string OpName_() const override;
 
-  char Op_() const override;
+  std::string Op_() const override;
 };
 
 class MulExprNode : public BinaryExprNode {
@@ -196,7 +196,7 @@ class MulExprNode : public BinaryExprNode {
  protected:
   std::string OpName_() const override;
 
-  char Op_() const override;
+  std::string Op_() const override;
 };
 
 class DivExprNode : public BinaryExprNode {
@@ -205,7 +205,7 @@ class DivExprNode : public BinaryExprNode {
  protected:
   std::string OpName_() const override;
 
-  char Op_() const override;
+  std::string Op_() const override;
 };
 
 #endif  // AST_HPP_
