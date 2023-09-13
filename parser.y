@@ -110,6 +110,12 @@ expr: ID { $$ = std::make_unique<IdExprNode>($1); }
   | expr '-' expr { $$ = std::make_unique<SubExprNode>($1, $3); }
   | expr '*' expr { $$ = std::make_unique<MulExprNode>($1, $3); }
   | expr '/' expr { $$ = std::make_unique<DivExprNode>($1, $3); }
+  | expr '>' expr { $$ = std::make_unique<GreaterExprNode>($1, $3); }
+  | expr '<' expr { $$ = std::make_unique<LessExprNode>($1, $3); }
+  | expr GE expr { $$ = std::make_unique<GreaterEqualExprNode>($1, $3); }
+  | expr LE expr { $$ = std::make_unique<LessEqualExprNode>($1, $3); }
+  | expr EQ expr { $$ = std::make_unique<EqualExprNode>($1, $3); }
+  | expr NE expr { $$ = std::make_unique<NotEqualExprNode>($1, $3); }
   | '(' expr ')' { $$ = $2; }
   ;
 

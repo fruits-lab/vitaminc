@@ -208,4 +208,58 @@ class DivExprNode : public BinaryExprNode {
   std::string Op_() const override;
 };
 
+class GreaterExprNode : public BinaryExprNode {
+  using BinaryExprNode::BinaryExprNode;
+
+ protected:
+  std::string OpName_() const override;
+
+  std::string Op_() const override;
+};
+
+class GreaterEqualExprNode : public BinaryExprNode {
+  using BinaryExprNode::BinaryExprNode;
+
+ protected:
+  std::string OpName_() const override;
+
+  std::string Op_() const override;
+};
+
+class LessExprNode : public BinaryExprNode {
+  using BinaryExprNode::BinaryExprNode;
+
+ protected:
+  std::string OpName_() const override;
+
+  std::string Op_() const override;
+};
+
+class LessEqualExprNode : public BinaryExprNode {
+  using BinaryExprNode::BinaryExprNode;
+
+ protected:
+  std::string OpName_() const override;
+
+  std::string Op_() const override;
+};
+
+class EqualExprNode : public BinaryExprNode {
+  using BinaryExprNode::BinaryExprNode;
+
+ protected:
+  std::string OpName_() const override;
+
+  std::string Op_() const override;
+};
+
+class NotEqualExprNode : public BinaryExprNode {
+  using BinaryExprNode::BinaryExprNode;
+
+ protected:
+  std::string OpName_() const override;
+
+  std::string Op_() const override;
+};
+
 #endif  // AST_HPP_
