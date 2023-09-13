@@ -281,7 +281,7 @@ std::string DivExprNode::Op_() const {
 }
 
 std::string GreaterThanExprNode::OpName_() const {
-  // for signed greater
+  // signed
   return "sgt";
 }
 
@@ -290,7 +290,7 @@ std::string GreaterThanExprNode::Op_() const {
 }
 
 std::string GreaterThanOrEqualToExprNode::OpName_() const {
-  // for signed greater or equal
+  // signed
   return "sge";
 }
 
@@ -299,7 +299,7 @@ std::string GreaterThanOrEqualToExprNode::Op_() const {
 }
 
 std::string LessThanExprNode::OpName_() const {
-  // for signed less
+  // signed
   return "slt";
 }
 
@@ -308,7 +308,7 @@ std::string LessThanExprNode::Op_() const {
 }
 
 std::string LessThanOrEqualToExprNode::OpName_() const {
-  // for signed less or equal
+  // signed
   return "sle";
 }
 
