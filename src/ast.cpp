@@ -285,7 +285,7 @@ std::string GreaterExprNode::OpName_() const {
   return "sgt";
 }
 
-std::string GreaterExprNode::Op_() const {
+std::string GreaterThanExprNode::Op_() const {
   return ">";
 }
 
@@ -294,7 +294,7 @@ std::string GreaterEqualExprNode::OpName_() const {
   return "sge";
 }
 
-std::string GreaterEqualExprNode::Op_() const {
+std::string GreaterThanOrEqualToExprNode::Op_() const {
   return ">=";
 }
 
@@ -303,7 +303,7 @@ std::string LessExprNode::OpName_() const {
   return "slt";
 }
 
-std::string LessExprNode::Op_() const {
+std::string LessThanExprNode::Op_() const {
   return "<";
 }
 
@@ -312,23 +312,23 @@ std::string LessEqualExprNode::OpName_() const {
   return "sle";
 }
 
-std::string LessEqualExprNode::Op_() const {
+std::string LessThanOrEqualToExprNode::Op_() const {
   return "<=";
 }
 
-std::string EqualExprNode::OpName_() const {
+std::string EqualToExprNode::OpName_() const {
   return "eq";
 }
 
-std::string EqualExprNode::Op_() const {
+std::string EqualToExprNode::Op_() const {
   return "==";
 }
 
-std::string NotEqualExprNode::OpName_() const {
+std::string NotEqualToExprNode::OpName_() const {
   return "ne";
 }
 
-std::string NotEqualExprNode::Op_() const {
+std::string NotEqualToExprNode::Op_() const {
   return "!=";
 }
 

@@ -208,7 +208,7 @@ class DivExprNode : public BinaryExprNode {
   std::string Op_() const override;
 };
 
-class GreaterExprNode : public BinaryExprNode {
+class GreaterThanExprNode : public BinaryExprNode {
   using BinaryExprNode::BinaryExprNode;
 
  protected:
@@ -217,7 +217,7 @@ class GreaterExprNode : public BinaryExprNode {
   std::string Op_() const override;
 };
 
-class GreaterEqualExprNode : public BinaryExprNode {
+class GreaterThanOrEqualToExprNode : public BinaryExprNode {
   using BinaryExprNode::BinaryExprNode;
 
  protected:
@@ -226,7 +226,7 @@ class GreaterEqualExprNode : public BinaryExprNode {
   std::string Op_() const override;
 };
 
-class LessExprNode : public BinaryExprNode {
+class LessThanExprNode : public BinaryExprNode {
   using BinaryExprNode::BinaryExprNode;
 
  protected:
@@ -235,7 +235,7 @@ class LessExprNode : public BinaryExprNode {
   std::string Op_() const override;
 };
 
-class LessEqualExprNode : public BinaryExprNode {
+class LessThanOrEqualToExprNode : public BinaryExprNode {
   using BinaryExprNode::BinaryExprNode;
 
  protected:
@@ -244,7 +244,7 @@ class LessEqualExprNode : public BinaryExprNode {
   std::string Op_() const override;
 };
 
-class EqualExprNode : public BinaryExprNode {
+class EqualToExprNode : public BinaryExprNode {
   using BinaryExprNode::BinaryExprNode;
 
  protected:
@@ -253,7 +253,7 @@ class EqualExprNode : public BinaryExprNode {
   std::string Op_() const override;
 };
 
-class NotEqualExprNode : public BinaryExprNode {
+class NotEqualToExprNode : public BinaryExprNode {
   using BinaryExprNode::BinaryExprNode;
 
  protected:
