@@ -107,18 +107,22 @@ stmt: ';' { $$ = std::make_unique<NullStmtNode>(); }
 
 expr: ID { $$ = std::make_unique<IdExprNode>($1); }
   | NUM { $$ = std::make_unique<IntConstExprNode>($1); }
+  /* additive 6.5.6 */
   | expr '+' expr { $$ = std::make_unique<PlusExprNode>($1, $3); }
   | expr '-' expr { $$ = std::make_unique<SubExprNode>($1, $3); }
+  /* multiplicative 6.5.5 */
   | expr '*' expr { $$ = std::make_unique<MulExprNode>($1, $3); }
   | expr '/' expr { $$ = std::make_unique<DivExprNode>($1, $3); }
+  /* relational 6.5.8 */
   | expr '>' expr { $$ = std::make_unique<GreaterThanExprNode>($1, $3); }
   | expr '<' expr { $$ = std::make_unique<LessThanExprNode>($1, $3); }
   | expr GE expr { $$ = std::make_unique<GreaterThanOrEqualToExprNode>($1, $3); }
   | expr LE expr { $$ = std::make_unique<LessThanOrEqualToExprNode>($1, $3); }
+  /* equality 6.5.9 */
   | expr EQ expr { $$ = std::make_unique<EqualToExprNode>($1, $3); }
   | expr NE expr { $$ = std::make_unique<NotEqualToExprNode>($1, $3); }
   | '(' expr ')' { $$ = $2; }
-  /* assignment operators */
+  /* assignment 6.5.16 */
   | ID '=' expr { $$ = std::make_unique<SimpleAssignmentExprNode>($1, $3); }
   ;
 
