@@ -332,6 +332,12 @@ std::string NotEqualToExprNode::Op_() const {
   return "!=";
 }
 
+int SimpleAssignmentExprNode::CodeGen() const {}
+
+void SimpleAssignmentExprNode::Dump(int pad) const {}
+
+void SimpleAssignmentExprNode::CheckType(ScopeStack& env) {}
+
 namespace {
 
 const char* Pad(int n) {
