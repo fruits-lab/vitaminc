@@ -343,7 +343,23 @@ void SimpleAssignmentExprNode::Dump(int pad) const {
             << std::endl;
 }
 
-void SimpleAssignmentExprNode::CheckType(ScopeStack& env) {}
+void SimpleAssignmentExprNode::CheckType(ScopeStack& env) {
+  expr_->CheckType(env);
+  if (auto symbol = env.LookUp(id_)) {
+    if (expr_->type == symbol->expr_type) {
+      // 6.5.16 Assignment operators
+      // The type of an assignment expression is the type of the left
+      // operand unless the left operand has qualified type, in which case it is
+      // the unqualified version of the type of the left operand.
+      type = symbol->expr_type;
+    } else {
+      // TODO: assigning to 'symbol->expr_type' from incompatible type
+      // 'expr_->type'
+    }
+  } else {
+    // TODO: 'id_' undeclared
+  }
+}
 
 namespace {
 
