@@ -334,7 +334,14 @@ std::string NotEqualToExprNode::Op_() const {
 
 int SimpleAssignmentExprNode::CodeGen() const {}
 
-void SimpleAssignmentExprNode::Dump(int pad) const {}
+void SimpleAssignmentExprNode::Dump(int pad) const {
+  std::cout << Pad(pad) << '(' << '=' << std::endl;
+  std::cout << Pad(pad + 2) << id_ << ": " << ExprTypeToCString(type)
+            << std::endl;
+  expr_->Dump(pad + 2);
+  std::cout << Pad(pad) << ')' << ": " << ExprTypeToCString(expr_->type)
+            << std::endl;
+}
 
 void SimpleAssignmentExprNode::CheckType(ScopeStack& env) {}
 
