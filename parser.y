@@ -59,6 +59,7 @@ extern std::unique_ptr<AstNode> program;
 %nterm <std::vector<std::unique_ptr<StmtNode>>> stmts
 %nterm <std::unique_ptr<BlockStmtNode>> main_func
 
+%left '='
 %left EQ NE
 %left '<' '>' LE GE
 %left '+' '-'
@@ -117,6 +118,8 @@ expr: ID { $$ = std::make_unique<IdExprNode>($1); }
   | expr EQ expr { $$ = std::make_unique<EqualToExprNode>($1, $3); }
   | expr NE expr { $$ = std::make_unique<NotEqualToExprNode>($1, $3); }
   | '(' expr ')' { $$ = $2; }
+  /* assignment operators */
+  | ID '=' expr { $$ = std::make_unique<SimpleAssignmentExprNode>($1, $3); }
   ;
 
 epsilon: /* empty */ ;
