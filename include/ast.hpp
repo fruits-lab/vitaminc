@@ -262,4 +262,23 @@ class NotEqualToExprNode : public BinaryExprNode {
   std::string Op_() const override;
 };
 
+/// @note This is an abstract class.
+class AssignmentExprNode : public ExprNode {};
+
+class SimpleAssignmentExprNode : public AssignmentExprNode {
+ public:
+  SimpleAssignmentExprNode(std::string id, std::unique_ptr<ExprNode> expr)
+      : id_{std::move(id)}, expr_{std::move(expr)} {}
+
+  int CodeGen() const override;
+
+  void Dump(int pad) const override;
+
+  void CheckType(ScopeStack& env) override;
+
+ protected:
+  std::string id_;
+  std::unique_ptr<ExprNode> expr_;
+};
+
 #endif  // AST_HPP_
