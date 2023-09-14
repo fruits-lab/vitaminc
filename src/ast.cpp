@@ -332,7 +332,12 @@ std::string NotEqualToExprNode::Op_() const {
   return "!=";
 }
 
-int SimpleAssignmentExprNode::CodeGen() const {}
+int SimpleAssignmentExprNode::CodeGen() const {
+  int expr_num = expr_->CodeGen();
+  output << "storew " << PrefixSigil(expr_num) << ", "
+         << PrefixSigil(id_to_num.at(id_)) << std::endl;
+  return expr_num;
+}
 
 void SimpleAssignmentExprNode::Dump(int pad) const {
   std::cout << Pad(pad) << '(' << '=' << std::endl;
