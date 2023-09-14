@@ -1,0 +1,8 @@
+(a: int)
+(=
+  a: int
+  (+
+    3: int
+    2: int
+  ): int
+): int
