@@ -38,6 +38,12 @@ extern std::unique_ptr<AstNode> program;
 %define api.value.automove
 // This guarantees that headers do not conflict when included together.
 %define api.token.prefix {TOK_}
+// Have messages report the unexpected token, and possibly the expected ones.
+// Without this, the error message is always only "syntax error".
+%define parse.error verbose
+// Improve syntax error handling, as LALR parser might perform additional
+// parser stack reductions before discovering the syntax error.
+%define parse.lac full
 
 %token <int> NUM
 %token <std::string> ID
