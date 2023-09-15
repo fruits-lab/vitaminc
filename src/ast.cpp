@@ -282,7 +282,9 @@ std::string DivExprNode::Op_() const {
 
 std::string ModExprNode::OpName_() const {}
 
-std::string ModExprNode::Op_() const {}
+std::string ModExprNode::Op_() const {
+  return "%";
+}
 
 std::string GreaterThanExprNode::OpName_() const {
   // signed
