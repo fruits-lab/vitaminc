@@ -280,7 +280,9 @@ std::string DivExprNode::Op_() const {
   return "/";
 }
 
-std::string ModExprNode::OpName_() const {}
+std::string ModExprNode::OpName_() const {
+  return "rem";
+}
 
 std::string ModExprNode::Op_() const {
   return "%";
