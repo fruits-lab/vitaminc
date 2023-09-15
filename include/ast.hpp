@@ -208,6 +208,15 @@ class DivExprNode : public BinaryExprNode {
   std::string Op_() const override;
 };
 
+class ModExprNode : public BinaryExprNode {
+  using BinaryExprNode::BinaryExprNode;
+
+ protected:
+  std::string OpName_() const override;
+
+  std::string Op_() const override;
+};
+
 class GreaterThanExprNode : public BinaryExprNode {
   using BinaryExprNode::BinaryExprNode;
 
