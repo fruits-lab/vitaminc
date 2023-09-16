@@ -9,10 +9,16 @@
 #include "scope.hpp"
 #include "type.hpp"
 
+template <bool>
+class Visitor;
+
 /// @brief The most general base node of the Abstract Syntax Tree.
 /// @note This is an abstract class.
 class AstNode {
  public:
+  virtual void Accept(Visitor<false>&) const;
+  virtual void Accept(Visitor<true>&);
+
   virtual int CodeGen() const = 0;
   /// @param pad The length of the padding.
   virtual void Dump(int pad) const = 0;
@@ -22,12 +28,17 @@ class AstNode {
 };
 
 /// @note This is an abstract class.
-class StmtNode : public AstNode {};
+class StmtNode : public AstNode {
+  virtual void Accept(Visitor<false>&) const;
+  virtual void Accept(Visitor<true>&);
+};
 
 /// @note This is an abstract class.
 class ExprNode : public AstNode {
  public:
   ExprType type = ExprType::kUnknown;
+  virtual void Accept(Visitor<false>&) const;
+  virtual void Accept(Visitor<true>&);
 };
 
 class DeclNode : public AstNode {
@@ -35,6 +46,9 @@ class DeclNode : public AstNode {
   DeclNode(const std::string& id, ExprType decl_type,
            std::unique_ptr<ExprNode> init = {})
       : id_{id}, type_{decl_type}, init_{std::move(init)} {}
+
+  virtual void Accept(Visitor<false>&) const;
+  virtual void Accept(Visitor<true>&);
 
   int CodeGen() const override;
 
@@ -55,6 +69,9 @@ class BlockStmtNode : public StmtNode {
                 std::vector<std::unique_ptr<StmtNode>>&& stmts)
       : decls_{std::move(decls)}, stmts_{std::move(stmts)} {}
 
+  virtual void Accept(Visitor<false>&) const;
+  virtual void Accept(Visitor<true>&);
+
   int CodeGen() const override;
 
   void Dump(int pad) const override;
@@ -73,6 +90,9 @@ class ProgramNode : public AstNode {
   ProgramNode(std::unique_ptr<BlockStmtNode> block)
       : block_{std::move(block)} {}
 
+  virtual void Accept(Visitor<false>&) const;
+  virtual void Accept(Visitor<true>&);
+
   int CodeGen() const override;
 
   void Dump(int pad) const override;
@@ -85,6 +105,9 @@ class ProgramNode : public AstNode {
 
 class NullStmtNode : public StmtNode {
  public:
+  virtual void Accept(Visitor<false>&) const;
+  virtual void Accept(Visitor<true>&);
+
   int CodeGen() const override;
 
   void Dump(int pad) const override;
@@ -95,6 +118,9 @@ class NullStmtNode : public StmtNode {
 class ReturnStmtNode : public StmtNode {
  public:
   ReturnStmtNode(std::unique_ptr<ExprNode> expr) : expr_{std::move(expr)} {}
+
+  virtual void Accept(Visitor<false>&) const;
+  virtual void Accept(Visitor<true>&);
 
   int CodeGen() const override;
 
@@ -112,6 +138,9 @@ class ExprStmtNode : public StmtNode {
  public:
   ExprStmtNode(std::unique_ptr<ExprNode> expr) : expr_{std::move(expr)} {}
 
+  virtual void Accept(Visitor<false>&) const;
+  virtual void Accept(Visitor<true>&);
+
   int CodeGen() const override;
 
   void Dump(int pad) const override;
@@ -126,6 +155,9 @@ class IdExprNode : public ExprNode {
  public:
   IdExprNode(const std::string& id) : id_{id} {}
 
+  virtual void Accept(Visitor<false>&) const;
+  virtual void Accept(Visitor<true>&);
+
   int CodeGen() const override;
 
   void Dump(int pad) const override;
@@ -139,6 +171,9 @@ class IdExprNode : public ExprNode {
 class IntConstExprNode : public ExprNode {
  public:
   IntConstExprNode(int val) : val_{val} {}
+
+  virtual void Accept(Visitor<false>&) const;
+  virtual void Accept(Visitor<true>&);
 
   int CodeGen() const override;
 
@@ -155,6 +190,9 @@ class BinaryExprNode : public ExprNode {
  public:
   BinaryExprNode(std::unique_ptr<ExprNode> lhs, std::unique_ptr<ExprNode> rhs)
       : lhs_{std::move(lhs)}, rhs_{std::move(rhs)} {}
+
+  virtual void Accept(Visitor<false>&) const;
+  virtual void Accept(Visitor<true>&);
 
   int CodeGen() const override;
 
@@ -175,6 +213,10 @@ class BinaryExprNode : public ExprNode {
 class PlusExprNode : public BinaryExprNode {
   using BinaryExprNode::BinaryExprNode;
 
+ public:
+  virtual void Accept(Visitor<false>&) const;
+  virtual void Accept(Visitor<true>&);
+
  protected:
   std::string OpName_() const override;
 
@@ -183,6 +225,10 @@ class PlusExprNode : public BinaryExprNode {
 
 class SubExprNode : public BinaryExprNode {
   using BinaryExprNode::BinaryExprNode;
+
+ public:
+  virtual void Accept(Visitor<false>&) const;
+  virtual void Accept(Visitor<true>&);
 
  protected:
   std::string OpName_() const override;
@@ -193,6 +239,10 @@ class SubExprNode : public BinaryExprNode {
 class MulExprNode : public BinaryExprNode {
   using BinaryExprNode::BinaryExprNode;
 
+ public:
+  virtual void Accept(Visitor<false>&) const;
+  virtual void Accept(Visitor<true>&);
+
  protected:
   std::string OpName_() const override;
 
@@ -201,6 +251,10 @@ class MulExprNode : public BinaryExprNode {
 
 class DivExprNode : public BinaryExprNode {
   using BinaryExprNode::BinaryExprNode;
+
+ public:
+  virtual void Accept(Visitor<false>&) const;
+  virtual void Accept(Visitor<true>&);
 
  protected:
   std::string OpName_() const override;
@@ -211,6 +265,10 @@ class DivExprNode : public BinaryExprNode {
 class ModExprNode : public BinaryExprNode {
   using BinaryExprNode::BinaryExprNode;
 
+ public:
+  virtual void Accept(Visitor<false>&) const;
+  virtual void Accept(Visitor<true>&);
+
  protected:
   std::string OpName_() const override;
 
@@ -219,6 +277,10 @@ class ModExprNode : public BinaryExprNode {
 
 class GreaterThanExprNode : public BinaryExprNode {
   using BinaryExprNode::BinaryExprNode;
+
+ public:
+  virtual void Accept(Visitor<false>&) const;
+  virtual void Accept(Visitor<true>&);
 
  protected:
   std::string OpName_() const override;
@@ -229,6 +291,10 @@ class GreaterThanExprNode : public BinaryExprNode {
 class GreaterThanOrEqualToExprNode : public BinaryExprNode {
   using BinaryExprNode::BinaryExprNode;
 
+ public:
+  virtual void Accept(Visitor<false>&) const;
+  virtual void Accept(Visitor<true>&);
+
  protected:
   std::string OpName_() const override;
 
@@ -237,6 +303,10 @@ class GreaterThanOrEqualToExprNode : public BinaryExprNode {
 
 class LessThanExprNode : public BinaryExprNode {
   using BinaryExprNode::BinaryExprNode;
+
+ public:
+  virtual void Accept(Visitor<false>&) const;
+  virtual void Accept(Visitor<true>&);
 
  protected:
   std::string OpName_() const override;
@@ -247,6 +317,10 @@ class LessThanExprNode : public BinaryExprNode {
 class LessThanOrEqualToExprNode : public BinaryExprNode {
   using BinaryExprNode::BinaryExprNode;
 
+ public:
+  virtual void Accept(Visitor<false>&) const;
+  virtual void Accept(Visitor<true>&);
+
  protected:
   std::string OpName_() const override;
 
@@ -255,6 +329,10 @@ class LessThanOrEqualToExprNode : public BinaryExprNode {
 
 class EqualToExprNode : public BinaryExprNode {
   using BinaryExprNode::BinaryExprNode;
+
+ public:
+  virtual void Accept(Visitor<false>&) const;
+  virtual void Accept(Visitor<true>&);
 
  protected:
   std::string OpName_() const override;
@@ -265,6 +343,10 @@ class EqualToExprNode : public BinaryExprNode {
 class NotEqualToExprNode : public BinaryExprNode {
   using BinaryExprNode::BinaryExprNode;
 
+ public:
+  virtual void Accept(Visitor<false>&) const;
+  virtual void Accept(Visitor<true>&);
+
  protected:
   std::string OpName_() const override;
 
@@ -272,12 +354,19 @@ class NotEqualToExprNode : public BinaryExprNode {
 };
 
 /// @note This is an abstract class.
-class AssignmentExprNode : public ExprNode {};
+class AssignmentExprNode : public ExprNode {
+ public:
+  virtual void Accept(Visitor<false>&) const;
+  virtual void Accept(Visitor<true>&);
+};
 
 class SimpleAssignmentExprNode : public AssignmentExprNode {
  public:
   SimpleAssignmentExprNode(std::string id, std::unique_ptr<ExprNode> expr)
       : id_{std::move(id)}, expr_{std::move(expr)} {}
+
+  virtual void Accept(Visitor<false>&) const;
+  virtual void Accept(Visitor<true>&);
 
   int CodeGen() const override;
 
