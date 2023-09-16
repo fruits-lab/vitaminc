@@ -6,6 +6,7 @@
 
 #include "ast.hpp"
 #include "scope.hpp"
+#include "type_checker.hpp"
 #include "y.tab.h"
 
 /// @brief Where the generated code goes.
@@ -44,7 +45,8 @@ int main(int argc, char** argv) {
 
   // perform analyses and transformations on the ast
   auto scopes = ScopeStack{};
-  program->CheckType(scopes);
+  auto type_checker = TypeChecker{scopes};
+  program->Accept(type_checker);
   if (args["dump"].as<bool>()) {
     program->Dump(0);
   }
