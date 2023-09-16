@@ -5,7 +5,7 @@
 #include "visitor.hpp"
 
 /// @brief A modifying pass; resolves the type of expressions.
-class TypeChecker : public Visitor<true> {
+class TypeChecker : public ModifyingVisitor {
  public:
   TypeChecker(ScopeStack& env) : env_{env} {}
 
