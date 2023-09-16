@@ -56,7 +56,6 @@ class DeclNode : public AstNode {
 
   void CheckType(ScopeStack& env) override;
 
- protected:
   std::string id_;
   ExprType type_;
   std::unique_ptr<ExprNode> init_;
@@ -78,7 +77,6 @@ class BlockStmtNode : public StmtNode {
 
   void CheckType(ScopeStack& env) override;
 
- protected:
   std::vector<std::unique_ptr<DeclNode>> decls_;
   std::vector<std::unique_ptr<StmtNode>> stmts_;
 };
@@ -99,7 +97,6 @@ class ProgramNode : public AstNode {
 
   void CheckType(ScopeStack& env) override;
 
- protected:
   std::unique_ptr<BlockStmtNode> block_;
 };
 
@@ -128,7 +125,6 @@ class ReturnStmtNode : public StmtNode {
 
   void CheckType(ScopeStack& env) override;
 
- protected:
   std::unique_ptr<ExprNode> expr_;
 };
 
@@ -147,7 +143,6 @@ class ExprStmtNode : public StmtNode {
 
   void CheckType(ScopeStack& env) override;
 
- protected:
   std::unique_ptr<ExprNode> expr_;
 };
 
@@ -164,7 +159,6 @@ class IdExprNode : public ExprNode {
 
   void CheckType(ScopeStack& env) override;
 
- protected:
   std::string id_;
 };
 
@@ -181,7 +175,6 @@ class IntConstExprNode : public ExprNode {
 
   void CheckType(ScopeStack& env) override;
 
- protected:
   int val_;
 };
 
@@ -200,7 +193,6 @@ class BinaryExprNode : public ExprNode {
 
   void CheckType(ScopeStack& env) override;
 
- protected:
   std::unique_ptr<ExprNode> lhs_;
   std::unique_ptr<ExprNode> rhs_;
 
@@ -217,7 +209,6 @@ class PlusExprNode : public BinaryExprNode {
   virtual void Accept(Visitor<false>&) const;
   virtual void Accept(Visitor<true>&);
 
- protected:
   std::string OpName_() const override;
 
   std::string Op_() const override;
@@ -230,7 +221,6 @@ class SubExprNode : public BinaryExprNode {
   virtual void Accept(Visitor<false>&) const;
   virtual void Accept(Visitor<true>&);
 
- protected:
   std::string OpName_() const override;
 
   std::string Op_() const override;
@@ -243,7 +233,6 @@ class MulExprNode : public BinaryExprNode {
   virtual void Accept(Visitor<false>&) const;
   virtual void Accept(Visitor<true>&);
 
- protected:
   std::string OpName_() const override;
 
   std::string Op_() const override;
@@ -256,7 +245,6 @@ class DivExprNode : public BinaryExprNode {
   virtual void Accept(Visitor<false>&) const;
   virtual void Accept(Visitor<true>&);
 
- protected:
   std::string OpName_() const override;
 
   std::string Op_() const override;
@@ -269,7 +257,6 @@ class ModExprNode : public BinaryExprNode {
   virtual void Accept(Visitor<false>&) const;
   virtual void Accept(Visitor<true>&);
 
- protected:
   std::string OpName_() const override;
 
   std::string Op_() const override;
@@ -282,7 +269,6 @@ class GreaterThanExprNode : public BinaryExprNode {
   virtual void Accept(Visitor<false>&) const;
   virtual void Accept(Visitor<true>&);
 
- protected:
   std::string OpName_() const override;
 
   std::string Op_() const override;
@@ -295,7 +281,6 @@ class GreaterThanOrEqualToExprNode : public BinaryExprNode {
   virtual void Accept(Visitor<false>&) const;
   virtual void Accept(Visitor<true>&);
 
- protected:
   std::string OpName_() const override;
 
   std::string Op_() const override;
@@ -308,7 +293,6 @@ class LessThanExprNode : public BinaryExprNode {
   virtual void Accept(Visitor<false>&) const;
   virtual void Accept(Visitor<true>&);
 
- protected:
   std::string OpName_() const override;
 
   std::string Op_() const override;
@@ -321,7 +305,6 @@ class LessThanOrEqualToExprNode : public BinaryExprNode {
   virtual void Accept(Visitor<false>&) const;
   virtual void Accept(Visitor<true>&);
 
- protected:
   std::string OpName_() const override;
 
   std::string Op_() const override;
@@ -334,7 +317,6 @@ class EqualToExprNode : public BinaryExprNode {
   virtual void Accept(Visitor<false>&) const;
   virtual void Accept(Visitor<true>&);
 
- protected:
   std::string OpName_() const override;
 
   std::string Op_() const override;
@@ -347,7 +329,6 @@ class NotEqualToExprNode : public BinaryExprNode {
   virtual void Accept(Visitor<false>&) const;
   virtual void Accept(Visitor<true>&);
 
- protected:
   std::string OpName_() const override;
 
   std::string Op_() const override;
@@ -374,7 +355,6 @@ class SimpleAssignmentExprNode : public AssignmentExprNode {
 
   void CheckType(ScopeStack& env) override;
 
- protected:
   std::string id_;
   std::unique_ptr<ExprNode> expr_;
 };
