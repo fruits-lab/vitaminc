@@ -51,35 +51,35 @@ std::map<std::string, int> id_to_num{};
 
 }  // namespace
 
-void AstNode::Accept(Visitor<false>& v) const {
+void AstNode::Accept(NonModifyingVisitor& v) const {
   v.Visit(*this);
 }
 
-void AstNode::Accept(Visitor<true>& v) {
+void AstNode::Accept(ModifyingVisitor& v) {
   v.Visit(*this);
 }
 
-void StmtNode::Accept(Visitor<false>& v) const {
+void StmtNode::Accept(NonModifyingVisitor& v) const {
   v.Visit(*this);
 }
 
-void StmtNode::Accept(Visitor<true>& v) {
+void StmtNode::Accept(ModifyingVisitor& v) {
   v.Visit(*this);
 }
 
-void ExprNode::Accept(Visitor<false>& v) const {
+void ExprNode::Accept(NonModifyingVisitor& v) const {
   v.Visit(*this);
 }
 
-void ExprNode::Accept(Visitor<true>& v) {
+void ExprNode::Accept(ModifyingVisitor& v) {
   v.Visit(*this);
 }
 
-void DeclNode::Accept(Visitor<false>& v) const {
+void DeclNode::Accept(NonModifyingVisitor& v) const {
   v.Visit(*this);
 }
 
-void DeclNode::Accept(Visitor<true>& v) {
+void DeclNode::Accept(ModifyingVisitor& v) {
   v.Visit(*this);
 }
 
@@ -124,11 +124,11 @@ void DeclNode::CheckType(ScopeStack& env) {
   }
 }
 
-void BlockStmtNode::Accept(Visitor<false>& v) const {
+void BlockStmtNode::Accept(NonModifyingVisitor& v) const {
   v.Visit(*this);
 }
 
-void BlockStmtNode::Accept(Visitor<true>& v) {
+void BlockStmtNode::Accept(ModifyingVisitor& v) {
   v.Visit(*this);
 }
 
@@ -164,11 +164,11 @@ void BlockStmtNode::CheckType(ScopeStack& env) {
   env.PopScope();
 }
 
-void ProgramNode::Accept(Visitor<false>& v) const {
+void ProgramNode::Accept(NonModifyingVisitor& v) const {
   v.Visit(*this);
 }
 
-void ProgramNode::Accept(Visitor<true>& v) {
+void ProgramNode::Accept(ModifyingVisitor& v) {
   v.Visit(*this);
 }
 
@@ -188,11 +188,11 @@ void ProgramNode::CheckType(ScopeStack& env) {
   block_->CheckType(env);
 }
 
-void NullStmtNode::Accept(Visitor<false>& v) const {
+void NullStmtNode::Accept(NonModifyingVisitor& v) const {
   v.Visit(*this);
 }
 
-void NullStmtNode::Accept(Visitor<true>& v) {
+void NullStmtNode::Accept(ModifyingVisitor& v) {
   v.Visit(*this);
 }
 
@@ -206,11 +206,11 @@ void NullStmtNode::Dump(int pad) const {
 
 void NullStmtNode::CheckType(ScopeStack& env) {}
 
-void ReturnStmtNode::Accept(Visitor<false>& v) const {
+void ReturnStmtNode::Accept(NonModifyingVisitor& v) const {
   v.Visit(*this);
 }
 
-void ReturnStmtNode::Accept(Visitor<true>& v) {
+void ReturnStmtNode::Accept(ModifyingVisitor& v) {
   v.Visit(*this);
 }
 
@@ -233,11 +233,11 @@ void ReturnStmtNode::CheckType(ScopeStack& env) {
   }
 }
 
-void ExprStmtNode::Accept(Visitor<false>& v) const {
+void ExprStmtNode::Accept(NonModifyingVisitor& v) const {
   v.Visit(*this);
 }
 
-void ExprStmtNode::Accept(Visitor<true>& v) {
+void ExprStmtNode::Accept(ModifyingVisitor& v) {
   v.Visit(*this);
 }
 
@@ -255,11 +255,11 @@ void ExprStmtNode::CheckType(ScopeStack& env) {
   expr_->CheckType(env);
 }
 
-void IdExprNode::Accept(Visitor<false>& v) const {
+void IdExprNode::Accept(NonModifyingVisitor& v) const {
   v.Visit(*this);
 }
 
-void IdExprNode::Accept(Visitor<true>& v) {
+void IdExprNode::Accept(ModifyingVisitor& v) {
   v.Visit(*this);
 }
 
@@ -285,11 +285,11 @@ void IdExprNode::CheckType(ScopeStack& env) {
   }
 }
 
-void IntConstExprNode::Accept(Visitor<false>& v) const {
+void IntConstExprNode::Accept(NonModifyingVisitor& v) const {
   v.Visit(*this);
 }
 
-void IntConstExprNode::Accept(Visitor<true>& v) {
+void IntConstExprNode::Accept(ModifyingVisitor& v) {
   v.Visit(*this);
 }
 
@@ -307,11 +307,11 @@ void IntConstExprNode::CheckType(ScopeStack& env) {
   type = ExprType::kInt;
 }
 
-void BinaryExprNode::Accept(Visitor<false>& v) const {
+void BinaryExprNode::Accept(NonModifyingVisitor& v) const {
   v.Visit(*this);
 }
 
-void BinaryExprNode::Accept(Visitor<true>& v) {
+void BinaryExprNode::Accept(ModifyingVisitor& v) {
   v.Visit(*this);
 }
 
@@ -343,11 +343,11 @@ void BinaryExprNode::CheckType(ScopeStack& env) {
   }
 }
 
-void PlusExprNode::Accept(Visitor<false>& v) const {
+void PlusExprNode::Accept(NonModifyingVisitor& v) const {
   v.Visit(*this);
 }
 
-void PlusExprNode::Accept(Visitor<true>& v) {
+void PlusExprNode::Accept(ModifyingVisitor& v) {
   v.Visit(*this);
 }
 
@@ -359,11 +359,11 @@ std::string PlusExprNode::Op_() const {
   return "+";
 }
 
-void SubExprNode::Accept(Visitor<false>& v) const {
+void SubExprNode::Accept(NonModifyingVisitor& v) const {
   v.Visit(*this);
 }
 
-void SubExprNode::Accept(Visitor<true>& v) {
+void SubExprNode::Accept(ModifyingVisitor& v) {
   v.Visit(*this);
 }
 
@@ -375,11 +375,11 @@ std::string SubExprNode::Op_() const {
   return "-";
 }
 
-void MulExprNode::Accept(Visitor<false>& v) const {
+void MulExprNode::Accept(NonModifyingVisitor& v) const {
   v.Visit(*this);
 }
 
-void MulExprNode::Accept(Visitor<true>& v) {
+void MulExprNode::Accept(ModifyingVisitor& v) {
   v.Visit(*this);
 }
 
@@ -391,11 +391,11 @@ std::string MulExprNode::Op_() const {
   return "*";
 }
 
-void DivExprNode::Accept(Visitor<false>& v) const {
+void DivExprNode::Accept(NonModifyingVisitor& v) const {
   v.Visit(*this);
 }
 
-void DivExprNode::Accept(Visitor<true>& v) {
+void DivExprNode::Accept(ModifyingVisitor& v) {
   v.Visit(*this);
 }
 
@@ -407,11 +407,11 @@ std::string DivExprNode::Op_() const {
   return "/";
 }
 
-void ModExprNode::Accept(Visitor<false>& v) const {
+void ModExprNode::Accept(NonModifyingVisitor& v) const {
   v.Visit(*this);
 }
 
-void ModExprNode::Accept(Visitor<true>& v) {
+void ModExprNode::Accept(ModifyingVisitor& v) {
   v.Visit(*this);
 }
 
@@ -423,11 +423,11 @@ std::string ModExprNode::Op_() const {
   return "%";
 }
 
-void GreaterThanExprNode::Accept(Visitor<false>& v) const {
+void GreaterThanExprNode::Accept(NonModifyingVisitor& v) const {
   v.Visit(*this);
 }
 
-void GreaterThanExprNode::Accept(Visitor<true>& v) {
+void GreaterThanExprNode::Accept(ModifyingVisitor& v) {
   v.Visit(*this);
 }
 
@@ -440,11 +440,11 @@ std::string GreaterThanExprNode::Op_() const {
   return ">";
 }
 
-void GreaterThanOrEqualToExprNode::Accept(Visitor<false>& v) const {
+void GreaterThanOrEqualToExprNode::Accept(NonModifyingVisitor& v) const {
   v.Visit(*this);
 }
 
-void GreaterThanOrEqualToExprNode::Accept(Visitor<true>& v) {
+void GreaterThanOrEqualToExprNode::Accept(ModifyingVisitor& v) {
   v.Visit(*this);
 }
 
@@ -457,11 +457,11 @@ std::string GreaterThanOrEqualToExprNode::Op_() const {
   return ">=";
 }
 
-void LessThanExprNode::Accept(Visitor<false>& v) const {
+void LessThanExprNode::Accept(NonModifyingVisitor& v) const {
   v.Visit(*this);
 }
 
-void LessThanExprNode::Accept(Visitor<true>& v) {
+void LessThanExprNode::Accept(ModifyingVisitor& v) {
   v.Visit(*this);
 }
 
@@ -474,11 +474,11 @@ std::string LessThanExprNode::Op_() const {
   return "<";
 }
 
-void LessThanOrEqualToExprNode::Accept(Visitor<false>& v) const {
+void LessThanOrEqualToExprNode::Accept(NonModifyingVisitor& v) const {
   v.Visit(*this);
 }
 
-void LessThanOrEqualToExprNode::Accept(Visitor<true>& v) {
+void LessThanOrEqualToExprNode::Accept(ModifyingVisitor& v) {
   v.Visit(*this);
 }
 
@@ -491,11 +491,11 @@ std::string LessThanOrEqualToExprNode::Op_() const {
   return "<=";
 }
 
-void EqualToExprNode::Accept(Visitor<false>& v) const {
+void EqualToExprNode::Accept(NonModifyingVisitor& v) const {
   v.Visit(*this);
 }
 
-void EqualToExprNode::Accept(Visitor<true>& v) {
+void EqualToExprNode::Accept(ModifyingVisitor& v) {
   v.Visit(*this);
 }
 
@@ -507,11 +507,11 @@ std::string EqualToExprNode::Op_() const {
   return "==";
 }
 
-void NotEqualToExprNode::Accept(Visitor<false>& v) const {
+void NotEqualToExprNode::Accept(NonModifyingVisitor& v) const {
   v.Visit(*this);
 }
 
-void NotEqualToExprNode::Accept(Visitor<true>& v) {
+void NotEqualToExprNode::Accept(ModifyingVisitor& v) {
   v.Visit(*this);
 }
 
@@ -523,19 +523,19 @@ std::string NotEqualToExprNode::Op_() const {
   return "!=";
 }
 
-void AssignmentExprNode::Accept(Visitor<false>& v) const {
+void AssignmentExprNode::Accept(NonModifyingVisitor& v) const {
   v.Visit(*this);
 }
 
-void AssignmentExprNode::Accept(Visitor<true>& v) {
+void AssignmentExprNode::Accept(ModifyingVisitor& v) {
   v.Visit(*this);
 }
 
-void SimpleAssignmentExprNode::Accept(Visitor<false>& v) const {
+void SimpleAssignmentExprNode::Accept(NonModifyingVisitor& v) const {
   v.Visit(*this);
 }
 
-void SimpleAssignmentExprNode::Accept(Visitor<true>& v) {
+void SimpleAssignmentExprNode::Accept(ModifyingVisitor& v) {
   v.Visit(*this);
 }
 

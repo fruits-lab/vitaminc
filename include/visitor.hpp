@@ -76,4 +76,10 @@ class Visitor {
   virtual ~Visitor() = default;
 };
 
+// One can use these type aliases in cases where the meaning of the template
+// parameter is not obvious.
+
+using ModifyingVisitor = Visitor<true>;
+using NonModifyingVisitor = Visitor<false>;
+
 #endif  // VISITOR_HPP_
