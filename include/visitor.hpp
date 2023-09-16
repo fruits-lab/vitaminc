@@ -34,6 +34,7 @@ class SimpleAssignmentExprNode;
 
 /// @tparam is_modifying If `true`, `Visit()` takes a non-const reference of the
 /// visitable; otherwise, a const reference. Default to `false`.
+/// @note This is an abstract class.
 /// @note For concrete Visitors, define `Visit()` on the classes that you care
 /// about, others will do nothing by default.
 template <bool is_modifying = false>
@@ -73,8 +74,13 @@ class Visitor {
   virtual void Visit(CondMut<AssignmentExprNode>&){};
   virtual void Visit(CondMut<SimpleAssignmentExprNode>&){};
 
-  virtual ~Visitor() = default;
+  /// @note To make the class abstract. But still we have to provide an
+  /// out-of-class definition for the destructor.
+  virtual ~Visitor() = 0;
 };
+
+template <bool is_modifying>
+Visitor<is_modifying>::~Visitor() = default;
 
 // One can use these type aliases in cases where the meaning of the template
 // parameter is not obvious.
