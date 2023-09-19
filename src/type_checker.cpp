@@ -4,7 +4,7 @@
 
 void TypeChecker::Visit(DeclNode& decl) {
   if (decl.init_) {
-    decl.init_->CheckType(env_);
+    decl.init_->Accept(*this);
     if (decl.init_->type != decl.type_) {
       // TODO: incompatible types when initializing type 'type_' using type
       // 'init_->type'
@@ -23,10 +23,10 @@ void TypeChecker::Visit(DeclNode& decl) {
 void TypeChecker::Visit(BlockStmtNode& block) {
   env_.PushScope();
   for (auto& decl : block.decls_) {
-    decl->CheckType(env_);
+    decl->Accept(*this);
   }
   for (auto& stmt : block.stmts_) {
-    stmt->CheckType(env_);
+    stmt->Accept(*this);
   }
   env_.PopScope();
 }
@@ -40,7 +40,7 @@ void TypeChecker::Visit(NullStmtNode&) {
 }
 
 void TypeChecker::Visit(ReturnStmtNode& ret_stmt) {
-  ret_stmt.expr_->CheckType(env_);
+  ret_stmt.expr_->Accept(*this);
   if (ret_stmt.expr_->type != ExprType::kInt) {
     // TODO: return value type does not match the function type
   }
