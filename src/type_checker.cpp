@@ -72,6 +72,28 @@ void TypeChecker::Visit(BinaryExprNode& bin_expr) {
   }
 }
 
+/// @brief Dispatch the concrete binary expressions to the parent
+/// `BinaryExprNode`.
+/// @param classname A subclass of `BinaryExprNode`.
+#define DISPATCH_TO_VISIT_BINARY_EXPR(classname) \
+  void TypeChecker::Visit(classname& expr) { \
+    Visit(static_cast<BinaryExprNode&>(expr)); \
+  }
+
+DISPATCH_TO_VISIT_BINARY_EXPR(PlusExprNode);
+DISPATCH_TO_VISIT_BINARY_EXPR(SubExprNode);
+DISPATCH_TO_VISIT_BINARY_EXPR(MulExprNode);
+DISPATCH_TO_VISIT_BINARY_EXPR(DivExprNode);
+DISPATCH_TO_VISIT_BINARY_EXPR(ModExprNode);
+DISPATCH_TO_VISIT_BINARY_EXPR(GreaterThanExprNode);
+DISPATCH_TO_VISIT_BINARY_EXPR(GreaterThanOrEqualToExprNode);
+DISPATCH_TO_VISIT_BINARY_EXPR(LessThanExprNode);
+DISPATCH_TO_VISIT_BINARY_EXPR(LessThanOrEqualToExprNode);
+DISPATCH_TO_VISIT_BINARY_EXPR(EqualToExprNode);
+DISPATCH_TO_VISIT_BINARY_EXPR(NotEqualToExprNode);
+
+#undef DISPATCH_TO_VISIT_BINARY_EXPR
+
 void TypeChecker::Visit(SimpleAssignmentExprNode& assign_expr) {
   assign_expr.expr_->Accept(*this);
   if (auto symbol = env_.LookUp(assign_expr.id_)) {
