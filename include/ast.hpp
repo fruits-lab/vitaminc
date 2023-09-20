@@ -6,7 +6,6 @@
 #include <utility>
 #include <vector>
 
-#include "scope.hpp"
 #include "type.hpp"
 #include "visitor.hpp"
 
@@ -20,8 +19,6 @@ class AstNode {
   virtual int CodeGen() const = 0;
   /// @param pad The length of the padding.
   virtual void Dump(int pad) const = 0;
-  /// @brief A modifying pass; resolves the type of expressions.
-  virtual void CheckType(ScopeStack&) = 0;
   virtual ~AstNode() = default;
 };
 
@@ -53,8 +50,6 @@ class DeclNode : public AstNode {
 
   void Dump(int pad) const override;
 
-  void CheckType(ScopeStack& env) override;
-
   std::string id_;
   ExprType type_;
   std::unique_ptr<ExprNode> init_;
@@ -74,8 +69,6 @@ class BlockStmtNode : public StmtNode {
 
   void Dump(int pad) const override;
 
-  void CheckType(ScopeStack& env) override;
-
   std::vector<std::unique_ptr<DeclNode>> decls_;
   std::vector<std::unique_ptr<StmtNode>> stmts_;
 };
@@ -94,8 +87,6 @@ class ProgramNode : public AstNode {
 
   void Dump(int pad) const override;
 
-  void CheckType(ScopeStack& env) override;
-
   std::unique_ptr<BlockStmtNode> block_;
 };
 
@@ -107,8 +98,6 @@ class NullStmtNode : public StmtNode {
   int CodeGen() const override;
 
   void Dump(int pad) const override;
-
-  void CheckType(ScopeStack& env) override;
 };
 
 class ReturnStmtNode : public StmtNode {
@@ -121,8 +110,6 @@ class ReturnStmtNode : public StmtNode {
   int CodeGen() const override;
 
   void Dump(int pad) const override;
-
-  void CheckType(ScopeStack& env) override;
 
   std::unique_ptr<ExprNode> expr_;
 };
@@ -140,8 +127,6 @@ class ExprStmtNode : public StmtNode {
 
   void Dump(int pad) const override;
 
-  void CheckType(ScopeStack& env) override;
-
   std::unique_ptr<ExprNode> expr_;
 };
 
@@ -156,8 +141,6 @@ class IdExprNode : public ExprNode {
 
   void Dump(int pad) const override;
 
-  void CheckType(ScopeStack& env) override;
-
   std::string id_;
 };
 
@@ -171,8 +154,6 @@ class IntConstExprNode : public ExprNode {
   int CodeGen() const override;
 
   void Dump(int pad) const override;
-
-  void CheckType(ScopeStack& env) override;
 
   int val_;
 };
@@ -189,8 +170,6 @@ class BinaryExprNode : public ExprNode {
   int CodeGen() const override;
 
   void Dump(int pad) const override;
-
-  void CheckType(ScopeStack& env) override;
 
   std::unique_ptr<ExprNode> lhs_;
   std::unique_ptr<ExprNode> rhs_;
@@ -351,8 +330,6 @@ class SimpleAssignmentExprNode : public AssignmentExprNode {
   int CodeGen() const override;
 
   void Dump(int pad) const override;
-
-  void CheckType(ScopeStack& env) override;
 
   std::string id_;
   std::unique_ptr<ExprNode> expr_;
