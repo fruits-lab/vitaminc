@@ -5,11 +5,8 @@
 #include <map>
 #include <memory>
 #include <string>
-#include <utility>
 #include <vector>
 
-#include "scope.hpp"
-#include "symbol.hpp"
 #include "type.hpp"
 #include "visitor.hpp"
 
@@ -106,24 +103,6 @@ void DeclNode::Dump(int pad) const {
   std::cout << ')' << std::endl;
 }
 
-void DeclNode::CheckType(ScopeStack& env) {
-  if (init_) {
-    init_->CheckType(env);
-    if (init_->type != type_) {
-      // TODO: incompatible types when initializing type 'type_' using type
-      // 'init_->type'
-    }
-  }
-
-  if (env.Probe(id_)) {
-    // TODO: redefinition of 'id_'
-  } else {
-    auto symbol = std::make_unique<SymbolEntry>(id_);
-    symbol->expr_type = type_;
-    env.Add(std::move(symbol));
-  }
-}
-
 void BlockStmtNode::Accept(NonModifyingVisitor& v) const {
   v.Visit(*this);
 }
@@ -153,17 +132,6 @@ void BlockStmtNode::Dump(int pad) const {
   }
 }
 
-void BlockStmtNode::CheckType(ScopeStack& env) {
-  env.PushScope();
-  for (auto& decl : decls_) {
-    decl->CheckType(env);
-  }
-  for (auto& stmt : stmts_) {
-    stmt->CheckType(env);
-  }
-  env.PopScope();
-}
-
 void ProgramNode::Accept(NonModifyingVisitor& v) const {
   v.Visit(*this);
 }
@@ -184,10 +152,6 @@ void ProgramNode::Dump(int pad) const {
   block_->Dump(pad);
 }
 
-void ProgramNode::CheckType(ScopeStack& env) {
-  block_->CheckType(env);
-}
-
 void NullStmtNode::Accept(NonModifyingVisitor& v) const {
   v.Visit(*this);
 }
@@ -203,8 +167,6 @@ int NullStmtNode::CodeGen() const {
 void NullStmtNode::Dump(int pad) const {
   std::cout << Pad(pad) << "()" << std::endl;
 }
-
-void NullStmtNode::CheckType(ScopeStack& env) {}
 
 void ReturnStmtNode::Accept(NonModifyingVisitor& v) const {
   v.Visit(*this);
@@ -226,13 +188,6 @@ void ReturnStmtNode::Dump(int pad) const {
   std::cout << Pad(pad) << ')' << std::endl;
 }
 
-void ReturnStmtNode::CheckType(ScopeStack& env) {
-  expr_->CheckType(env);
-  if (expr_->type != ExprType::kInt) {
-    // TODO: return value type does not match the function type
-  }
-}
-
 void ExprStmtNode::Accept(NonModifyingVisitor& v) const {
   v.Visit(*this);
 }
@@ -249,10 +204,6 @@ int ExprStmtNode::CodeGen() const {
 
 void ExprStmtNode::Dump(int pad) const {
   expr_->Dump(pad);
-}
-
-void ExprStmtNode::CheckType(ScopeStack& env) {
-  expr_->CheckType(env);
 }
 
 void IdExprNode::Accept(NonModifyingVisitor& v) const {
@@ -277,14 +228,6 @@ void IdExprNode::Dump(int pad) const {
   std::cout << Pad(pad) << id_ << ": " << ExprTypeToCString(type) << std::endl;
 }
 
-void IdExprNode::CheckType(ScopeStack& env) {
-  if (auto symbol = env.LookUp(id_)) {
-    type = symbol->expr_type;
-  } else {
-    // TODO: 'id_' undeclared
-  }
-}
-
 void IntConstExprNode::Accept(NonModifyingVisitor& v) const {
   v.Visit(*this);
 }
@@ -301,10 +244,6 @@ int IntConstExprNode::CodeGen() const {
 
 void IntConstExprNode::Dump(int pad) const {
   std::cout << Pad(pad) << val_ << ": " << ExprTypeToCString(type) << std::endl;
-}
-
-void IntConstExprNode::CheckType(ScopeStack& env) {
-  type = ExprType::kInt;
 }
 
 void BinaryExprNode::Accept(NonModifyingVisitor& v) const {
@@ -331,16 +270,6 @@ void BinaryExprNode::Dump(int pad) const {
   lhs_->Dump(pad + 2);
   rhs_->Dump(pad + 2);
   std::cout << Pad(pad) << ')' << ": " << ExprTypeToCString(type) << std::endl;
-}
-
-void BinaryExprNode::CheckType(ScopeStack& env) {
-  lhs_->CheckType(env);
-  rhs_->CheckType(env);
-  if (lhs_->type != rhs_->type) {
-    // TODO: invalid operands to binary +
-  } else {
-    type = lhs_->type;
-  }
 }
 
 void PlusExprNode::Accept(NonModifyingVisitor& v) const {
@@ -553,24 +482,6 @@ void SimpleAssignmentExprNode::Dump(int pad) const {
   expr_->Dump(pad + 2);
   std::cout << Pad(pad) << ')' << ": " << ExprTypeToCString(expr_->type)
             << std::endl;
-}
-
-void SimpleAssignmentExprNode::CheckType(ScopeStack& env) {
-  expr_->CheckType(env);
-  if (auto symbol = env.LookUp(id_)) {
-    if (expr_->type == symbol->expr_type) {
-      // 6.5.16 Assignment operators
-      // The type of an assignment expression is the type of the left
-      // operand unless the left operand has qualified type, in which case it is
-      // the unqualified version of the type of the left operand.
-      type = symbol->expr_type;
-    } else {
-      // TODO: assigning to 'symbol->expr_type' from incompatible type
-      // 'expr_->type'
-    }
-  } else {
-    // TODO: 'id_' undeclared
-  }
 }
 
 namespace {
