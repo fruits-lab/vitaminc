@@ -27,6 +27,7 @@ class AstNode {
 
 /// @note This is an abstract class.
 class StmtNode : public AstNode {
+ public:
   virtual void Accept(NonModifyingVisitor&) const;
   virtual void Accept(ModifyingVisitor&);
 };
