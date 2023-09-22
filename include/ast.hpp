@@ -20,6 +20,19 @@ class AstNode {
   /// @param pad The length of the padding.
   virtual void Dump(int pad) const = 0;
   virtual ~AstNode() = default;
+  AstNode() = default;
+
+  // Delete copy/move operations to avoid slicing. [1]
+  // And "You almost never want to copy or move polymorphic objects. They
+  // generally live on the heap, and are accessed via (smart) pointers." [2]
+  // [1]
+  // https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines#Rc-copy-virtual
+  // [2] https://stackoverflow.com/a/54792149
+
+  AstNode(const AstNode&) = delete;
+  AstNode& operator=(const AstNode&) = delete;
+  AstNode(AstNode&&) = delete;
+  AstNode& operator=(AstNode&&) = delete;
 };
 
 /// @note This is an abstract class.
