@@ -1,6 +1,7 @@
 #ifndef AST_DUMPER_HPP_
 #define AST_DUMPER_HPP_
 
+#include "util.hpp"
 #include "visitor.hpp"
 
 class AstDumper : public NonModifyingVisitor {
@@ -26,6 +27,11 @@ class AstDumper : public NonModifyingVisitor {
   void Visit(const EqualToExprNode&) override;
   void Visit(const NotEqualToExprNode&) override;
   void Visit(const SimpleAssignmentExprNode&) override;
+
+  AstDumper(Indenter& indenter) : indenter_{indenter} {}
+
+ private:
+  Indenter& indenter_;
 };
 
 #endif  // AST_DUMPER_HPP_
