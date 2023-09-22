@@ -8,6 +8,7 @@
 #include "ast_dumper.hpp"
 #include "scope.hpp"
 #include "type_checker.hpp"
+#include "util.hpp"
 #include "y.tab.h"
 
 /// @brief Where the generated code goes.
@@ -49,7 +50,8 @@ int main(int argc, char** argv) {
   auto type_checker = TypeChecker{scopes};
   program->Accept(type_checker);
   if (args["dump"].as<bool>()) {
-    auto ast_dumper = AstDumper{};
+    auto indenter = Indenter{' ', 2, 80};
+    auto ast_dumper = AstDumper{indenter};
     program->Accept(ast_dumper);
   }
   program->CodeGen();

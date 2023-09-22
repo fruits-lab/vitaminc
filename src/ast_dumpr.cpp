@@ -3,22 +3,15 @@
 #include "ast.hpp"
 #include "ast_dumper.hpp"
 #include "type.hpp"
-#include "util.hpp"
-
-namespace {
-
-auto indenter = Indenter{' ', 2, 80};
-
-}  // namespace
 
 void AstDumper::Visit(const DeclNode& decl) {
-  std::cout << indenter.Indent() << '(' << decl.id_ << ": "
+  std::cout << indenter_.Indent() << '(' << decl.id_ << ": "
             << ExprTypeToCString(decl.type_);
   if (decl.init_) {
     std::cout << " =" << std::endl;
-    indenter.IncreaseLevel();
+    indenter_.IncreaseLevel();
     decl.init_->Accept(*this);
-    indenter.DecreaseLevel();
+    indenter_.DecreaseLevel();
   }
   std::cout << ')' << std::endl;
 }
@@ -37,15 +30,15 @@ void AstDumper::Visit(const ProgramNode& program) {
 }
 
 void AstDumper::Visit(const NullStmtNode& stmt) {
-  std::cout << indenter.Indent() << "()" << std::endl;
+  std::cout << indenter_.Indent() << "()" << std::endl;
 }
 
 void AstDumper::Visit(const ReturnStmtNode& ret_stmt) {
-  std::cout << indenter.Indent() << "(ret" << std::endl;
-  indenter.IncreaseLevel();
+  std::cout << indenter_.Indent() << "(ret" << std::endl;
+  indenter_.IncreaseLevel();
   ret_stmt.expr_->Accept(*this);
-  indenter.DecreaseLevel();
-  std::cout << indenter.Indent() << ')' << std::endl;
+  indenter_.DecreaseLevel();
+  std::cout << indenter_.Indent() << ')' << std::endl;
 }
 
 void AstDumper::Visit(const ExprStmtNode& expr_stmt) {
@@ -53,22 +46,22 @@ void AstDumper::Visit(const ExprStmtNode& expr_stmt) {
 }
 
 void AstDumper::Visit(const IdExprNode& id_expr) {
-  std::cout << indenter.Indent() << id_expr.id_ << ": "
+  std::cout << indenter_.Indent() << id_expr.id_ << ": "
             << ExprTypeToCString(id_expr.type) << std::endl;
 }
 
 void AstDumper::Visit(const IntConstExprNode& int_expr) {
-  std::cout << indenter.Indent() << int_expr.val_ << ": "
+  std::cout << indenter_.Indent() << int_expr.val_ << ": "
             << ExprTypeToCString(int_expr.type) << std::endl;
 }
 
 void AstDumper::Visit(const BinaryExprNode& bin_expr) {
-  std::cout << indenter.Indent() << '(' << bin_expr.Op_() << std::endl;
-  indenter.IncreaseLevel();
+  std::cout << indenter_.Indent() << '(' << bin_expr.Op_() << std::endl;
+  indenter_.IncreaseLevel();
   bin_expr.lhs_->Accept(*this);
   bin_expr.rhs_->Accept(*this);
-  indenter.DecreaseLevel();
-  std::cout << indenter.Indent() << ')' << ": "
+  indenter_.DecreaseLevel();
+  std::cout << indenter_.Indent() << ')' << ": "
             << ExprTypeToCString(bin_expr.type) << std::endl;
 }
 
@@ -95,12 +88,12 @@ DISPATCH_TO_VISIT_BINARY_EXPR(NotEqualToExprNode);
 #undef DISPATCH_TO_VISIT_BINARY_EXPR
 
 void AstDumper::Visit(const SimpleAssignmentExprNode& assign_expr) {
-  std::cout << indenter.Indent() << '(' << '=' << std::endl;
-  indenter.IncreaseLevel();
-  std::cout << indenter.Indent() << assign_expr.id_ << ": "
+  std::cout << indenter_.Indent() << '(' << '=' << std::endl;
+  indenter_.IncreaseLevel();
+  std::cout << indenter_.Indent() << assign_expr.id_ << ": "
             << ExprTypeToCString(assign_expr.type) << std::endl;
   assign_expr.expr_->Accept(*this);
-  indenter.DecreaseLevel();
-  std::cout << indenter.Indent() << ')' << ": "
+  indenter_.DecreaseLevel();
+  std::cout << indenter_.Indent() << ')' << ": "
             << ExprTypeToCString(assign_expr.expr_->type) << std::endl;
 }
