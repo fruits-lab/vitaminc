@@ -5,6 +5,7 @@
 #include <memory>
 
 #include "ast.hpp"
+#include "ast_dumper.hpp"
 #include "scope.hpp"
 #include "type_checker.hpp"
 #include "y.tab.h"
@@ -48,7 +49,8 @@ int main(int argc, char** argv) {
   auto type_checker = TypeChecker{scopes};
   program->Accept(type_checker);
   if (args["dump"].as<bool>()) {
-    program->Dump(0);
+    auto ast_dumper = AstDumper{};
+    program->Accept(ast_dumper);
   }
   program->CodeGen();
 
