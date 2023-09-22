@@ -1,31 +1,17 @@
 #include "ast.hpp"
 
 #include <fstream>
-#include <iostream>
 #include <map>
 #include <memory>
 #include <string>
 #include <vector>
 
-#include "type.hpp"
 #include "visitor.hpp"
 
 /// @brief qbe intermediate file
 extern std::ofstream output;
 
 namespace {
-
-// clang-format off
-// Not to format the padding to emphasize the actual length.
-
-// 80 spaces for padding
-//                     01234567890123456789012345678901234567890123456789012345678901234567890123456789
-const char* padding = "                                                                                ";
-
-// clang-format on
-
-/// @param n The length of the padding, saturated on the boundary of [0, 80].
-const char* Pad(int n);
 
 /// @brief Returns the next local number and increment it by 1. The first number
 /// will be 1.
@@ -94,15 +80,6 @@ int DeclNode::CodeGen() const {
   return kDummyLocalNum;
 }
 
-void DeclNode::Dump(int pad) const {
-  std::cout << Pad(pad) << '(' << id_ << ": " << ExprTypeToCString(type_);
-  if (init_) {
-    std::cout << " =" << std::endl;
-    init_->Dump(pad + 2);
-  }
-  std::cout << ')' << std::endl;
-}
-
 void BlockStmtNode::Accept(NonModifyingVisitor& v) const {
   v.Visit(*this);
 }
@@ -123,15 +100,6 @@ int BlockStmtNode::CodeGen() const {
   return kDummyLocalNum;
 }
 
-void BlockStmtNode::Dump(int pad) const {
-  for (const auto& decl : decls_) {
-    decl->Dump(pad);
-  }
-  for (const auto& stmt : stmts_) {
-    stmt->Dump(pad);
-  }
-}
-
 void ProgramNode::Accept(NonModifyingVisitor& v) const {
   v.Visit(*this);
 }
@@ -148,10 +116,6 @@ int ProgramNode::CodeGen() const {
   return kDummyLocalNum;
 }
 
-void ProgramNode::Dump(int pad) const {
-  block_->Dump(pad);
-}
-
 void NullStmtNode::Accept(NonModifyingVisitor& v) const {
   v.Visit(*this);
 }
@@ -162,10 +126,6 @@ void NullStmtNode::Accept(ModifyingVisitor& v) {
 
 int NullStmtNode::CodeGen() const {
   return kDummyLocalNum;
-}
-
-void NullStmtNode::Dump(int pad) const {
-  std::cout << Pad(pad) << "()" << std::endl;
 }
 
 void ReturnStmtNode::Accept(NonModifyingVisitor& v) const {
@@ -182,12 +142,6 @@ int ReturnStmtNode::CodeGen() const {
   return kDummyLocalNum;
 }
 
-void ReturnStmtNode::Dump(int pad) const {
-  std::cout << Pad(pad) << "(ret" << std::endl;
-  expr_->Dump(pad + 2);
-  std::cout << Pad(pad) << ')' << std::endl;
-}
-
 void ExprStmtNode::Accept(NonModifyingVisitor& v) const {
   v.Visit(*this);
 }
@@ -200,10 +154,6 @@ int ExprStmtNode::CodeGen() const {
   expr_->CodeGen();
 
   return kDummyLocalNum;
-}
-
-void ExprStmtNode::Dump(int pad) const {
-  expr_->Dump(pad);
 }
 
 void IdExprNode::Accept(NonModifyingVisitor& v) const {
@@ -224,10 +174,6 @@ int IdExprNode::CodeGen() const {
   return reg_num;
 }
 
-void IdExprNode::Dump(int pad) const {
-  std::cout << Pad(pad) << id_ << ": " << ExprTypeToCString(type) << std::endl;
-}
-
 void IntConstExprNode::Accept(NonModifyingVisitor& v) const {
   v.Visit(*this);
 }
@@ -240,10 +186,6 @@ int IntConstExprNode::CodeGen() const {
   int num = NextLocalNum();
   output << PrefixSigil(num) << " =w copy " << val_ << std::endl;
   return num;
-}
-
-void IntConstExprNode::Dump(int pad) const {
-  std::cout << Pad(pad) << val_ << ": " << ExprTypeToCString(type) << std::endl;
 }
 
 void BinaryExprNode::Accept(NonModifyingVisitor& v) const {
@@ -263,13 +205,6 @@ int BinaryExprNode::CodeGen() const {
          << std::endl;
 
   return num;
-}
-
-void BinaryExprNode::Dump(int pad) const {
-  std::cout << Pad(pad) << '(' << Op_() << std::endl;
-  lhs_->Dump(pad + 2);
-  rhs_->Dump(pad + 2);
-  std::cout << Pad(pad) << ')' << ": " << ExprTypeToCString(type) << std::endl;
 }
 
 void PlusExprNode::Accept(NonModifyingVisitor& v) const {
@@ -474,25 +409,3 @@ int SimpleAssignmentExprNode::CodeGen() const {
          << PrefixSigil(id_to_num.at(id_)) << std::endl;
   return expr_num;
 }
-
-void SimpleAssignmentExprNode::Dump(int pad) const {
-  std::cout << Pad(pad) << '(' << '=' << std::endl;
-  std::cout << Pad(pad + 2) << id_ << ": " << ExprTypeToCString(type)
-            << std::endl;
-  expr_->Dump(pad + 2);
-  std::cout << Pad(pad) << ')' << ": " << ExprTypeToCString(expr_->type)
-            << std::endl;
-}
-
-namespace {
-
-const char* Pad(int n) {
-  if (n > 80) {
-    n = 80;
-  } else if (n < 0) {
-    n = 0;
-  }
-  return padding + (80 - n);
-}
-
-}  // namespace
