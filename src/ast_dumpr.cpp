@@ -1,8 +1,31 @@
 #include <iostream>
+#include <memory>
+#include <string>
 
 #include "ast.hpp"
 #include "ast_dumper.hpp"
 #include "type.hpp"
+#include "visitor.hpp"
+
+namespace {
+class OpGetter {
+ public:
+  /// @return The mathematical symbol of the binary operator, e.g., `+`.
+  std::string OpOf(const BinaryExprNode& bin_expr);
+
+  OpGetter();
+
+ private:
+  /// @note An alternative approach would be to directly implement `OpGetter` as
+  /// a `Visitor`, but this is intended to be used exclusively with binary
+  /// expressions. Therefore, we encapsulate it to prevent unintended usage in
+  /// other contexts. We also employ the Pimpl idiom, allowing deferred
+  /// implementation details later in this file.
+  class OpGetterImpl;
+  std::unique_ptr<OpGetterImpl> impl_;
+};
+
+}  // namespace
 
 void AstDumper::Visit(const DeclNode& decl) {
   std::cout << indenter_.Indent() << '(' << decl.id_ << ": "
@@ -56,7 +79,8 @@ void AstDumper::Visit(const IntConstExprNode& int_expr) {
 }
 
 void AstDumper::Visit(const BinaryExprNode& bin_expr) {
-  std::cout << indenter_.Indent() << '(' << bin_expr.Op_() << std::endl;
+  std::cout << indenter_.Indent() << '(' << OpGetter{}.OpOf(bin_expr)
+            << std::endl;
   indenter_.IncreaseLevel();
   bin_expr.lhs_->Accept(*this);
   bin_expr.rhs_->Accept(*this);
@@ -97,3 +121,64 @@ void AstDumper::Visit(const SimpleAssignmentExprNode& assign_expr) {
   std::cout << indenter_.Indent() << ')' << ": "
             << ExprTypeToCString(assign_expr.expr_->type) << std::endl;
 }
+
+class OpGetter::OpGetterImpl : public NonModifyingVisitor {
+ public:
+  std::string Op() const {
+    return op_;
+  }
+
+  void Visit(const PlusExprNode&) override {
+    op_ = "+";
+  }
+
+  void Visit(const SubExprNode&) override {
+    op_ = "-";
+  }
+
+  void Visit(const MulExprNode&) override {
+    op_ = "*";
+  }
+
+  void Visit(const DivExprNode&) override {
+    op_ = "/";
+  }
+
+  void Visit(const ModExprNode&) override {
+    op_ = "%";
+  }
+
+  void Visit(const GreaterThanExprNode&) override {
+    op_ = ">";
+  }
+
+  void Visit(const GreaterThanOrEqualToExprNode&) override {
+    op_ = ">=";
+  }
+
+  void Visit(const LessThanExprNode&) override {
+    op_ = "<";
+  }
+
+  void Visit(const LessThanOrEqualToExprNode&) override {
+    op_ = "<=";
+  }
+
+  void Visit(const EqualToExprNode&) override {
+    op_ = "==";
+  }
+
+  void Visit(const NotEqualToExprNode&) override {
+    op_ = "!=";
+  }
+
+ private:
+  std::string op_;
+};
+
+std::string OpGetter::OpOf(const BinaryExprNode& bin_expr) {
+  bin_expr.Accept(*impl_);
+  return impl_->Op();
+}
+
+OpGetter::OpGetter() : impl_{std::make_unique<OpGetterImpl>()} {}

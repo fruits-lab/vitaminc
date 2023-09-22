@@ -169,8 +169,6 @@ class BinaryExprNode : public ExprNode {
 
   /// @brief The name of the operator used in the QBE IR, e.g., `add`.
   virtual std::string OpName_() const = 0;
-  /// @brief The mathematical symbol of the operator, e.g., `+`.
-  virtual std::string Op_() const = 0;
 };
 
 class PlusExprNode : public BinaryExprNode {
@@ -181,8 +179,6 @@ class PlusExprNode : public BinaryExprNode {
   virtual void Accept(ModifyingVisitor&) override;
 
   std::string OpName_() const override;
-
-  std::string Op_() const override;
 };
 
 class SubExprNode : public BinaryExprNode {
@@ -193,8 +189,6 @@ class SubExprNode : public BinaryExprNode {
   virtual void Accept(ModifyingVisitor&) override;
 
   std::string OpName_() const override;
-
-  std::string Op_() const override;
 };
 
 class MulExprNode : public BinaryExprNode {
@@ -205,8 +199,6 @@ class MulExprNode : public BinaryExprNode {
   virtual void Accept(ModifyingVisitor&) override;
 
   std::string OpName_() const override;
-
-  std::string Op_() const override;
 };
 
 class DivExprNode : public BinaryExprNode {
@@ -217,8 +209,6 @@ class DivExprNode : public BinaryExprNode {
   virtual void Accept(ModifyingVisitor&) override;
 
   std::string OpName_() const override;
-
-  std::string Op_() const override;
 };
 
 class ModExprNode : public BinaryExprNode {
@@ -229,8 +219,6 @@ class ModExprNode : public BinaryExprNode {
   virtual void Accept(ModifyingVisitor&) override;
 
   std::string OpName_() const override;
-
-  std::string Op_() const override;
 };
 
 class GreaterThanExprNode : public BinaryExprNode {
@@ -241,8 +229,6 @@ class GreaterThanExprNode : public BinaryExprNode {
   virtual void Accept(ModifyingVisitor&) override;
 
   std::string OpName_() const override;
-
-  std::string Op_() const override;
 };
 
 class GreaterThanOrEqualToExprNode : public BinaryExprNode {
@@ -253,8 +239,6 @@ class GreaterThanOrEqualToExprNode : public BinaryExprNode {
   virtual void Accept(ModifyingVisitor&) override;
 
   std::string OpName_() const override;
-
-  std::string Op_() const override;
 };
 
 class LessThanExprNode : public BinaryExprNode {
@@ -265,8 +249,6 @@ class LessThanExprNode : public BinaryExprNode {
   virtual void Accept(ModifyingVisitor&) override;
 
   std::string OpName_() const override;
-
-  std::string Op_() const override;
 };
 
 class LessThanOrEqualToExprNode : public BinaryExprNode {
@@ -277,8 +259,6 @@ class LessThanOrEqualToExprNode : public BinaryExprNode {
   virtual void Accept(ModifyingVisitor&) override;
 
   std::string OpName_() const override;
-
-  std::string Op_() const override;
 };
 
 class EqualToExprNode : public BinaryExprNode {
@@ -289,8 +269,6 @@ class EqualToExprNode : public BinaryExprNode {
   virtual void Accept(ModifyingVisitor&) override;
 
   std::string OpName_() const override;
-
-  std::string Op_() const override;
 };
 
 class NotEqualToExprNode : public BinaryExprNode {
@@ -301,8 +279,6 @@ class NotEqualToExprNode : public BinaryExprNode {
   virtual void Accept(ModifyingVisitor&) override;
 
   std::string OpName_() const override;
-
-  std::string Op_() const override;
 };
 
 /// @note This is an abstract class.
