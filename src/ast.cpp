@@ -10,6 +10,8 @@ void AstNode::Accept(ModifyingVisitor& v) {
   v.Visit(*this);
 }
 
+AstNode::~AstNode() = default;
+
 void StmtNode::Accept(NonModifyingVisitor& v) const {
   v.Visit(*this);
 }
@@ -18,6 +20,8 @@ void StmtNode::Accept(ModifyingVisitor& v) {
   v.Visit(*this);
 }
 
+StmtNode::~StmtNode() = default;
+
 void ExprNode::Accept(NonModifyingVisitor& v) const {
   v.Visit(*this);
 }
@@ -25,6 +29,8 @@ void ExprNode::Accept(NonModifyingVisitor& v) const {
 void ExprNode::Accept(ModifyingVisitor& v) {
   v.Visit(*this);
 }
+
+ExprNode::~ExprNode() = default;
 
 void DeclNode::Accept(NonModifyingVisitor& v) const {
   v.Visit(*this);
@@ -97,6 +103,8 @@ void BinaryExprNode::Accept(NonModifyingVisitor& v) const {
 void BinaryExprNode::Accept(ModifyingVisitor& v) {
   v.Visit(*this);
 }
+
+BinaryExprNode::~BinaryExprNode() = default;
 
 void PlusExprNode::Accept(NonModifyingVisitor& v) const {
   v.Visit(*this);
@@ -193,6 +201,8 @@ void AssignmentExprNode::Accept(NonModifyingVisitor& v) const {
 void AssignmentExprNode::Accept(ModifyingVisitor& v) {
   v.Visit(*this);
 }
+
+AssignmentExprNode::~AssignmentExprNode() = default;
 
 void SimpleAssignmentExprNode::Accept(NonModifyingVisitor& v) const {
   v.Visit(*this);
