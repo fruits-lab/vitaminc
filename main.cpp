@@ -6,6 +6,7 @@
 
 #include "ast.hpp"
 #include "ast_dumper.hpp"
+#include "code_generator.hpp"
 #include "scope.hpp"
 #include "type_checker.hpp"
 #include "util.hpp"
@@ -54,7 +55,8 @@ int main(int argc, char** argv) {
     auto ast_dumper = AstDumper{indenter};
     program->Accept(ast_dumper);
   }
-  program->CodeGen();
+  auto code_generator = CodeGenerator{};
+  program->Accept(code_generator);
 
   output.close();
 
