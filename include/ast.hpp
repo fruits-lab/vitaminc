@@ -16,7 +16,8 @@ class AstNode {
   virtual void Accept(NonModifyingVisitor&) const;
   virtual void Accept(ModifyingVisitor&);
 
-  virtual ~AstNode() = default;
+  /// @note To make the class abstract.
+  virtual ~AstNode() = 0;
   AstNode() = default;
 
   // Delete copy/move operations to avoid slicing. [1]
@@ -37,6 +38,9 @@ class StmtNode : public AstNode {
  public:
   virtual void Accept(NonModifyingVisitor&) const override;
   virtual void Accept(ModifyingVisitor&) override;
+
+  /// @note To make the class abstract.
+  virtual ~StmtNode() = 0;
 };
 
 /// @note This is an abstract class.
@@ -45,6 +49,9 @@ class ExprNode : public AstNode {
   ExprType type = ExprType::kUnknown;
   virtual void Accept(NonModifyingVisitor&) const override;
   virtual void Accept(ModifyingVisitor&) override;
+
+  /// @note To make the class abstract.
+  virtual ~ExprNode() = 0;
 };
 
 class DeclNode : public AstNode {
@@ -145,6 +152,9 @@ class BinaryExprNode : public ExprNode {
   virtual void Accept(NonModifyingVisitor&) const override;
   virtual void Accept(ModifyingVisitor&) override;
 
+  /// @note To make the class abstract.
+  virtual ~BinaryExprNode() = 0;
+
   std::unique_ptr<ExprNode> lhs_;
   std::unique_ptr<ExprNode> rhs_;
 };
@@ -242,6 +252,9 @@ class AssignmentExprNode : public ExprNode {
  public:
   virtual void Accept(NonModifyingVisitor&) const override;
   virtual void Accept(ModifyingVisitor&) override;
+
+  /// @note To make the class abstract.
+  virtual ~AssignmentExprNode() = 0;
 };
 
 class SimpleAssignmentExprNode : public AssignmentExprNode {
