@@ -16,7 +16,6 @@ class AstNode {
   virtual void Accept(NonModifyingVisitor&) const;
   virtual void Accept(ModifyingVisitor&);
 
-  virtual int CodeGen() const = 0;
   virtual ~AstNode() = default;
   AstNode() = default;
 
@@ -57,8 +56,6 @@ class DeclNode : public AstNode {
   virtual void Accept(NonModifyingVisitor&) const override;
   virtual void Accept(ModifyingVisitor&) override;
 
-  int CodeGen() const override;
-
   std::string id_;
   ExprType type_;
   std::unique_ptr<ExprNode> init_;
@@ -74,8 +71,6 @@ class BlockStmtNode : public StmtNode {
   virtual void Accept(NonModifyingVisitor&) const override;
   virtual void Accept(ModifyingVisitor&) override;
 
-  int CodeGen() const override;
-
   std::vector<std::unique_ptr<DeclNode>> decls_;
   std::vector<std::unique_ptr<StmtNode>> stmts_;
 };
@@ -90,8 +85,6 @@ class ProgramNode : public AstNode {
   virtual void Accept(NonModifyingVisitor&) const override;
   virtual void Accept(ModifyingVisitor&) override;
 
-  int CodeGen() const override;
-
   std::unique_ptr<BlockStmtNode> block_;
 };
 
@@ -99,8 +92,6 @@ class NullStmtNode : public StmtNode {
  public:
   virtual void Accept(NonModifyingVisitor&) const override;
   virtual void Accept(ModifyingVisitor&) override;
-
-  int CodeGen() const override;
 };
 
 class ReturnStmtNode : public StmtNode {
@@ -109,8 +100,6 @@ class ReturnStmtNode : public StmtNode {
 
   virtual void Accept(NonModifyingVisitor&) const override;
   virtual void Accept(ModifyingVisitor&) override;
-
-  int CodeGen() const override;
 
   std::unique_ptr<ExprNode> expr_;
 };
@@ -124,8 +113,6 @@ class ExprStmtNode : public StmtNode {
   virtual void Accept(NonModifyingVisitor&) const override;
   virtual void Accept(ModifyingVisitor&) override;
 
-  int CodeGen() const override;
-
   std::unique_ptr<ExprNode> expr_;
 };
 
@@ -136,8 +123,6 @@ class IdExprNode : public ExprNode {
   virtual void Accept(NonModifyingVisitor&) const override;
   virtual void Accept(ModifyingVisitor&) override;
 
-  int CodeGen() const override;
-
   std::string id_;
 };
 
@@ -147,8 +132,6 @@ class IntConstExprNode : public ExprNode {
 
   virtual void Accept(NonModifyingVisitor&) const override;
   virtual void Accept(ModifyingVisitor&) override;
-
-  int CodeGen() const override;
 
   int val_;
 };
@@ -161,8 +144,6 @@ class BinaryExprNode : public ExprNode {
 
   virtual void Accept(NonModifyingVisitor&) const override;
   virtual void Accept(ModifyingVisitor&) override;
-
-  int CodeGen() const override;
 
   std::unique_ptr<ExprNode> lhs_;
   std::unique_ptr<ExprNode> rhs_;
@@ -295,8 +276,6 @@ class SimpleAssignmentExprNode : public AssignmentExprNode {
 
   virtual void Accept(NonModifyingVisitor&) const override;
   virtual void Accept(ModifyingVisitor&) override;
-
-  int CodeGen() const override;
 
   std::string id_;
   std::unique_ptr<ExprNode> expr_;
