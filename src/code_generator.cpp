@@ -3,9 +3,11 @@
 #include <cassert>
 #include <fstream>
 #include <map>
+#include <memory>
 #include <string>
 
 #include "ast.hpp"
+#include "visitor.hpp"
 
 /// @brief qbe intermediate file
 extern std::ofstream output;
@@ -24,6 +26,23 @@ int NextLocalNum() {
 std::string PrefixSigil(int local_num) {
   return "%." + std::to_string(local_num);
 }
+
+class OpNameGetter {
+ public:
+  /// @return The name of the operator used in the QBE IR, e.g., `add`.
+  std::string OpNameOf(const BinaryExprNode& bin_expr);
+
+  OpNameGetter();
+
+ private:
+  /// @note An alternative approach would be to directly implement
+  /// `OpNameGetterImpl` as a `Visitor`, but this is intended to be used
+  /// exclusively with binary expressions. Therefore, we encapsulate it to
+  /// prevent unintended usage in other contexts. We also employ the Pimpl
+  /// idiom, allowing deferred implementation details later in this file.
+  class OpNameGetterImpl;
+  std::unique_ptr<OpNameGetterImpl> impl_;
+};
 
 std::map<std::string, int> id_to_num{};
 
@@ -119,8 +138,8 @@ void CodeGenerator::Visit(const BinaryExprNode& bin_expr) {
   bin_expr.rhs_->Accept(*this);
   int right_num = num_recorder.NumOfPrevExpr();
   int num = NextLocalNum();
-  output << PrefixSigil(num) << " =w " << bin_expr.OpName_() << " "
-         << PrefixSigil(left_num) << ", " << PrefixSigil(right_num)
+  output << PrefixSigil(num) << " =w " << OpNameGetter{}.OpNameOf(bin_expr)
+         << " " << PrefixSigil(left_num) << ", " << PrefixSigil(right_num)
          << std::endl;
   num_recorder.Record(num);
 }
@@ -154,3 +173,64 @@ void CodeGenerator::Visit(const SimpleAssignmentExprNode& assign_expr) {
          << PrefixSigil(id_to_num.at(assign_expr.id_)) << std::endl;
   num_recorder.Record(expr_num);
 }
+
+class OpNameGetter::OpNameGetterImpl : public NonModifyingVisitor {
+ public:
+  std::string OpName() const {
+    return op_name_;
+  }
+
+  void Visit(const PlusExprNode&) override {
+    op_name_ = "add";
+  }
+
+  void Visit(const SubExprNode&) override {
+    op_name_ = "sub";
+  }
+
+  void Visit(const MulExprNode&) override {
+    op_name_ = "mul";
+  }
+
+  void Visit(const DivExprNode&) override {
+    op_name_ = "div";
+  }
+
+  void Visit(const ModExprNode&) override {
+    op_name_ = "rem";
+  }
+
+  void Visit(const GreaterThanExprNode&) override {
+    op_name_ = "sgt";
+  }
+
+  void Visit(const GreaterThanOrEqualToExprNode&) override {
+    op_name_ = "sge";
+  }
+
+  void Visit(const LessThanExprNode&) override {
+    op_name_ = "slt";
+  }
+
+  void Visit(const LessThanOrEqualToExprNode&) override {
+    op_name_ = "sle";
+  }
+
+  void Visit(const EqualToExprNode&) override {
+    op_name_ = "eq";
+  }
+
+  void Visit(const NotEqualToExprNode&) override {
+    op_name_ = "ne";
+  }
+
+ private:
+  std::string op_name_;
+};
+
+std::string OpNameGetter::OpNameOf(const BinaryExprNode& bin_expr) {
+  bin_expr.Accept(*impl_);
+  return impl_->OpName();
+}
+
+OpNameGetter::OpNameGetter() : impl_{std::make_unique<OpNameGetterImpl>()} {}

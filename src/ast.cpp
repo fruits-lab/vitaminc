@@ -1,7 +1,5 @@
 #include "ast.hpp"
 
-#include <string>
-
 #include "visitor.hpp"
 
 void AstNode::Accept(NonModifyingVisitor& v) const {
@@ -108,20 +106,12 @@ void PlusExprNode::Accept(ModifyingVisitor& v) {
   v.Visit(*this);
 }
 
-std::string PlusExprNode::OpName_() const {
-  return "add";
-}
-
 void SubExprNode::Accept(NonModifyingVisitor& v) const {
   v.Visit(*this);
 }
 
 void SubExprNode::Accept(ModifyingVisitor& v) {
   v.Visit(*this);
-}
-
-std::string SubExprNode::OpName_() const {
-  return "sub";
 }
 
 void MulExprNode::Accept(NonModifyingVisitor& v) const {
@@ -132,20 +122,12 @@ void MulExprNode::Accept(ModifyingVisitor& v) {
   v.Visit(*this);
 }
 
-std::string MulExprNode::OpName_() const {
-  return "mul";
-}
-
 void DivExprNode::Accept(NonModifyingVisitor& v) const {
   v.Visit(*this);
 }
 
 void DivExprNode::Accept(ModifyingVisitor& v) {
   v.Visit(*this);
-}
-
-std::string DivExprNode::OpName_() const {
-  return "div";
 }
 
 void ModExprNode::Accept(NonModifyingVisitor& v) const {
@@ -156,21 +138,12 @@ void ModExprNode::Accept(ModifyingVisitor& v) {
   v.Visit(*this);
 }
 
-std::string ModExprNode::OpName_() const {
-  return "rem";
-}
-
 void GreaterThanExprNode::Accept(NonModifyingVisitor& v) const {
   v.Visit(*this);
 }
 
 void GreaterThanExprNode::Accept(ModifyingVisitor& v) {
   v.Visit(*this);
-}
-
-std::string GreaterThanExprNode::OpName_() const {
-  // signed
-  return "sgt";
 }
 
 void GreaterThanOrEqualToExprNode::Accept(NonModifyingVisitor& v) const {
@@ -181,22 +154,12 @@ void GreaterThanOrEqualToExprNode::Accept(ModifyingVisitor& v) {
   v.Visit(*this);
 }
 
-std::string GreaterThanOrEqualToExprNode::OpName_() const {
-  // signed
-  return "sge";
-}
-
 void LessThanExprNode::Accept(NonModifyingVisitor& v) const {
   v.Visit(*this);
 }
 
 void LessThanExprNode::Accept(ModifyingVisitor& v) {
   v.Visit(*this);
-}
-
-std::string LessThanExprNode::OpName_() const {
-  // signed
-  return "slt";
 }
 
 void LessThanOrEqualToExprNode::Accept(NonModifyingVisitor& v) const {
@@ -207,11 +170,6 @@ void LessThanOrEqualToExprNode::Accept(ModifyingVisitor& v) {
   v.Visit(*this);
 }
 
-std::string LessThanOrEqualToExprNode::OpName_() const {
-  // signed
-  return "sle";
-}
-
 void EqualToExprNode::Accept(NonModifyingVisitor& v) const {
   v.Visit(*this);
 }
@@ -220,20 +178,12 @@ void EqualToExprNode::Accept(ModifyingVisitor& v) {
   v.Visit(*this);
 }
 
-std::string EqualToExprNode::OpName_() const {
-  return "eq";
-}
-
 void NotEqualToExprNode::Accept(NonModifyingVisitor& v) const {
   v.Visit(*this);
 }
 
 void NotEqualToExprNode::Accept(ModifyingVisitor& v) {
   v.Visit(*this);
-}
-
-std::string NotEqualToExprNode::OpName_() const {
-  return "ne";
 }
 
 void AssignmentExprNode::Accept(NonModifyingVisitor& v) const {
