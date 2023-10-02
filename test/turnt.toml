@@ -1,2 +1,0 @@
-command = "../vitaminc --dump < {filename}"
-output.exp = "-"
