@@ -6,7 +6,7 @@
 
 #include "ast.hpp"
 #include "ast_dumper.hpp"
-#include "code_generator.hpp"
+#include "qbe_ir_generator.hpp"
 #include "scope.hpp"
 #include "type_checker.hpp"
 #include "util.hpp"
@@ -55,7 +55,7 @@ int main(int argc, char** argv) {
     auto ast_dumper = AstDumper{indenter};
     program->Accept(ast_dumper);
   }
-  auto code_generator = CodeGenerator{};
+  auto code_generator = QbeIrGenerator{};
   program->Accept(code_generator);
 
   output.close();

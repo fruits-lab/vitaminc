@@ -1,4 +1,4 @@
-#include "code_generator.hpp"
+#include "qbe_ir_generator.hpp"
 
 #include <cassert>
 #include <fstream>
@@ -72,7 +72,7 @@ auto num_recorder = PrevExprNumRecorder{};
 
 }  // namespace
 
-void CodeGenerator::Visit(const DeclNode& decl) {
+void QbeIrGenerator::Visit(const DeclNode& decl) {
   int id_num = NextLocalNum();
   output << PrefixSigil(id_num) << " =l alloc4 4" << std::endl;
 
@@ -86,7 +86,7 @@ void CodeGenerator::Visit(const DeclNode& decl) {
   id_to_num[decl.id_] = id_num;
 }
 
-void CodeGenerator::Visit(const BlockStmtNode& block) {
+void QbeIrGenerator::Visit(const BlockStmtNode& block) {
   output << "@start" << std::endl;
   for (const auto& decl : block.decls_) {
     decl->Accept(*this);
@@ -96,27 +96,27 @@ void CodeGenerator::Visit(const BlockStmtNode& block) {
   }
 }
 
-void CodeGenerator::Visit(const ProgramNode& program) {
+void QbeIrGenerator::Visit(const ProgramNode& program) {
   output << "export function w $main() {" << std::endl;
   program.block_->Accept(*this);
   output << "}";
 }
 
-void CodeGenerator::Visit(const NullStmtNode&) {
+void QbeIrGenerator::Visit(const NullStmtNode&) {
   /* do nothing */
 }
 
-void CodeGenerator::Visit(const ReturnStmtNode& ret_stmt) {
+void QbeIrGenerator::Visit(const ReturnStmtNode& ret_stmt) {
   ret_stmt.expr_->Accept(*this);
   int ret_num = num_recorder.NumOfPrevExpr();
   output << " ret " << PrefixSigil(ret_num) << std::endl;
 }
 
-void CodeGenerator::Visit(const ExprStmtNode& expr_stmt) {
+void QbeIrGenerator::Visit(const ExprStmtNode& expr_stmt) {
   expr_stmt.expr_->Accept(*this);
 }
 
-void CodeGenerator::Visit(const IdExprNode& id_expr) {
+void QbeIrGenerator::Visit(const IdExprNode& id_expr) {
   /// @brief Plays the role of a "pointer". Its value has to be loaded to
   /// the register before use.
   int id_num = id_to_num.at(id_expr.id_);
@@ -126,13 +126,13 @@ void CodeGenerator::Visit(const IdExprNode& id_expr) {
   num_recorder.Record(reg_num);
 }
 
-void CodeGenerator::Visit(const IntConstExprNode& int_expr) {
+void QbeIrGenerator::Visit(const IntConstExprNode& int_expr) {
   int num = NextLocalNum();
   output << PrefixSigil(num) << " =w copy " << int_expr.val_ << std::endl;
   num_recorder.Record(num);
 }
 
-void CodeGenerator::Visit(const BinaryExprNode& bin_expr) {
+void QbeIrGenerator::Visit(const BinaryExprNode& bin_expr) {
   bin_expr.lhs_->Accept(*this);
   int left_num = num_recorder.NumOfPrevExpr();
   bin_expr.rhs_->Accept(*this);
@@ -148,7 +148,7 @@ void CodeGenerator::Visit(const BinaryExprNode& bin_expr) {
 /// `BinaryExprNode`.
 /// @param classname A subclass of `BinaryExprNode`.
 #define DISPATCH_TO_VISIT_BINARY_EXPR(classname) \
-  void CodeGenerator::Visit(const classname& expr) { \
+  void QbeIrGenerator::Visit(const classname& expr) { \
     Visit(static_cast<const BinaryExprNode&>(expr)); \
   }
 
@@ -166,7 +166,7 @@ DISPATCH_TO_VISIT_BINARY_EXPR(NotEqualToExprNode);
 
 #undef DISPATCH_TO_VISIT_BINARY_EXPR
 
-void CodeGenerator::Visit(const SimpleAssignmentExprNode& assign_expr) {
+void QbeIrGenerator::Visit(const SimpleAssignmentExprNode& assign_expr) {
   assign_expr.expr_->Accept(*this);
   int expr_num = num_recorder.NumOfPrevExpr();
   output << "storew " << PrefixSigil(expr_num) << ", "
