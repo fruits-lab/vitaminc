@@ -1,9 +1,9 @@
-#ifndef CODE_GENERATOR_HPP_
-#define CODE_GENERATOR_HPP_
+#ifndef QBE_IR_GENERATOR_HPP_
+#define QBE_IR_GENERATOR_HPP_
 
 #include "visitor.hpp"
 
-class CodeGenerator : public NonModifyingVisitor {
+class QbeIrGenerator : public NonModifyingVisitor {
  public:
   void Visit(const DeclNode&) override;
   void Visit(const BlockStmtNode&) override;
@@ -28,4 +28,4 @@ class CodeGenerator : public NonModifyingVisitor {
   void Visit(const SimpleAssignmentExprNode&) override;
 };
 
-#endif  // CODE_GENERATOR_HPP_
+#endif  // QBE_IR_GENERATOR_HPP_
