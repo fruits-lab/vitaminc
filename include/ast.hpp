@@ -58,14 +58,14 @@ class DeclNode : public AstNode {
  public:
   DeclNode(const std::string& id, ExprType decl_type,
            std::unique_ptr<ExprNode> init = {})
-      : id_{id}, type_{decl_type}, init_{std::move(init)} {}
+      : id{id}, type{decl_type}, init{std::move(init)} {}
 
   virtual void Accept(NonModifyingVisitor&) const override;
   virtual void Accept(ModifyingVisitor&) override;
 
-  std::string id_;
-  ExprType type_;
-  std::unique_ptr<ExprNode> init_;
+  std::string id;
+  ExprType type;
+  std::unique_ptr<ExprNode> init;
 };
 
 /// @brief A block is a set of declarations and statements.
@@ -73,26 +73,25 @@ class BlockStmtNode : public StmtNode {
  public:
   BlockStmtNode(std::vector<std::unique_ptr<DeclNode>>&& decls,
                 std::vector<std::unique_ptr<StmtNode>>&& stmts)
-      : decls_{std::move(decls)}, stmts_{std::move(stmts)} {}
+      : decls{std::move(decls)}, stmts{std::move(stmts)} {}
 
   virtual void Accept(NonModifyingVisitor&) const override;
   virtual void Accept(ModifyingVisitor&) override;
 
-  std::vector<std::unique_ptr<DeclNode>> decls_;
-  std::vector<std::unique_ptr<StmtNode>> stmts_;
+  std::vector<std::unique_ptr<DeclNode>> decls;
+  std::vector<std::unique_ptr<StmtNode>> stmts;
 };
 
 /// @brief Root of the entire program.
 class ProgramNode : public AstNode {
  public:
   /// @note vector of move-only elements are move-only
-  ProgramNode(std::unique_ptr<BlockStmtNode> block)
-      : block_{std::move(block)} {}
+  ProgramNode(std::unique_ptr<BlockStmtNode> block) : block{std::move(block)} {}
 
   virtual void Accept(NonModifyingVisitor&) const override;
   virtual void Accept(ModifyingVisitor&) override;
 
-  std::unique_ptr<BlockStmtNode> block_;
+  std::unique_ptr<BlockStmtNode> block;
 };
 
 class NullStmtNode : public StmtNode {
@@ -103,51 +102,51 @@ class NullStmtNode : public StmtNode {
 
 class ReturnStmtNode : public StmtNode {
  public:
-  ReturnStmtNode(std::unique_ptr<ExprNode> expr) : expr_{std::move(expr)} {}
+  ReturnStmtNode(std::unique_ptr<ExprNode> expr) : expr{std::move(expr)} {}
 
   virtual void Accept(NonModifyingVisitor&) const override;
   virtual void Accept(ModifyingVisitor&) override;
 
-  std::unique_ptr<ExprNode> expr_;
+  std::unique_ptr<ExprNode> expr;
 };
 
 /// @note Any expression can be turned into a statement by adding a semicolon
 /// to the end of the expression.
 class ExprStmtNode : public StmtNode {
  public:
-  ExprStmtNode(std::unique_ptr<ExprNode> expr) : expr_{std::move(expr)} {}
+  ExprStmtNode(std::unique_ptr<ExprNode> expr) : expr{std::move(expr)} {}
 
   virtual void Accept(NonModifyingVisitor&) const override;
   virtual void Accept(ModifyingVisitor&) override;
 
-  std::unique_ptr<ExprNode> expr_;
+  std::unique_ptr<ExprNode> expr;
 };
 
 class IdExprNode : public ExprNode {
  public:
-  IdExprNode(const std::string& id) : id_{id} {}
+  IdExprNode(const std::string& id) : id{id} {}
 
   virtual void Accept(NonModifyingVisitor&) const override;
   virtual void Accept(ModifyingVisitor&) override;
 
-  std::string id_;
+  std::string id;
 };
 
 class IntConstExprNode : public ExprNode {
  public:
-  IntConstExprNode(int val) : val_{val} {}
+  IntConstExprNode(int val) : val{val} {}
 
   virtual void Accept(NonModifyingVisitor&) const override;
   virtual void Accept(ModifyingVisitor&) override;
 
-  int val_;
+  int val;
 };
 
 /// @note This is an abstract class.
 class BinaryExprNode : public ExprNode {
  public:
   BinaryExprNode(std::unique_ptr<ExprNode> lhs, std::unique_ptr<ExprNode> rhs)
-      : lhs_{std::move(lhs)}, rhs_{std::move(rhs)} {}
+      : lhs{std::move(lhs)}, rhs{std::move(rhs)} {}
 
   virtual void Accept(NonModifyingVisitor&) const override;
   virtual void Accept(ModifyingVisitor&) override;
@@ -155,8 +154,8 @@ class BinaryExprNode : public ExprNode {
   /// @note To make the class abstract.
   virtual ~BinaryExprNode() = 0;
 
-  std::unique_ptr<ExprNode> lhs_;
-  std::unique_ptr<ExprNode> rhs_;
+  std::unique_ptr<ExprNode> lhs;
+  std::unique_ptr<ExprNode> rhs;
 };
 
 class PlusExprNode : public BinaryExprNode {
@@ -260,13 +259,13 @@ class AssignmentExprNode : public ExprNode {
 class SimpleAssignmentExprNode : public AssignmentExprNode {
  public:
   SimpleAssignmentExprNode(std::string id, std::unique_ptr<ExprNode> expr)
-      : id_{std::move(id)}, expr_{std::move(expr)} {}
+      : id{std::move(id)}, expr{std::move(expr)} {}
 
   virtual void Accept(NonModifyingVisitor&) const override;
   virtual void Accept(ModifyingVisitor&) override;
 
-  std::string id_;
-  std::unique_ptr<ExprNode> expr_;
+  std::string id;
+  std::unique_ptr<ExprNode> expr;
 };
 
 #endif  // AST_HPP_

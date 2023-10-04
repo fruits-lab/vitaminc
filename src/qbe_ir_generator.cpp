@@ -76,29 +76,29 @@ void QbeIrGenerator::Visit(const DeclNode& decl) {
   int id_num = NextLocalNum();
   output << PrefixSigil(id_num) << " =l alloc4 4" << std::endl;
 
-  if (decl.init_) {
-    decl.init_->Accept(*this);
+  if (decl.init) {
+    decl.init->Accept(*this);
     int init_num = num_recorder.NumOfPrevExpr();
     output << "storew " << PrefixSigil(init_num) << ", " << PrefixSigil(id_num)
            << std::endl;
   }
   // Set up the number of the id so we know were to load it back.
-  id_to_num[decl.id_] = id_num;
+  id_to_num[decl.id] = id_num;
 }
 
 void QbeIrGenerator::Visit(const BlockStmtNode& block) {
   output << "@start" << std::endl;
-  for (const auto& decl : block.decls_) {
+  for (const auto& decl : block.decls) {
     decl->Accept(*this);
   }
-  for (const auto& stmt : block.stmts_) {
+  for (const auto& stmt : block.stmts) {
     stmt->Accept(*this);
   }
 }
 
 void QbeIrGenerator::Visit(const ProgramNode& program) {
   output << "export function w $main() {" << std::endl;
-  program.block_->Accept(*this);
+  program.block->Accept(*this);
   output << "}";
 }
 
@@ -107,19 +107,19 @@ void QbeIrGenerator::Visit(const NullStmtNode&) {
 }
 
 void QbeIrGenerator::Visit(const ReturnStmtNode& ret_stmt) {
-  ret_stmt.expr_->Accept(*this);
+  ret_stmt.expr->Accept(*this);
   int ret_num = num_recorder.NumOfPrevExpr();
   output << " ret " << PrefixSigil(ret_num) << std::endl;
 }
 
 void QbeIrGenerator::Visit(const ExprStmtNode& expr_stmt) {
-  expr_stmt.expr_->Accept(*this);
+  expr_stmt.expr->Accept(*this);
 }
 
 void QbeIrGenerator::Visit(const IdExprNode& id_expr) {
   /// @brief Plays the role of a "pointer". Its value has to be loaded to
   /// the register before use.
-  int id_num = id_to_num.at(id_expr.id_);
+  int id_num = id_to_num.at(id_expr.id);
   int reg_num = NextLocalNum();
   output << PrefixSigil(reg_num) << " =w loadw " << PrefixSigil(id_num)
          << std::endl;
@@ -128,14 +128,14 @@ void QbeIrGenerator::Visit(const IdExprNode& id_expr) {
 
 void QbeIrGenerator::Visit(const IntConstExprNode& int_expr) {
   int num = NextLocalNum();
-  output << PrefixSigil(num) << " =w copy " << int_expr.val_ << std::endl;
+  output << PrefixSigil(num) << " =w copy " << int_expr.val << std::endl;
   num_recorder.Record(num);
 }
 
 void QbeIrGenerator::Visit(const BinaryExprNode& bin_expr) {
-  bin_expr.lhs_->Accept(*this);
+  bin_expr.lhs->Accept(*this);
   int left_num = num_recorder.NumOfPrevExpr();
-  bin_expr.rhs_->Accept(*this);
+  bin_expr.rhs->Accept(*this);
   int right_num = num_recorder.NumOfPrevExpr();
   int num = NextLocalNum();
   output << PrefixSigil(num) << " =w " << OpNameGetter{}.OpNameOf(bin_expr)
@@ -167,10 +167,10 @@ DISPATCH_TO_VISIT_BINARY_EXPR(NotEqualToExprNode);
 #undef DISPATCH_TO_VISIT_BINARY_EXPR
 
 void QbeIrGenerator::Visit(const SimpleAssignmentExprNode& assign_expr) {
-  assign_expr.expr_->Accept(*this);
+  assign_expr.expr->Accept(*this);
   int expr_num = num_recorder.NumOfPrevExpr();
   output << "storew " << PrefixSigil(expr_num) << ", "
-         << PrefixSigil(id_to_num.at(assign_expr.id_)) << std::endl;
+         << PrefixSigil(id_to_num.at(assign_expr.id)) << std::endl;
   num_recorder.Record(expr_num);
 }
 
