@@ -28,28 +28,28 @@ class OpGetter {
 }  // namespace
 
 void AstDumper::Visit(const DeclNode& decl) {
-  std::cout << indenter_.Indent() << '(' << decl.id_ << ": "
-            << ExprTypeToCString(decl.type_);
-  if (decl.init_) {
+  std::cout << indenter_.Indent() << '(' << decl.id << ": "
+            << ExprTypeToCString(decl.type);
+  if (decl.init) {
     std::cout << " =" << std::endl;
     indenter_.IncreaseLevel();
-    decl.init_->Accept(*this);
+    decl.init->Accept(*this);
     indenter_.DecreaseLevel();
   }
   std::cout << ')' << std::endl;
 }
 
 void AstDumper::Visit(const BlockStmtNode& block) {
-  for (const auto& decl : block.decls_) {
+  for (const auto& decl : block.decls) {
     decl->Accept(*this);
   }
-  for (const auto& stmt : block.stmts_) {
+  for (const auto& stmt : block.stmts) {
     stmt->Accept(*this);
   }
 }
 
 void AstDumper::Visit(const ProgramNode& program) {
-  program.block_->Accept(*this);
+  program.block->Accept(*this);
 }
 
 void AstDumper::Visit(const NullStmtNode& stmt) {
@@ -59,22 +59,22 @@ void AstDumper::Visit(const NullStmtNode& stmt) {
 void AstDumper::Visit(const ReturnStmtNode& ret_stmt) {
   std::cout << indenter_.Indent() << "(ret" << std::endl;
   indenter_.IncreaseLevel();
-  ret_stmt.expr_->Accept(*this);
+  ret_stmt.expr->Accept(*this);
   indenter_.DecreaseLevel();
   std::cout << indenter_.Indent() << ')' << std::endl;
 }
 
 void AstDumper::Visit(const ExprStmtNode& expr_stmt) {
-  expr_stmt.expr_->Accept(*this);
+  expr_stmt.expr->Accept(*this);
 }
 
 void AstDumper::Visit(const IdExprNode& id_expr) {
-  std::cout << indenter_.Indent() << id_expr.id_ << ": "
+  std::cout << indenter_.Indent() << id_expr.id << ": "
             << ExprTypeToCString(id_expr.type) << std::endl;
 }
 
 void AstDumper::Visit(const IntConstExprNode& int_expr) {
-  std::cout << indenter_.Indent() << int_expr.val_ << ": "
+  std::cout << indenter_.Indent() << int_expr.val << ": "
             << ExprTypeToCString(int_expr.type) << std::endl;
 }
 
@@ -82,8 +82,8 @@ void AstDumper::Visit(const BinaryExprNode& bin_expr) {
   std::cout << indenter_.Indent() << '(' << OpGetter{}.OpOf(bin_expr)
             << std::endl;
   indenter_.IncreaseLevel();
-  bin_expr.lhs_->Accept(*this);
-  bin_expr.rhs_->Accept(*this);
+  bin_expr.lhs->Accept(*this);
+  bin_expr.rhs->Accept(*this);
   indenter_.DecreaseLevel();
   std::cout << indenter_.Indent() << ')' << ": "
             << ExprTypeToCString(bin_expr.type) << std::endl;
@@ -114,12 +114,12 @@ DISPATCH_TO_VISIT_BINARY_EXPR(NotEqualToExprNode);
 void AstDumper::Visit(const SimpleAssignmentExprNode& assign_expr) {
   std::cout << indenter_.Indent() << '(' << '=' << std::endl;
   indenter_.IncreaseLevel();
-  std::cout << indenter_.Indent() << assign_expr.id_ << ": "
+  std::cout << indenter_.Indent() << assign_expr.id << ": "
             << ExprTypeToCString(assign_expr.type) << std::endl;
-  assign_expr.expr_->Accept(*this);
+  assign_expr.expr->Accept(*this);
   indenter_.DecreaseLevel();
   std::cout << indenter_.Indent() << ')' << ": "
-            << ExprTypeToCString(assign_expr.expr_->type) << std::endl;
+            << ExprTypeToCString(assign_expr.expr->type) << std::endl;
 }
 
 class OpGetter::OpGetterImpl : public NonModifyingVisitor {
