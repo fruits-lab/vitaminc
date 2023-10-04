@@ -11,8 +11,7 @@
 
 /// @brief The most general base node of the Abstract Syntax Tree.
 /// @note This is an abstract class.
-class AstNode {
- public:
+struct AstNode {
   virtual void Accept(NonModifyingVisitor&) const;
   virtual void Accept(ModifyingVisitor&);
 
@@ -34,8 +33,7 @@ class AstNode {
 };
 
 /// @note This is an abstract class.
-class StmtNode : public AstNode {
- public:
+struct StmtNode : public AstNode {
   virtual void Accept(NonModifyingVisitor&) const override;
   virtual void Accept(ModifyingVisitor&) override;
 
@@ -44,8 +42,7 @@ class StmtNode : public AstNode {
 };
 
 /// @note This is an abstract class.
-class ExprNode : public AstNode {
- public:
+struct ExprNode : public AstNode {
   ExprType type = ExprType::kUnknown;
   virtual void Accept(NonModifyingVisitor&) const override;
   virtual void Accept(ModifyingVisitor&) override;
@@ -54,8 +51,7 @@ class ExprNode : public AstNode {
   virtual ~ExprNode() = 0;
 };
 
-class DeclNode : public AstNode {
- public:
+struct DeclNode : public AstNode {
   DeclNode(const std::string& id, ExprType decl_type,
            std::unique_ptr<ExprNode> init = {})
       : id{id}, type{decl_type}, init{std::move(init)} {}
@@ -69,8 +65,7 @@ class DeclNode : public AstNode {
 };
 
 /// @brief A block is a set of declarations and statements.
-class BlockStmtNode : public StmtNode {
- public:
+struct BlockStmtNode : public StmtNode {
   BlockStmtNode(std::vector<std::unique_ptr<DeclNode>>&& decls,
                 std::vector<std::unique_ptr<StmtNode>>&& stmts)
       : decls{std::move(decls)}, stmts{std::move(stmts)} {}
@@ -83,8 +78,7 @@ class BlockStmtNode : public StmtNode {
 };
 
 /// @brief Root of the entire program.
-class ProgramNode : public AstNode {
- public:
+struct ProgramNode : public AstNode {
   /// @note vector of move-only elements are move-only
   ProgramNode(std::unique_ptr<BlockStmtNode> block) : block{std::move(block)} {}
 
@@ -94,14 +88,12 @@ class ProgramNode : public AstNode {
   std::unique_ptr<BlockStmtNode> block;
 };
 
-class NullStmtNode : public StmtNode {
- public:
+struct NullStmtNode : public StmtNode {
   virtual void Accept(NonModifyingVisitor&) const override;
   virtual void Accept(ModifyingVisitor&) override;
 };
 
-class ReturnStmtNode : public StmtNode {
- public:
+struct ReturnStmtNode : public StmtNode {
   ReturnStmtNode(std::unique_ptr<ExprNode> expr) : expr{std::move(expr)} {}
 
   virtual void Accept(NonModifyingVisitor&) const override;
@@ -112,8 +104,7 @@ class ReturnStmtNode : public StmtNode {
 
 /// @note Any expression can be turned into a statement by adding a semicolon
 /// to the end of the expression.
-class ExprStmtNode : public StmtNode {
- public:
+struct ExprStmtNode : public StmtNode {
   ExprStmtNode(std::unique_ptr<ExprNode> expr) : expr{std::move(expr)} {}
 
   virtual void Accept(NonModifyingVisitor&) const override;
@@ -122,8 +113,7 @@ class ExprStmtNode : public StmtNode {
   std::unique_ptr<ExprNode> expr;
 };
 
-class IdExprNode : public ExprNode {
- public:
+struct IdExprNode : public ExprNode {
   IdExprNode(const std::string& id) : id{id} {}
 
   virtual void Accept(NonModifyingVisitor&) const override;
@@ -132,8 +122,7 @@ class IdExprNode : public ExprNode {
   std::string id;
 };
 
-class IntConstExprNode : public ExprNode {
- public:
+struct IntConstExprNode : public ExprNode {
   IntConstExprNode(int val) : val{val} {}
 
   virtual void Accept(NonModifyingVisitor&) const override;
@@ -143,8 +132,7 @@ class IntConstExprNode : public ExprNode {
 };
 
 /// @note This is an abstract class.
-class BinaryExprNode : public ExprNode {
- public:
+struct BinaryExprNode : public ExprNode {
   BinaryExprNode(std::unique_ptr<ExprNode> lhs, std::unique_ptr<ExprNode> rhs)
       : lhs{std::move(lhs)}, rhs{std::move(rhs)} {}
 
@@ -158,97 +146,85 @@ class BinaryExprNode : public ExprNode {
   std::unique_ptr<ExprNode> rhs;
 };
 
-class PlusExprNode : public BinaryExprNode {
+struct PlusExprNode : public BinaryExprNode {
   using BinaryExprNode::BinaryExprNode;
 
- public:
   virtual void Accept(NonModifyingVisitor&) const override;
   virtual void Accept(ModifyingVisitor&) override;
 };
 
-class SubExprNode : public BinaryExprNode {
+struct SubExprNode : public BinaryExprNode {
   using BinaryExprNode::BinaryExprNode;
 
- public:
   virtual void Accept(NonModifyingVisitor&) const override;
   virtual void Accept(ModifyingVisitor&) override;
 };
 
-class MulExprNode : public BinaryExprNode {
+struct MulExprNode : public BinaryExprNode {
   using BinaryExprNode::BinaryExprNode;
 
- public:
   virtual void Accept(NonModifyingVisitor&) const override;
   virtual void Accept(ModifyingVisitor&) override;
 };
 
-class DivExprNode : public BinaryExprNode {
+struct DivExprNode : public BinaryExprNode {
   using BinaryExprNode::BinaryExprNode;
 
- public:
   virtual void Accept(NonModifyingVisitor&) const override;
   virtual void Accept(ModifyingVisitor&) override;
 };
 
-class ModExprNode : public BinaryExprNode {
+struct ModExprNode : public BinaryExprNode {
   using BinaryExprNode::BinaryExprNode;
 
- public:
   virtual void Accept(NonModifyingVisitor&) const override;
   virtual void Accept(ModifyingVisitor&) override;
 };
 
-class GreaterThanExprNode : public BinaryExprNode {
+struct GreaterThanExprNode : public BinaryExprNode {
   using BinaryExprNode::BinaryExprNode;
 
- public:
   virtual void Accept(NonModifyingVisitor&) const override;
   virtual void Accept(ModifyingVisitor&) override;
 };
 
-class GreaterThanOrEqualToExprNode : public BinaryExprNode {
+struct GreaterThanOrEqualToExprNode : public BinaryExprNode {
   using BinaryExprNode::BinaryExprNode;
 
- public:
   virtual void Accept(NonModifyingVisitor&) const override;
   virtual void Accept(ModifyingVisitor&) override;
 };
 
-class LessThanExprNode : public BinaryExprNode {
+struct LessThanExprNode : public BinaryExprNode {
   using BinaryExprNode::BinaryExprNode;
 
- public:
   virtual void Accept(NonModifyingVisitor&) const override;
   virtual void Accept(ModifyingVisitor&) override;
 };
 
-class LessThanOrEqualToExprNode : public BinaryExprNode {
+struct LessThanOrEqualToExprNode : public BinaryExprNode {
   using BinaryExprNode::BinaryExprNode;
 
- public:
   virtual void Accept(NonModifyingVisitor&) const override;
   virtual void Accept(ModifyingVisitor&) override;
 };
 
-class EqualToExprNode : public BinaryExprNode {
+struct EqualToExprNode : public BinaryExprNode {
   using BinaryExprNode::BinaryExprNode;
 
- public:
   virtual void Accept(NonModifyingVisitor&) const override;
   virtual void Accept(ModifyingVisitor&) override;
 };
 
-class NotEqualToExprNode : public BinaryExprNode {
+struct NotEqualToExprNode : public BinaryExprNode {
   using BinaryExprNode::BinaryExprNode;
 
- public:
   virtual void Accept(NonModifyingVisitor&) const override;
   virtual void Accept(ModifyingVisitor&) override;
 };
 
 /// @note This is an abstract class.
-class AssignmentExprNode : public ExprNode {
- public:
+struct AssignmentExprNode : public ExprNode {
   virtual void Accept(NonModifyingVisitor&) const override;
   virtual void Accept(ModifyingVisitor&) override;
 
@@ -256,8 +232,7 @@ class AssignmentExprNode : public ExprNode {
   virtual ~AssignmentExprNode() = 0;
 };
 
-class SimpleAssignmentExprNode : public AssignmentExprNode {
- public:
+struct SimpleAssignmentExprNode : public AssignmentExprNode {
   SimpleAssignmentExprNode(std::string id, std::unique_ptr<ExprNode> expr)
       : id{std::move(id)}, expr{std::move(expr)} {}
 
