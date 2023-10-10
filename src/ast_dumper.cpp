@@ -1,9 +1,10 @@
+#include "ast_dumper.hpp"
+
 #include <iostream>
 #include <memory>
 #include <string>
 
 #include "ast.hpp"
-#include "ast_dumper.hpp"
 #include "type.hpp"
 #include "visitor.hpp"
 
