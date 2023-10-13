@@ -1,7 +1,7 @@
 TARGET := vitaminc
 CXX := g++
 CC = $(CXX)
-CXXFLAGS = -g3 -std=c++14 -Wall -MMD -Iinclude
+CXXFLAGS = -g3 -std=c++14 -Wall -MMD -Iinclude -Werror
 CFLAGS = $(CXXFLAGS)
 LEX = lex
 # C++ features are used, yacc doesn't suffice
