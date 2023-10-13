@@ -6,7 +6,7 @@
 #include <vector>
 
 #include "ast.hpp"
-#include "lex.yy.c"
+#include "lex.yy.cpp"
 #include "type.hpp"
 
 extern std::unique_ptr<AstNode> program;

@@ -9,9 +9,9 @@ YACC = bison
 # -d: generate header with default name
 YFLAGS = --verbose --debug -d
 
-# Note that lex.yy.c is excluded deliberately, as "lex.yy.c" is considered a
-# header file (it's included by "y.tab.c").
-OBJS := $(shell find . -name "*.cpp") y.tab.o
+# Note that lex.yy.cpp is excluded deliberately, as "lex.yy.cpp" is considered a
+# header file (it's included by "y.tab.cpp").
+OBJS := $(shell find . -name "*.cpp" ! -name "y.tab.cpp" ! -name "lex.yy.cpp" ) y.tab.o
 OBJS := $(OBJS:.cpp=.o)
 DEPS = $(OBJS:.o=.d)
 
@@ -25,11 +25,11 @@ test: $(TARGET)
 $(TARGET): $(OBJS)
 	$(CXX) $(CXXFLAGS) $(OBJS) -o $@
 
-lex.yy.c: lexer.l
+lex.yy.cpp: lexer.l
 	$(LEX) -o $@ $<
 
-y.tab.h: y.tab.c
-y.tab.c: parser.y lex.yy.c
+y.tab.hpp: y.tab.cpp
+y.tab.cpp: parser.y lex.yy.cpp
 	$(YACC) $(YFLAGS) $< -o $@
 
 #
@@ -38,10 +38,10 @@ y.tab.c: parser.y lex.yy.c
 # dependency explicit to enforce the ordering.
 #
 
-main.o: %.o: %.cpp y.tab.h
+main.o: %.o: %.cpp y.tab.hpp
 
 clean:
-	rm -rf *.s *.o lex.yy.c y.tab.c y.tab.h *.output *.ssa $(TARGET) $(OBJS) $(DEPS)
+	rm -rf *.s *.o lex.yy.* y.tab.* *.output *.ssa $(TARGET) $(OBJS) $(DEPS)
 	make -C test/ clean
 
 -include $(DEPS)

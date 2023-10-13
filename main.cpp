@@ -10,7 +10,7 @@
 #include "scope.hpp"
 #include "type_checker.hpp"
 #include "util.hpp"
-#include "y.tab.h"
+#include "y.tab.hpp"
 
 /// @brief Where the generated code goes.
 std::ofstream output;

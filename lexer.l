@@ -15,7 +15,7 @@
 #include <cstdlib>
 #include <iostream>
 
-#include "y.tab.h"
+#include "y.tab.hpp"
 
 // Use LINENO for the actual line number in the source code
 // yylineno has advanced to the next line when we reference it.
