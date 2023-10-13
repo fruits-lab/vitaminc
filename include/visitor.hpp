@@ -6,31 +6,31 @@
 // Forward declarations to fix the acyclic problem with name only dependency.
 // NOTE: update the list every time a new kind of node is introduced.
 
-class AstNode;
-class StmtNode;
-class ExprNode;
-class DeclNode;
-class BlockStmtNode;
-class ProgramNode;
-class NullStmtNode;
-class ReturnStmtNode;
-class ExprStmtNode;
-class IdExprNode;
-class IntConstExprNode;
-class BinaryExprNode;
-class PlusExprNode;
-class SubExprNode;
-class MulExprNode;
-class DivExprNode;
-class ModExprNode;
-class GreaterThanExprNode;
-class GreaterThanOrEqualToExprNode;
-class LessThanExprNode;
-class LessThanOrEqualToExprNode;
-class EqualToExprNode;
-class NotEqualToExprNode;
-class AssignmentExprNode;
-class SimpleAssignmentExprNode;
+struct AstNode;
+struct StmtNode;
+struct ExprNode;
+struct DeclNode;
+struct BlockStmtNode;
+struct ProgramNode;
+struct NullStmtNode;
+struct ReturnStmtNode;
+struct ExprStmtNode;
+struct IdExprNode;
+struct IntConstExprNode;
+struct BinaryExprNode;
+struct PlusExprNode;
+struct SubExprNode;
+struct MulExprNode;
+struct DivExprNode;
+struct ModExprNode;
+struct GreaterThanExprNode;
+struct GreaterThanOrEqualToExprNode;
+struct LessThanExprNode;
+struct LessThanOrEqualToExprNode;
+struct EqualToExprNode;
+struct NotEqualToExprNode;
+struct AssignmentExprNode;
+struct SimpleAssignmentExprNode;
 
 /// @tparam is_modifying If `true`, `Visit()` takes a non-const reference of the
 /// visitable; otherwise, a const reference. Default to `false`.
