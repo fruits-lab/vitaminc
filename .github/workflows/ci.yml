@@ -19,6 +19,9 @@ jobs:
           scripts/check-format.sh
   test:
     runs-on: ubuntu-22.04
+    strategy:
+      matrix:
+        cxx: [g++, clang++]
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v3
@@ -29,4 +32,4 @@ jobs:
       - name: Install Turnt
         run: pip install turnt
       - name: Run tests
-        run: make test
+        run: make test CXX=${{ matrix.cxx }}
