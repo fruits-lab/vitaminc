@@ -203,27 +203,27 @@ class OpNameGetter::OpNameGetterImpl : public NonModifyingVisitor {
   }
 
   void Visit(const GreaterThanExprNode&) override {
-    op_name_ = "sgt";
+    op_name_ = "csgtw";
   }
 
   void Visit(const GreaterThanOrEqualToExprNode&) override {
-    op_name_ = "sge";
+    op_name_ = "csgew";
   }
 
   void Visit(const LessThanExprNode&) override {
-    op_name_ = "slt";
+    op_name_ = "csltw";
   }
 
   void Visit(const LessThanOrEqualToExprNode&) override {
-    op_name_ = "sle";
+    op_name_ = "cslew";
   }
 
   void Visit(const EqualToExprNode&) override {
-    op_name_ = "eq";
+    op_name_ = "ceqw";
   }
 
   void Visit(const NotEqualToExprNode&) override {
-    op_name_ = "ne";
+    op_name_ = "cnew";
   }
 
  private:
