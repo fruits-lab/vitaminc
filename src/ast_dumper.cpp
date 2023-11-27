@@ -57,6 +57,15 @@ void AstDumper::Visit(const NullStmtNode& stmt) {
   std::cout << indenter_.Indent() << "()" << std::endl;
 }
 
+void AstDumper::Visit(const IfStmtNode& if_stmt) {
+  std::cout << indenter_.Indent() << "(if" << std::endl;
+  indenter_.IncreaseLevel();
+  if_stmt.predicate->Accept(*this);
+  if_stmt.body->Accept(*this);
+  indenter_.DecreaseLevel();
+  std::cout << indenter_.Indent() << ')' << std::endl;
+}
+
 void AstDumper::Visit(const ReturnStmtNode& ret_stmt) {
   std::cout << indenter_.Indent() << "(ret" << std::endl;
   indenter_.IncreaseLevel();
