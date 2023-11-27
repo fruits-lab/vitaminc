@@ -39,6 +39,11 @@ void TypeChecker::Visit(NullStmtNode&) {
   /* do nothing */
 }
 
+void TypeChecker::Visit(IfStmtNode& if_stmt) {
+  if_stmt.predicate->Accept(*this);
+  if_stmt.body->Accept(*this);
+}
+
 void TypeChecker::Visit(ReturnStmtNode& ret_stmt) {
   ret_stmt.expr->Accept(*this);
   if (ret_stmt.expr->type != ExprType::kInt) {
@@ -100,8 +105,8 @@ void TypeChecker::Visit(SimpleAssignmentExprNode& assign_expr) {
     if (assign_expr.expr->type == symbol->expr_type) {
       // 6.5.16 Assignment operators
       // The type of an assignment expression is the type of the left
-      // operand unless the left operand has qualified type, in which case it is
-      // the unqualified version of the type of the left operand.
+      // operand unless the left operand has qualified type, in which case it
+      // is the unqualified version of the type of the left operand.
       assign_expr.type = symbol->expr_type;
     } else {
       // TODO: assigning to 'symbol->expr_type' from incompatible type

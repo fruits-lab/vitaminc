@@ -109,7 +109,7 @@ stmts: stmts stmt {
 stmt: ';' { $$ = std::make_unique<NullStmtNode>(); }
     | RETURN expr ';' { $$ = std::make_unique<ReturnStmtNode>($2); }
     | expr ';' { $$ = std::make_unique<ExprStmtNode>($1); }
-    | IF '(' expr ')' block {}
+    | IF '(' expr ')' block { $$ = std::make_unique<IfStmtNode>($3, $5); }
     ;
 
 expr: ID { $$ = std::make_unique<IdExprNode>($1); }

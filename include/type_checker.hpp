@@ -13,6 +13,7 @@ class TypeChecker : public ModifyingVisitor {
   void Visit(BlockStmtNode&) override;
   void Visit(ProgramNode&) override;
   void Visit(NullStmtNode&) override;
+  void Visit(IfStmtNode&) override;
   void Visit(ReturnStmtNode&) override;
   void Visit(ExprStmtNode&) override;
   void Visit(IdExprNode&) override;
