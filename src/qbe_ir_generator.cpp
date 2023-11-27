@@ -22,9 +22,19 @@ int NextLocalNum() {
   return next_local_num++;
 }
 
+int NextLabelNum() {
+  static int next_label_num = 1;
+  return next_label_num++;
+}
+
 /// @brief Returns the function-scope temporary with sigil (`%`).
 std::string PrefixSigil(int local_num) {
   return "%." + std::to_string(local_num);
+}
+
+/// @brief Returns a label with prefix (`@`).
+std::string PrefixLabel(const std::string& name, int label_num) {
+  return "@" + name + "." + std::to_string(label_num);
 }
 
 class OpNameGetter {
@@ -87,7 +97,10 @@ void QbeIrGenerator::Visit(const DeclNode& decl) {
 }
 
 void QbeIrGenerator::Visit(const BlockStmtNode& block) {
-  output << "@start" << std::endl;
+  // Note: BlockStmtNode cannot output the correct label to its own block
+  // because it doesn't know whether it is a if statement body or a function.
+  // Thus, by moving label creation to an upper level, each block can have its
+  // correct starting label.
   for (const auto& decl : block.decls) {
     decl->Accept(*this);
   }
@@ -98,6 +111,7 @@ void QbeIrGenerator::Visit(const BlockStmtNode& block) {
 
 void QbeIrGenerator::Visit(const ProgramNode& program) {
   output << "export function w $main() {" << std::endl;
+  output << "@start" << std::endl;
   program.block->Accept(*this);
   output << "}";
 }
@@ -106,7 +120,20 @@ void QbeIrGenerator::Visit(const NullStmtNode&) {
   /* do nothing */
 }
 
-void QbeIrGenerator::Visit(const IfStmtNode& if_stmt) {}
+void QbeIrGenerator::Visit(const IfStmtNode& if_stmt) {
+  if_stmt.predicate->Accept(*this);
+  int predicate_num = num_recorder.NumOfPrevExpr();
+  int label_num = NextLabelNum();
+  std::string start_label = PrefixLabel("if", label_num);
+  std::string end_label = PrefixLabel("end", label_num);
+
+  // Jumps to start_label if argument is non-zero. Or else, jumps to end_label.
+  output << "jnz " << PrefixSigil(predicate_num) << ", " << start_label << ", "
+         << end_label << std::endl;
+  output << start_label << std::endl;
+  if_stmt.body->Accept(*this);
+  output << end_label << std::endl;
+}
 
 void QbeIrGenerator::Visit(const ReturnStmtNode& ret_stmt) {
   ret_stmt.expr->Accept(*this);
