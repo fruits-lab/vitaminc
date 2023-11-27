@@ -63,6 +63,7 @@ extern std::unique_ptr<AstNode> program;
 %nterm <std::vector<std::unique_ptr<DeclNode>>> decls
 %nterm <std::unique_ptr<StmtNode>> stmt
 %nterm <std::vector<std::unique_ptr<StmtNode>>> stmts
+%nterm <std::unique_ptr<BlockStmtNode>> block
 %nterm <std::unique_ptr<BlockStmtNode>> main_func
 
 %left '='
@@ -80,8 +81,13 @@ entry: main_func {
   ;
 
   /* TODO: mix declarations and statements in compound statement */
-main_func: INT MAIN '(' ')' '{' decls stmts '}' {
-    $$ = std::make_unique<BlockStmtNode>($6, $7);
+main_func: INT MAIN '(' ')' block {
+    $$ = $5;
+  }
+  ;
+
+block: '{' decls stmts '}' {
+    $$ = std::make_unique<BlockStmtNode>($2, $3);
   }
   ;
 
