@@ -1,0 +1,25 @@
+(i: int =
+  2: int
+)
+(if
+  (<
+    i: int
+    0: int
+  ): int
+  (=
+    i: int
+    0: int
+  ): int
+)
+(else
+  (=
+    i: int
+    (+
+      i: int
+      1: int
+    ): int
+  ): int
+)
+(ret
+  i: int
+)
