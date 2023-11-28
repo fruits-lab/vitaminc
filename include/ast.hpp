@@ -95,14 +95,18 @@ struct NullStmtNode : public StmtNode {
 
 struct IfStmtNode : public StmtNode {
   IfStmtNode(std::unique_ptr<ExprNode> expr,
-             std::unique_ptr<BlockStmtNode> block)
-      : predicate{std::move(expr)}, body{std::move(block)} {}
+             std::unique_ptr<BlockStmtNode> then,
+             std::unique_ptr<BlockStmtNode> or_else = {})
+      : predicate{std::move(expr)},
+        then{std::move(then)},
+        or_else{std::move(or_else)} {}
 
   virtual void Accept(NonModifyingVisitor&) const override;
   virtual void Accept(ModifyingVisitor&) override;
 
   std::unique_ptr<ExprNode> predicate;
-  std::unique_ptr<BlockStmtNode> body;
+  std::unique_ptr<BlockStmtNode> then;
+  std::unique_ptr<BlockStmtNode> or_else;
 };
 
 struct ReturnStmtNode : public StmtNode {

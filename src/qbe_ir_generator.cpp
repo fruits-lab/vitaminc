@@ -124,14 +124,30 @@ void QbeIrGenerator::Visit(const IfStmtNode& if_stmt) {
   if_stmt.predicate->Accept(*this);
   int predicate_num = num_recorder.NumOfPrevExpr();
   int label_num = NextLabelNum();
-  std::string start_label = PrefixLabel("if", label_num);
+  std::string then_label = PrefixLabel("then", label_num);
+  std::string else_label = PrefixLabel("else", label_num);
   std::string end_label = PrefixLabel("end", label_num);
 
-  // Jumps to start_label if argument is non-zero. Or else, jumps to end_label.
-  output << "jnz " << PrefixSigil(predicate_num) << ", " << start_label << ", "
-         << end_label << std::endl;
-  output << start_label << std::endl;
-  if_stmt.body->Accept(*this);
+  // Jumps to "then" if the predicate is true (non-zero), else jumps to "else".
+  // If no "else" exists, falls through to "end".
+  // If "else" exists, a second jump is needed after executing "then" to skip
+  // it, as the generated code for "else" follows immediately after "then".
+  output << "# if" << std::endl;
+  output << "jnz " << PrefixSigil(predicate_num) << ", " << then_label << ", ";
+  if (if_stmt.or_else) {
+    output << else_label << std::endl;
+  } else {
+    output << end_label << std::endl;
+  }
+
+  output << then_label << std::endl;
+  if_stmt.then->Accept(*this);
+  if (if_stmt.or_else) {
+    // Skip the "else" part after executing "then".
+    output << "jmp " << end_label << std::endl;
+    output << else_label << std::endl;
+    if_stmt.or_else->Accept(*this);
+  }
   output << end_label << std::endl;
 }
 

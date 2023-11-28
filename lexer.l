@@ -48,6 +48,7 @@ bracket [\(\)\{\}\[\]]
 ">=" { return yy::parser::make_GE(); }
 
   /* keywords */
+else { return yy::parser::make_ELSE(); }
 if { return yy::parser::make_IF(); }
 int { return yy::parser::make_INT(); }
 main { return yy::parser::make_MAIN(); }

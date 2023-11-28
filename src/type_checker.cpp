@@ -41,7 +41,10 @@ void TypeChecker::Visit(NullStmtNode&) {
 
 void TypeChecker::Visit(IfStmtNode& if_stmt) {
   if_stmt.predicate->Accept(*this);
-  if_stmt.body->Accept(*this);
+  if_stmt.then->Accept(*this);
+  if (if_stmt.or_else) {
+    if_stmt.or_else->Accept(*this);
+  }
 }
 
 void TypeChecker::Visit(ReturnStmtNode& ret_stmt) {
