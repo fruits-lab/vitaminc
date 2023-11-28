@@ -48,7 +48,7 @@ extern std::unique_ptr<AstNode> program;
 %token <int> NUM
 %token <std::string> ID
 %token INT MAIN RETURN
-%token IF
+%token IF ELSE
 %token EQ NE LE GE
 %token EOF 0
 
@@ -110,6 +110,7 @@ stmt: ';' { $$ = std::make_unique<NullStmtNode>(); }
     | RETURN expr ';' { $$ = std::make_unique<ReturnStmtNode>($2); }
     | expr ';' { $$ = std::make_unique<ExprStmtNode>($1); }
     | IF '(' expr ')' block { $$ = std::make_unique<IfStmtNode>($3, $5); }
+    | IF '(' expr ')' block ELSE block { $$ = std::make_unique<IfStmtNode>($3, $5, $7); }
     ;
 
 expr: ID { $$ = std::make_unique<IdExprNode>($1); }
