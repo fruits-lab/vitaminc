@@ -1,0 +1,19 @@
+(i: int =
+  5: int
+)
+(while
+  (>
+    i: int
+    0: int
+  ): int
+  (=
+    i: int
+    (-
+      i: int
+      1: int
+    ): int
+  ): int
+)
+(ret
+  i: int
+)

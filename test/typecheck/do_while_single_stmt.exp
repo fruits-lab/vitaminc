@@ -1,0 +1,21 @@
+(i: int =
+  5: int
+)
+(do
+  (=
+    i: int
+    (-
+      i: int
+      1: int
+    ): int
+  ): int
+)
+(while
+  (>
+    i: int
+    0: int
+  ): int
+)
+(ret
+  i: int
+)
