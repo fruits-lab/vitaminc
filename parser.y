@@ -79,8 +79,9 @@ extern std::unique_ptr<AstNode> program;
 //                         ↳ 13: IF '(' expr ')' stmt •
 //
 // Our goal is to find the closest IF for ELSE, so we tell Yacc to shift.
-// ELSE has a higher precendence than IF due to increasing precedence order.
-%precedence IF
+// Since the token "ELSE" has a higher precedence than the production rule
+// "if without else", Yacc shifts to "ELSE" instead of reducing with the rule.
+%precedence IF_WITHOUT_ELSE
 %precedence ELSE
 
 %start entry
@@ -127,7 +128,7 @@ stmt: ';' { $$ = std::make_unique<NullStmtNode>(); }
     | RETURN expr ';' { $$ = std::make_unique<ReturnStmtNode>($2); }
     | expr ';' { $$ = std::make_unique<ExprStmtNode>($1); }
     | block { $$ = $1; }
-    | IF '(' expr ')' stmt %prec IF { $$ = std::make_unique<IfStmtNode>($3, $5); }
+    | IF '(' expr ')' stmt %prec IF_WITHOUT_ELSE { $$ = std::make_unique<IfStmtNode>($3, $5); }
     | IF '(' expr ')' stmt ELSE stmt { $$ = std::make_unique<IfStmtNode>($3, $5, $7); }
     ;
 
