@@ -108,6 +108,21 @@ struct IfStmtNode : public StmtNode {
   std::unique_ptr<StmtNode> or_else;
 };
 
+struct WhileStmtNode : public StmtNode {
+  WhileStmtNode(std::unique_ptr<ExprNode> predicate,
+                std::unique_ptr<StmtNode> loop_body, bool is_do_while = false)
+      : predicate{std::move(predicate)},
+        loop_body{std::move(loop_body)},
+        is_do_while{is_do_while} {}
+
+  virtual void Accept(NonModifyingVisitor&) const override;
+  virtual void Accept(ModifyingVisitor&) override;
+
+  std::unique_ptr<ExprNode> predicate;
+  std::unique_ptr<StmtNode> loop_body;
+  bool is_do_while;
+};
+
 struct ReturnStmtNode : public StmtNode {
   ReturnStmtNode(std::unique_ptr<ExprNode> expr) : expr{std::move(expr)} {}
 

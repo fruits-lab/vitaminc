@@ -50,6 +50,7 @@ extern std::unique_ptr<AstNode> program;
 %token INT MAIN RETURN
 %token IF ELSE
 %token EQ NE LE GE
+%token DO WHILE
 %token EOF 0
 
 %nterm <std::unique_ptr<ExprNode>> expr
@@ -130,6 +131,8 @@ stmt: ';' { $$ = std::make_unique<NullStmtNode>(); }
     | block { $$ = $1; }
     | IF '(' expr ')' stmt %prec IF_WITHOUT_ELSE { $$ = std::make_unique<IfStmtNode>($3, $5); }
     | IF '(' expr ')' stmt ELSE stmt { $$ = std::make_unique<IfStmtNode>($3, $5, $7); }
+    | WHILE '(' expr ')' stmt { $$ = std::make_unique<WhileStmtNode>($3, $5); }
+    | DO stmt WHILE '(' expr ')' ';' { $$ = std::make_unique<WhileStmtNode>($5, $2, true); }
     ;
 
 expr: ID { $$ = std::make_unique<IdExprNode>($1); }
