@@ -73,6 +73,24 @@ void AstDumper::Visit(const IfStmtNode& if_stmt) {
   }
 }
 
+void AstDumper::Visit(const WhileStmtNode& while_stmt) {
+  if (while_stmt.is_do_while) {
+    std::cout << indenter_.Indent() << "(do" << std::endl;
+    indenter_.IncreaseLevel();
+    while_stmt.loop_body->Accept(*this);
+    indenter_.DecreaseLevel();
+    std::cout << indenter_.Indent() << ')' << std::endl;
+  }
+  std::cout << indenter_.Indent() << "(while" << std::endl;
+  indenter_.IncreaseLevel();
+  while_stmt.predicate->Accept(*this);
+  if (!while_stmt.is_do_while) {
+    while_stmt.loop_body->Accept(*this);
+  }
+  indenter_.DecreaseLevel();
+  std::cout << indenter_.Indent() << ')' << std::endl;
+}
+
 void AstDumper::Visit(const ReturnStmtNode& ret_stmt) {
   std::cout << indenter_.Indent() << "(ret" << std::endl;
   indenter_.IncreaseLevel();

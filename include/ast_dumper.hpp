@@ -1,6 +1,7 @@
 #ifndef AST_DUMPER_HPP_
 #define AST_DUMPER_HPP_
 
+#include "ast.hpp"
 #include "util.hpp"
 #include "visitor.hpp"
 
@@ -11,6 +12,7 @@ class AstDumper : public NonModifyingVisitor {
   void Visit(const ProgramNode&) override;
   void Visit(const NullStmtNode&) override;
   void Visit(const IfStmtNode&) override;
+  void Visit(const WhileStmtNode&) override;
   void Visit(const ReturnStmtNode&) override;
   void Visit(const ExprStmtNode&) override;
   void Visit(const IdExprNode&) override;

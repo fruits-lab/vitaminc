@@ -151,6 +151,8 @@ void QbeIrGenerator::Visit(const IfStmtNode& if_stmt) {
   output << end_label << std::endl;
 }
 
+void QbeIrGenerator::Visit(const WhileStmtNode& while_stmt) {}
+
 void QbeIrGenerator::Visit(const ReturnStmtNode& ret_stmt) {
   ret_stmt.expr->Accept(*this);
   int ret_num = num_recorder.NumOfPrevExpr();

@@ -47,6 +47,11 @@ void TypeChecker::Visit(IfStmtNode& if_stmt) {
   }
 }
 
+void TypeChecker::Visit(WhileStmtNode& while_stmt) {
+  while_stmt.predicate->Accept(*this);
+  while_stmt.loop_body->Accept(*this);
+}
+
 void TypeChecker::Visit(ReturnStmtNode& ret_stmt) {
   ret_stmt.expr->Accept(*this);
   if (ret_stmt.expr->type != ExprType::kInt) {

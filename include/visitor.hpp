@@ -14,6 +14,7 @@ struct BlockStmtNode;
 struct ProgramNode;
 struct NullStmtNode;
 struct IfStmtNode;
+struct WhileStmtNode;
 struct ReturnStmtNode;
 struct ExprStmtNode;
 struct IdExprNode;
@@ -57,6 +58,7 @@ class Visitor {
   virtual void Visit(CondMut<ProgramNode>&){};
   virtual void Visit(CondMut<NullStmtNode>&){};
   virtual void Visit(CondMut<IfStmtNode>&){};
+  virtual void Visit(CondMut<WhileStmtNode>&){};
   virtual void Visit(CondMut<ReturnStmtNode>&){};
   virtual void Visit(CondMut<ExprStmtNode>&){};
   virtual void Visit(CondMut<IdExprNode>&){};
