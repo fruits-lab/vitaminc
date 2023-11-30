@@ -66,6 +66,23 @@ extern std::unique_ptr<AstNode> program;
 %left '+' '-'
 %left '*' '/' '%'
 
+// Resolve the ambiguity in the "dangling-else" grammar.
+// Example: IF '(' expr ')' IF '(' expr ')' stmt • ELSE stmt
+// Yacc has two options to make, either shift or reduce:
+// Shift derivation
+//   stmt
+//   ↳ 13: IF '(' expr ')' stmt
+//                         ↳ 14: IF '(' expr ')' stmt • ELSE stmt
+// Reduce derivation
+//   stmt
+//   ↳ 14: IF '(' expr ')' stmt                         ELSE stmt
+//                         ↳ 13: IF '(' expr ')' stmt •
+//
+// Our goal is to find the closest IF for ELSE, so we tell Yacc to shift.
+// ELSE has a higher precendence than IF due to increasing precedence order.
+%precedence IF
+%precedence ELSE
+
 %start entry
 
 %%
@@ -74,12 +91,12 @@ entry: main_func {
   }
   ;
 
-  /* TODO: mix declarations and statements in compound statement */
 main_func: INT MAIN '(' ')' block {
     $$ = $5;
   }
   ;
 
+  /* TODO: mix declarations and statements in compound statement */
 block: '{' decls stmts '}' {
     $$ = std::make_unique<BlockStmtNode>($2, $3);
   }
@@ -109,8 +126,9 @@ stmts: stmts stmt {
 stmt: ';' { $$ = std::make_unique<NullStmtNode>(); }
     | RETURN expr ';' { $$ = std::make_unique<ReturnStmtNode>($2); }
     | expr ';' { $$ = std::make_unique<ExprStmtNode>($1); }
-    | IF '(' expr ')' block { $$ = std::make_unique<IfStmtNode>($3, $5); }
-    | IF '(' expr ')' block ELSE block { $$ = std::make_unique<IfStmtNode>($3, $5, $7); }
+    | block { $$ = $1; }
+    | IF '(' expr ')' stmt %prec IF { $$ = std::make_unique<IfStmtNode>($3, $5); }
+    | IF '(' expr ')' stmt ELSE stmt { $$ = std::make_unique<IfStmtNode>($3, $5, $7); }
     ;
 
 expr: ID { $$ = std::make_unique<IdExprNode>($1); }
