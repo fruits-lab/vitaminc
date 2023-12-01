@@ -151,7 +151,36 @@ void QbeIrGenerator::Visit(const IfStmtNode& if_stmt) {
   output << end_label << std::endl;
 }
 
-void QbeIrGenerator::Visit(const WhileStmtNode& while_stmt) {}
+void QbeIrGenerator::Visit(const WhileStmtNode& while_stmt) {
+  int label_num = NextLabelNum();
+  std::string body_label = PrefixLabel("loop_body", label_num);
+  std::string pred_label = PrefixLabel("pred", label_num);
+  std::string end_label = PrefixLabel("end", label_num);
+
+  // A while statement's predicate is evaluated "before" the body statement,
+  // whereas a do-while statement's predicate is evaluated "after" the body
+  // statement. In the generated code for a while statement, there is an
+  // unconditional jump at the end of the body to jump back to the predicate.
+  // For a do-while statement, it only needs one conditional jump.
+  if (!while_stmt.is_do_while) {
+    output << pred_label << std::endl;
+    while_stmt.predicate->Accept(*this);
+    int predicate_num = num_recorder.NumOfPrevExpr();
+    output << "jnz " << PrefixSigil(predicate_num) << ", " << body_label << ", "
+           << end_label << std::endl;
+  }
+  output << body_label << std::endl;
+  while_stmt.loop_body->Accept(*this);
+  if (!while_stmt.is_do_while) {
+    output << "jmp " << pred_label << std::endl;
+  } else {
+    while_stmt.predicate->Accept(*this);
+    int predicate_num = num_recorder.NumOfPrevExpr();
+    output << "jnz " << PrefixSigil(predicate_num) << ", " << body_label << ", "
+           << end_label << std::endl;
+  }
+  output << end_label << std::endl;
+}
 
 void QbeIrGenerator::Visit(const ReturnStmtNode& ret_stmt) {
   ret_stmt.expr->Accept(*this);
