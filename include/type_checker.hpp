@@ -1,6 +1,7 @@
 #ifndef TYPE_CHECKER_HPP_
 #define TYPE_CHECKER_HPP_
 
+#include "ast.hpp"
 #include "scope.hpp"
 #include "visitor.hpp"
 
@@ -9,14 +10,17 @@ class TypeChecker : public ModifyingVisitor {
  public:
   TypeChecker(ScopeStack& env) : env_{env} {}
 
+  void Visit(LoopInitNode&) override;
   void Visit(DeclNode&) override;
   void Visit(BlockStmtNode&) override;
   void Visit(ProgramNode&) override;
   void Visit(NullStmtNode&) override;
   void Visit(IfStmtNode&) override;
   void Visit(WhileStmtNode&) override;
+  void Visit(ForStmtNode&) override;
   void Visit(ReturnStmtNode&) override;
   void Visit(ExprStmtNode&) override;
+  void Visit(NullExprNode&) override;
   void Visit(IdExprNode&) override;
   void Visit(IntConstExprNode&) override;
   void Visit(BinaryExprNode&) override;

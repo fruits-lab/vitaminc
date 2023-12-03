@@ -37,7 +37,15 @@ void AstDumper::Visit(const DeclNode& decl) {
     decl.init->Accept(*this);
     indenter_.DecreaseLevel();
   }
-  std::cout << ')' << std::endl;
+  std::cout << indenter_.Indent() << ')' << std::endl;
+}
+
+void AstDumper::Visit(const LoopInitNode& loop_init) {
+  if (std::holds_alternative<std::unique_ptr<DeclNode>>(loop_init.clause)) {
+    std::get<std::unique_ptr<DeclNode>>(loop_init.clause)->Accept(*this);
+  } else {
+    std::get<std::unique_ptr<ExprNode>>(loop_init.clause)->Accept(*this);
+  }
 }
 
 void AstDumper::Visit(const BlockStmtNode& block) {
@@ -91,6 +99,17 @@ void AstDumper::Visit(const WhileStmtNode& while_stmt) {
   std::cout << indenter_.Indent() << ')' << std::endl;
 }
 
+void AstDumper::Visit(const ForStmtNode& for_stmt) {
+  std::cout << indenter_.Indent() << "(for" << std::endl;
+  indenter_.IncreaseLevel();
+  for_stmt.loop_init->Accept(*this);
+  for_stmt.predicate->Accept(*this);
+  for_stmt.step->Accept(*this);
+  for_stmt.loop_body->Accept(*this);
+  indenter_.DecreaseLevel();
+  std::cout << indenter_.Indent() << ')' << std::endl;
+}
+
 void AstDumper::Visit(const ReturnStmtNode& ret_stmt) {
   std::cout << indenter_.Indent() << "(ret" << std::endl;
   indenter_.IncreaseLevel();
@@ -101,6 +120,10 @@ void AstDumper::Visit(const ReturnStmtNode& ret_stmt) {
 
 void AstDumper::Visit(const ExprStmtNode& expr_stmt) {
   expr_stmt.expr->Accept(*this);
+}
+
+void AstDumper::Visit(const NullExprNode& null_expr) {
+  std::cout << indenter_.Indent() << "()" << std::endl;
 }
 
 void AstDumper::Visit(const IdExprNode& id_expr) {

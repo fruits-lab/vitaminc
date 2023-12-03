@@ -40,6 +40,14 @@ void DeclNode::Accept(ModifyingVisitor& v) {
   v.Visit(*this);
 }
 
+void LoopInitNode::Accept(NonModifyingVisitor& v) const {
+  v.Visit(*this);
+}
+
+void LoopInitNode::Accept(ModifyingVisitor& v) {
+  v.Visit(*this);
+}
+
 void BlockStmtNode::Accept(NonModifyingVisitor& v) const {
   v.Visit(*this);
 }
@@ -80,6 +88,14 @@ void WhileStmtNode::Accept(ModifyingVisitor& v) {
   v.Visit(*this);
 }
 
+void ForStmtNode::Accept(NonModifyingVisitor& v) const {
+  v.Visit(*this);
+}
+
+void ForStmtNode::Accept(ModifyingVisitor& v) {
+  v.Visit(*this);
+}
+
 void ReturnStmtNode::Accept(NonModifyingVisitor& v) const {
   v.Visit(*this);
 }
@@ -93,6 +109,14 @@ void ExprStmtNode::Accept(NonModifyingVisitor& v) const {
 }
 
 void ExprStmtNode::Accept(ModifyingVisitor& v) {
+  v.Visit(*this);
+}
+
+void NullExprNode::Accept(NonModifyingVisitor& v) const {
+  v.Visit(*this);
+}
+
+void NullExprNode::Accept(ModifyingVisitor& v) {
   v.Visit(*this);
 }
 

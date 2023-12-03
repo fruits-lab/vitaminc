@@ -96,6 +96,8 @@ void QbeIrGenerator::Visit(const DeclNode& decl) {
   id_to_num[decl.id] = id_num;
 }
 
+void QbeIrGenerator::Visit(const LoopInitNode& init_loop) {}
+
 void QbeIrGenerator::Visit(const BlockStmtNode& block) {
   // Note: BlockStmtNode cannot output the correct label to its own block
   // because it doesn't know whether it is a if statement body or a function.
@@ -182,6 +184,8 @@ void QbeIrGenerator::Visit(const WhileStmtNode& while_stmt) {
   output << end_label << std::endl;
 }
 
+void QbeIrGenerator::Visit(const ForStmtNode& for_stmt) {}
+
 void QbeIrGenerator::Visit(const ReturnStmtNode& ret_stmt) {
   ret_stmt.expr->Accept(*this);
   int ret_num = num_recorder.NumOfPrevExpr();
@@ -190,6 +194,10 @@ void QbeIrGenerator::Visit(const ReturnStmtNode& ret_stmt) {
 
 void QbeIrGenerator::Visit(const ExprStmtNode& expr_stmt) {
   expr_stmt.expr->Accept(*this);
+}
+
+void QbeIrGenerator::Visit(const NullExprNode& null_expr) {
+  /* do nothing */
 }
 
 void QbeIrGenerator::Visit(const IdExprNode& id_expr) {

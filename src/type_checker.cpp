@@ -1,5 +1,8 @@
 #include "type_checker.hpp"
 
+#include <memory>
+#include <variant>
+
 #include "ast.hpp"
 
 void TypeChecker::Visit(DeclNode& decl) {
@@ -17,6 +20,14 @@ void TypeChecker::Visit(DeclNode& decl) {
     auto symbol = std::make_unique<SymbolEntry>(decl.id);
     symbol->expr_type = decl.type;
     env_.Add(std::move(symbol));
+  }
+}
+
+void TypeChecker::Visit(LoopInitNode& loop_init) {
+  if (std::holds_alternative<std::unique_ptr<DeclNode>>(loop_init.clause)) {
+    std::get<std::unique_ptr<DeclNode>>(loop_init.clause)->Accept(*this);
+  } else {
+    std::get<std::unique_ptr<ExprNode>>(loop_init.clause)->Accept(*this);
   }
 }
 
@@ -52,6 +63,13 @@ void TypeChecker::Visit(WhileStmtNode& while_stmt) {
   while_stmt.loop_body->Accept(*this);
 }
 
+void TypeChecker::Visit(ForStmtNode& for_stmt) {
+  for_stmt.loop_init->Accept(*this);
+  for_stmt.predicate->Accept(*this);
+  for_stmt.step->Accept(*this);
+  for_stmt.loop_body->Accept(*this);
+}
+
 void TypeChecker::Visit(ReturnStmtNode& ret_stmt) {
   ret_stmt.expr->Accept(*this);
   if (ret_stmt.expr->type != ExprType::kInt) {
@@ -61,6 +79,10 @@ void TypeChecker::Visit(ReturnStmtNode& ret_stmt) {
 
 void TypeChecker::Visit(ExprStmtNode& expr_stmt) {
   expr_stmt.expr->Accept(*this);
+}
+
+void TypeChecker::Visit(NullExprNode&) {
+  /* do nothing */
 }
 
 void TypeChecker::Visit(IdExprNode& id_expr) {

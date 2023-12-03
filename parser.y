@@ -50,11 +50,13 @@ extern std::unique_ptr<AstNode> program;
 %token INT MAIN RETURN
 %token IF ELSE
 %token EQ NE LE GE
-%token DO WHILE
+%token DO WHILE FOR
 %token EOF 0
 
 %nterm <std::unique_ptr<ExprNode>> expr
+%nterm <std::unique_ptr<ExprNode>> expr_opt
 %nterm <std::unique_ptr<DeclNode>> decl
+%nterm <std::unique_ptr<LoopInitNode>> loop_init
 %nterm <std::vector<std::unique_ptr<DeclNode>>> decls
 %nterm <std::unique_ptr<StmtNode>> stmt
 %nterm <std::vector<std::unique_ptr<StmtNode>>> stmts
@@ -133,6 +135,15 @@ stmt: ';' { $$ = std::make_unique<NullStmtNode>(); }
     | IF '(' expr ')' stmt ELSE stmt { $$ = std::make_unique<IfStmtNode>($3, $5, $7); }
     | WHILE '(' expr ')' stmt { $$ = std::make_unique<WhileStmtNode>($3, $5); }
     | DO stmt WHILE '(' expr ')' ';' { $$ = std::make_unique<WhileStmtNode>($5, $2, true); }
+    | FOR '(' loop_init expr_opt ';' expr_opt ')' stmt { $$ = std::make_unique<ForStmtNode>($3, $4, $6, $8); }
+    ;
+
+loop_init: decl { $$ = std::make_unique<LoopInitNode>($1); }
+    | expr_opt ';' { $$ = std::make_unique<LoopInitNode>($1); }
+    ;
+
+expr_opt: expr { $$ = $1; }
+    | epsilon { $$ = std::make_unique<NullExprNode>(); }
     ;
 
 expr: ID { $$ = std::make_unique<IdExprNode>($1); }

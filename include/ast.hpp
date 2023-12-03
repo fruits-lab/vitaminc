@@ -4,6 +4,7 @@
 #include <memory>
 #include <string>
 #include <utility>
+#include <variant>
 #include <vector>
 
 #include "type.hpp"
@@ -62,6 +63,18 @@ struct DeclNode : public AstNode {
   std::string id;
   ExprType type;
   std::unique_ptr<ExprNode> init;
+};
+
+/// @brief A loop initialization can be either a declaration or an expression.
+struct LoopInitNode : public AstNode {
+  LoopInitNode(
+      std::variant<std::unique_ptr<DeclNode>, std::unique_ptr<ExprNode>> clause)
+      : clause{std::move(clause)} {}
+
+  virtual void Accept(NonModifyingVisitor&) const override;
+  virtual void Accept(ModifyingVisitor&) override;
+
+  std::variant<std::unique_ptr<DeclNode>, std::unique_ptr<ExprNode>> clause;
 };
 
 /// @brief A block is a set of declarations and statements.
@@ -123,6 +136,25 @@ struct WhileStmtNode : public StmtNode {
   bool is_do_while;
 };
 
+struct ForStmtNode : public StmtNode {
+  ForStmtNode(std::unique_ptr<LoopInitNode> loop_init,
+              std::unique_ptr<ExprNode> predicate,
+              std::unique_ptr<ExprNode> step,
+              std::unique_ptr<StmtNode> loop_body)
+      : loop_init{std::move(loop_init)},
+        predicate{std::move(predicate)},
+        step{std::move(step)},
+        loop_body{std::move(loop_body)} {}
+
+  virtual void Accept(NonModifyingVisitor&) const override;
+  virtual void Accept(ModifyingVisitor&) override;
+
+  std::unique_ptr<LoopInitNode> loop_init;
+  std::unique_ptr<ExprNode> predicate;
+  std::unique_ptr<ExprNode> step;
+  std::unique_ptr<StmtNode> loop_body;
+};
+
 struct ReturnStmtNode : public StmtNode {
   ReturnStmtNode(std::unique_ptr<ExprNode> expr) : expr{std::move(expr)} {}
 
@@ -141,6 +173,12 @@ struct ExprStmtNode : public StmtNode {
   virtual void Accept(ModifyingVisitor&) override;
 
   std::unique_ptr<ExprNode> expr;
+};
+
+/// @note Only appears in for statement's expressions.
+struct NullExprNode : public ExprNode {
+  virtual void Accept(NonModifyingVisitor&) const override;
+  virtual void Accept(ModifyingVisitor&) override;
 };
 
 struct IdExprNode : public ExprNode {
