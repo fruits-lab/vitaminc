@@ -32,7 +32,7 @@ DEPS = $(OBJS:.o=.d)
 all: $(TARGET)
 
 test: $(TARGET)
-	make -C test/
+	cd test/ && $(MAKE) MAKEFLAGS=
 
 $(TARGET): $(OBJS)
 	$(CXX) $(CXXFLAGS) $(OBJS) -o $@
@@ -54,6 +54,6 @@ main.o: %.o: %.cpp y.tab.hpp
 
 clean:
 	rm -rf *.s *.o lex.yy.* y.tab.* *.output *.ssa $(TARGET) $(OBJS) $(DEPS)
-	make -C test/ clean
+	cd test/ && $(MAKE) clean MAKEFLAGS=
 
 -include $(DEPS)
