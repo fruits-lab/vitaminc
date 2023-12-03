@@ -9,6 +9,18 @@ YACC = bison
 # -d: generate header with default name
 YFLAGS = --verbose --debug -d
 
+# number of jobs to run
+NPROCS := 1
+OS := $(shell uname -s)
+# Find available processor numbers based on different OS.
+ifeq ($(OS),Linux)
+  NPROCS := $(shell grep -c ^processor /proc/cpuinfo)
+else ifeq ($(OS),Darwin)
+  NPROCS := $(shell sysctl -n hw.ncpu)
+endif # $(OS)
+# Specify the number of jobs to run simultaneously.
+MAKEFLAGS += -j$(NPROCS)
+
 # Note that lex.yy.cpp is excluded deliberately, as "lex.yy.cpp" is considered a
 # header file (it's included by "y.tab.cpp").
 OBJS := $(shell find . -name "*.cpp" ! -name "y.tab.cpp" ! -name "lex.yy.cpp" ) y.tab.o
