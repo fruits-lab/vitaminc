@@ -17,7 +17,7 @@ DEPS = $(OBJS:.o=.d)
 
 .PHONY: all clean test
 
-all: $(TARGET) test
+all: $(TARGET)
 
 test: $(TARGET)
 	make -C test/
