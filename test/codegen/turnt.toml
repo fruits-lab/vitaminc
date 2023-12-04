@@ -1,2 +1,2 @@
-command = "../../vitaminc -o test.ssa < {filename} && qbe -o out.s test.ssa && cc out.s -o a.o && ./a.o; echo $?"
+command = "../../vitaminc -o {filename}.ssa < {filename} && qbe -o {filename}.s {filename}.ssa && cc {filename}.s -o {filename}.o && ./{filename}.o; echo $?"
 output.exp = "-"
