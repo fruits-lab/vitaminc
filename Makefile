@@ -8,6 +8,13 @@ LEX = lex
 YACC = bison
 # -d: generate header with default name
 YFLAGS = --verbose --debug -d
+# Check if -j multiple jobs is configured.
+PARALLEL = false
+ifneq (,$(findstring j,$(MAKEFLAGS)))
+	PARALLEL := true
+endif
+# Export variable to be visible for test/Makefile.
+export PARALLEL
 
 # Note that lex.yy.cpp is excluded deliberately, as "lex.yy.cpp" is considered a
 # header file (it's included by "y.tab.cpp").
@@ -20,7 +27,9 @@ DEPS = $(OBJS:.o=.d)
 all: $(TARGET)
 
 test: $(TARGET)
-	make -C test/
+	# Flags are omitted to prevent passing the -j option since Turnt, our testing tool,
+	# has its own mechanism for parallel builds.
+	cd test/ && $(MAKE) test MAKEFLAGS=
 
 $(TARGET): $(OBJS)
 	$(CXX) $(CXXFLAGS) $(OBJS) -o $@
@@ -42,6 +51,6 @@ main.o: %.o: %.cpp y.tab.hpp
 
 clean:
 	rm -rf *.s *.o lex.yy.* y.tab.* *.output *.ssa $(TARGET) $(OBJS) $(DEPS)
-	make -C test/ clean
+	cd test/ && $(MAKE) clean
 
 -include $(DEPS)
