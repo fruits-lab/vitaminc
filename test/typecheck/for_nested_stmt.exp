@@ -1,0 +1,45 @@
+(k: int =
+  0: int
+)
+(for
+  (i: int =
+    0: int
+  )
+  (<
+    i: int
+    5: int
+  ): int
+  (=
+    i: int
+    (+
+      i: int
+      1: int
+    ): int
+  ): int
+  (for
+    (j: int =
+      0: int
+    )
+    (<
+      j: int
+      5: int
+    ): int
+    (=
+      j: int
+      (+
+        j: int
+        1: int
+      ): int
+    ): int
+    (=
+      k: int
+      (+
+        k: int
+        1: int
+      ): int
+    ): int
+  )
+)
+(ret
+  0: int
+)
