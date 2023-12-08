@@ -46,10 +46,6 @@ void TypeChecker::Visit(ProgramNode& program) {
   program.block->Accept(*this);
 }
 
-void TypeChecker::Visit(NullStmtNode&) {
-  /* do nothing */
-}
-
 void TypeChecker::Visit(IfStmtNode& if_stmt) {
   if_stmt.predicate->Accept(*this);
   if_stmt.then->Accept(*this);

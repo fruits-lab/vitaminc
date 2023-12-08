@@ -127,9 +127,8 @@ stmts: stmts stmt {
   | epsilon { $$ = std::vector<std::unique_ptr<StmtNode>>{}; }
   ;
 
-stmt: ';' { $$ = std::make_unique<NullStmtNode>(); }
+stmt: expr_opt ';' { $$ = std::make_unique<ExprStmtNode>($1); }
     | RETURN expr ';' { $$ = std::make_unique<ReturnStmtNode>($2); }
-    | expr ';' { $$ = std::make_unique<ExprStmtNode>($1); }
     | block { $$ = $1; }
     | IF '(' expr ')' stmt %prec IF_WITHOUT_ELSE { $$ = std::make_unique<IfStmtNode>($3, $5); }
     | IF '(' expr ')' stmt ELSE stmt { $$ = std::make_unique<IfStmtNode>($3, $5, $7); }

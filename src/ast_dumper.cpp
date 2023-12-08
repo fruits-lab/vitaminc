@@ -61,10 +61,6 @@ void AstDumper::Visit(const ProgramNode& program) {
   program.block->Accept(*this);
 }
 
-void AstDumper::Visit(const NullStmtNode& stmt) {
-  std::cout << indenter_.Indent() << "()" << std::endl;
-}
-
 void AstDumper::Visit(const IfStmtNode& if_stmt) {
   std::cout << indenter_.Indent() << "(if" << std::endl;
   indenter_.IncreaseLevel();

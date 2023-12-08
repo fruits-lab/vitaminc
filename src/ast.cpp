@@ -64,14 +64,6 @@ void ProgramNode::Accept(ModifyingVisitor& v) {
   v.Visit(*this);
 }
 
-void NullStmtNode::Accept(NonModifyingVisitor& v) const {
-  v.Visit(*this);
-}
-
-void NullStmtNode::Accept(ModifyingVisitor& v) {
-  v.Visit(*this);
-}
-
 void IfStmtNode::Accept(NonModifyingVisitor& v) const {
   v.Visit(*this);
 }

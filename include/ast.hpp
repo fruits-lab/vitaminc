@@ -101,11 +101,6 @@ struct ProgramNode : public AstNode {
   std::unique_ptr<BlockStmtNode> block;
 };
 
-struct NullStmtNode : public StmtNode {
-  virtual void Accept(NonModifyingVisitor&) const override;
-  virtual void Accept(ModifyingVisitor&) override;
-};
-
 struct IfStmtNode : public StmtNode {
   IfStmtNode(std::unique_ptr<ExprNode> expr, std::unique_ptr<StmtNode> then,
              std::unique_ptr<StmtNode> or_else = {})
@@ -175,7 +170,7 @@ struct ExprStmtNode : public StmtNode {
   std::unique_ptr<ExprNode> expr;
 };
 
-/// @note Only appears in for statement's expressions.
+/// @note Only appears in for statement's expressions and null statement.
 struct NullExprNode : public ExprNode {
   virtual void Accept(NonModifyingVisitor&) const override;
   virtual void Accept(ModifyingVisitor&) override;
