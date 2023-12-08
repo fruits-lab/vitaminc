@@ -11,7 +11,6 @@ class AstDumper : public NonModifyingVisitor {
   void Visit(const DeclNode&) override;
   void Visit(const BlockStmtNode&) override;
   void Visit(const ProgramNode&) override;
-  void Visit(const NullStmtNode&) override;
   void Visit(const IfStmtNode&) override;
   void Visit(const WhileStmtNode&) override;
   void Visit(const ForStmtNode&) override;

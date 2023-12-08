@@ -118,10 +118,6 @@ void QbeIrGenerator::Visit(const ProgramNode& program) {
   output << "}";
 }
 
-void QbeIrGenerator::Visit(const NullStmtNode&) {
-  /* do nothing */
-}
-
 void QbeIrGenerator::Visit(const IfStmtNode& if_stmt) {
   if_stmt.predicate->Accept(*this);
   int predicate_num = num_recorder.NumOfPrevExpr();

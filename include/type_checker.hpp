@@ -14,7 +14,6 @@ class TypeChecker : public ModifyingVisitor {
   void Visit(DeclNode&) override;
   void Visit(BlockStmtNode&) override;
   void Visit(ProgramNode&) override;
-  void Visit(NullStmtNode&) override;
   void Visit(IfStmtNode&) override;
   void Visit(WhileStmtNode&) override;
   void Visit(ForStmtNode&) override;
