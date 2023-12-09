@@ -96,7 +96,13 @@ void QbeIrGenerator::Visit(const DeclNode& decl) {
   id_to_num[decl.id] = id_num;
 }
 
-void QbeIrGenerator::Visit(const LoopInitNode& init_loop) {}
+void QbeIrGenerator::Visit(const LoopInitNode& loop_init) {
+  if (std::holds_alternative<std::unique_ptr<DeclNode>>(loop_init.clause)) {
+    std::get<std::unique_ptr<DeclNode>>(loop_init.clause)->Accept(*this);
+  } else {
+    std::get<std::unique_ptr<ExprNode>>(loop_init.clause)->Accept(*this);
+  }
+}
 
 void QbeIrGenerator::Visit(const BlockStmtNode& block) {
   // Note: BlockStmtNode cannot output the correct label to its own block
@@ -180,7 +186,31 @@ void QbeIrGenerator::Visit(const WhileStmtNode& while_stmt) {
   output << end_label << std::endl;
 }
 
-void QbeIrGenerator::Visit(const ForStmtNode& for_stmt) {}
+void QbeIrGenerator::Visit(const ForStmtNode& for_stmt) {
+  int label_num = NextLabelNum();
+  std::string pred_label = PrefixLabel("pred", label_num);
+  std::string body_label = PrefixLabel("loop_body", label_num);
+  std::string end_label = PrefixLabel("end", label_num);
+
+  // A for statement's loop initialization is the first clause to execute,
+  // whereas a for statement's predicate specifies evaluation made before each
+  // iteration. A step is an operation that is performed after each iteration.
+  // Skip predicate generation if it is a null expression.
+  output << "# loop init" << std::endl;
+  for_stmt.loop_init->Accept(*this);
+  output << pred_label << std::endl;
+  for_stmt.predicate->Accept(*this);
+  if (!dynamic_cast<NullExprNode*>((for_stmt.predicate).get())) {
+    int predicate_num = num_recorder.NumOfPrevExpr();
+    output << "jnz " << PrefixSigil(predicate_num) << ", " << body_label << ", "
+           << end_label << std::endl;
+  }
+  output << body_label << std::endl;
+  for_stmt.loop_body->Accept(*this);
+  for_stmt.step->Accept(*this);
+  output << "jmp " << pred_label << std::endl;
+  output << end_label << std::endl;
+}
 
 void QbeIrGenerator::Visit(const ReturnStmtNode& ret_stmt) {
   ret_stmt.expr->Accept(*this);
