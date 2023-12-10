@@ -29,6 +29,8 @@ jobs:
         run: scripts/install-qbe.sh
       - name: Install cxxopts
         run: scripts/install-cxxopts.sh
+      - name: Install fmt
+        run: scripts/install-fmt.sh
       - name: Install Turnt
         run: pip install turnt
       - name: Run tests
