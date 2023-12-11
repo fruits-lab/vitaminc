@@ -96,6 +96,22 @@ void ReturnStmtNode::Accept(ModifyingVisitor& v) {
   v.Visit(*this);
 }
 
+void BreakStmtNode::Accept(NonModifyingVisitor& v) const {
+  v.Visit(*this);
+}
+
+void BreakStmtNode::Accept(ModifyingVisitor& v) {
+  v.Visit(*this);
+}
+
+void ContinueStmtNode::Accept(NonModifyingVisitor& v) const {
+  v.Visit(*this);
+}
+
+void ContinueStmtNode::Accept(ModifyingVisitor& v) {
+  v.Visit(*this);
+}
+
 void ExprStmtNode::Accept(NonModifyingVisitor& v) const {
   v.Visit(*this);
 }

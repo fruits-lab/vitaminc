@@ -218,6 +218,10 @@ void QbeIrGenerator::Visit(const ReturnStmtNode& ret_stmt) {
   output << " ret " << PrefixSigil(ret_num) << std::endl;
 }
 
+void QbeIrGenerator::Visit(const BreakStmtNode& break_stmt) {}
+
+void QbeIrGenerator::Visit(const ContinueStmtNode& continue_stmt) {}
+
 void QbeIrGenerator::Visit(const ExprStmtNode& expr_stmt) {
   expr_stmt.expr->Accept(*this);
 }

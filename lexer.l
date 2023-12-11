@@ -50,6 +50,8 @@ bracket [\(\)\{\}\[\]]
 ">=" { return yy::parser::make_GE(); }
 
   /* keywords */
+break { return yy::parser::make_BREAK(); }
+continue { return yy::parser::make_CONTINUE(); }
 else { return yy::parser::make_ELSE(); }
 for { return yy::parser::make_FOR(); }
 do { return yy::parser::make_DO(); }
