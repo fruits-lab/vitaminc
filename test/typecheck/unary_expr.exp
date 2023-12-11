@@ -1,0 +1,24 @@
+(i: int =
+  1: int
+)
+(--
+  i: int
+): int
+(++
+  i: int
+): int
+(=
+  i: int
+  (-
+    i: int
+  ): int
+): int
+(=
+  i: int
+  (!
+    i: int
+  ): int
+): int
+(ret
+  0: int
+)
