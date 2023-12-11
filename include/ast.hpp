@@ -195,6 +195,70 @@ struct IntConstExprNode : public ExprNode {
 };
 
 /// @note This is an abstract class.
+struct UnaryExprNode : public ExprNode {
+  UnaryExprNode(std::unique_ptr<ExprNode> operand)
+      : operand{std::move(operand)} {}
+
+  virtual void Accept(NonModifyingVisitor&) const override;
+  virtual void Accept(ModifyingVisitor&) override;
+
+  /// @note To make the class abstract.
+  virtual ~UnaryExprNode() = 0;
+
+  std::unique_ptr<ExprNode> operand;
+};
+
+struct IncrExprNode : public UnaryExprNode {
+  using UnaryExprNode::UnaryExprNode;
+
+  virtual void Accept(NonModifyingVisitor&) const override;
+  virtual void Accept(ModifyingVisitor&) override;
+};
+
+struct DecrExprNode : public UnaryExprNode {
+  using UnaryExprNode::UnaryExprNode;
+
+  virtual void Accept(NonModifyingVisitor&) const override;
+  virtual void Accept(ModifyingVisitor&) override;
+};
+
+struct NegExprNode : public UnaryExprNode {
+  using UnaryExprNode::UnaryExprNode;
+
+  virtual void Accept(NonModifyingVisitor&) const override;
+  virtual void Accept(ModifyingVisitor&) override;
+};
+
+struct AddrExprNode : public UnaryExprNode {
+  using UnaryExprNode::UnaryExprNode;
+
+  virtual void Accept(NonModifyingVisitor&) const override;
+  virtual void Accept(ModifyingVisitor&) override;
+};
+
+struct DereferExprNode : public UnaryExprNode {
+  using UnaryExprNode::UnaryExprNode;
+
+  virtual void Accept(NonModifyingVisitor&) const override;
+  virtual void Accept(ModifyingVisitor&) override;
+};
+
+struct NotExprNode : public UnaryExprNode {
+  using UnaryExprNode::UnaryExprNode;
+
+  virtual void Accept(NonModifyingVisitor&) const override;
+  virtual void Accept(ModifyingVisitor&) override;
+};
+
+/// @brief This is a bitwise complement unary expression node.
+struct BitCompExprNode : public UnaryExprNode {
+  using UnaryExprNode::UnaryExprNode;
+
+  virtual void Accept(NonModifyingVisitor&) const override;
+  virtual void Accept(ModifyingVisitor&) override;
+};
+
+/// @note This is an abstract class.
 struct BinaryExprNode : public ExprNode {
   BinaryExprNode(std::unique_ptr<ExprNode> lhs, std::unique_ptr<ExprNode> rhs)
       : lhs{std::move(lhs)}, rhs{std::move(rhs)} {}

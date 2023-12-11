@@ -30,7 +30,7 @@ identifier [a-zA-Z_][0-9a-zA-Z_]*
 integer [0-9]+
 /* minus sign (-) must be the first or last one since it has special meaning
    when it's in the middle */
-operator [-+*/%=<>]
+operator [-+*/%=<>&!~]
 bracket [\(\)\{\}\[\]]
 
 %x C_COMMENT CXX_COMMENT
@@ -42,6 +42,8 @@ bracket [\(\)\{\}\[\]]
 
   /* operators */
 {operator} { return yytext[0]; }
+"--" { return yy::parser::make_DECR(); }
+"++" { return yy::parser::make_INCR(); }
 "==" { return yy::parser::make_EQ(); }
 "!=" { return yy::parser::make_NE(); }
 "<=" { return yy::parser::make_LE(); }

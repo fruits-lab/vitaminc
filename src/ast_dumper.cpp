@@ -11,8 +11,9 @@
 namespace {
 class OpGetter {
  public:
-  /// @return The mathematical symbol of the binary operator, e.g., `+`.
-  std::string OpOf(const BinaryExprNode& bin_expr);
+  /// @return The mathematical symbol of the binary or unary operator, e.g.,
+  /// `+`, `&`.
+  std::string OpOf(const ExprNode& bin_expr);
 
   OpGetter();
 
@@ -132,6 +133,16 @@ void AstDumper::Visit(const IntConstExprNode& int_expr) {
             << ExprTypeToCString(int_expr.type) << std::endl;
 }
 
+void AstDumper::Visit(const UnaryExprNode& unary_expr) {
+  std::cout << indenter_.Indent() << '(' << OpGetter{}.OpOf(unary_expr)
+            << std::endl;
+  indenter_.IncreaseLevel();
+  unary_expr.operand->Accept(*this);
+  indenter_.DecreaseLevel();
+  std::cout << indenter_.Indent() << ')' << ": "
+            << ExprTypeToCString(unary_expr.type) << std::endl;
+}
+
 void AstDumper::Visit(const BinaryExprNode& bin_expr) {
   std::cout << indenter_.Indent() << '(' << OpGetter{}.OpOf(bin_expr)
             << std::endl;
@@ -143,27 +154,35 @@ void AstDumper::Visit(const BinaryExprNode& bin_expr) {
             << ExprTypeToCString(bin_expr.type) << std::endl;
 }
 
-/// @brief Dispatch the concrete binary expressions to the parent
-/// `BinaryExprNode`.
-/// @param classname A subclass of `BinaryExprNode`.
-#define DISPATCH_TO_VISIT_BINARY_EXPR(classname) \
+/// @brief Dispatch the concrete binary or unary expressions to the parent
+/// `BinaryExprNode` or `UnaryExprNode`.
+/// @param classname A subclass of `BinaryExprNode` or `UnaryExprNode`.
+#define DISPATCH_TO_VISIT_EXPR(parentname, classname) \
   void AstDumper::Visit(const classname& expr) { \
-    Visit(static_cast<const BinaryExprNode&>(expr)); \
+    Visit(static_cast<const parentname&>(expr)); \
   }
 
-DISPATCH_TO_VISIT_BINARY_EXPR(PlusExprNode);
-DISPATCH_TO_VISIT_BINARY_EXPR(SubExprNode);
-DISPATCH_TO_VISIT_BINARY_EXPR(MulExprNode);
-DISPATCH_TO_VISIT_BINARY_EXPR(DivExprNode);
-DISPATCH_TO_VISIT_BINARY_EXPR(ModExprNode);
-DISPATCH_TO_VISIT_BINARY_EXPR(GreaterThanExprNode);
-DISPATCH_TO_VISIT_BINARY_EXPR(GreaterThanOrEqualToExprNode);
-DISPATCH_TO_VISIT_BINARY_EXPR(LessThanExprNode);
-DISPATCH_TO_VISIT_BINARY_EXPR(LessThanOrEqualToExprNode);
-DISPATCH_TO_VISIT_BINARY_EXPR(EqualToExprNode);
-DISPATCH_TO_VISIT_BINARY_EXPR(NotEqualToExprNode);
+DISPATCH_TO_VISIT_EXPR(BinaryExprNode, PlusExprNode);
+DISPATCH_TO_VISIT_EXPR(BinaryExprNode, SubExprNode);
+DISPATCH_TO_VISIT_EXPR(BinaryExprNode, MulExprNode);
+DISPATCH_TO_VISIT_EXPR(BinaryExprNode, DivExprNode);
+DISPATCH_TO_VISIT_EXPR(BinaryExprNode, ModExprNode);
+DISPATCH_TO_VISIT_EXPR(BinaryExprNode, GreaterThanExprNode);
+DISPATCH_TO_VISIT_EXPR(BinaryExprNode, GreaterThanOrEqualToExprNode);
+DISPATCH_TO_VISIT_EXPR(BinaryExprNode, LessThanExprNode);
+DISPATCH_TO_VISIT_EXPR(BinaryExprNode, LessThanOrEqualToExprNode);
+DISPATCH_TO_VISIT_EXPR(BinaryExprNode, EqualToExprNode);
+DISPATCH_TO_VISIT_EXPR(BinaryExprNode, NotEqualToExprNode);
 
-#undef DISPATCH_TO_VISIT_BINARY_EXPR
+DISPATCH_TO_VISIT_EXPR(UnaryExprNode, IncrExprNode);
+DISPATCH_TO_VISIT_EXPR(UnaryExprNode, DecrExprNode);
+DISPATCH_TO_VISIT_EXPR(UnaryExprNode, NegExprNode);
+DISPATCH_TO_VISIT_EXPR(UnaryExprNode, AddrExprNode);
+DISPATCH_TO_VISIT_EXPR(UnaryExprNode, DereferExprNode);
+DISPATCH_TO_VISIT_EXPR(UnaryExprNode, NotExprNode);
+DISPATCH_TO_VISIT_EXPR(UnaryExprNode, BitCompExprNode);
+
+#undef DISPATCH_TO_VISIT_EXPR
 
 void AstDumper::Visit(const SimpleAssignmentExprNode& assign_expr) {
   std::cout << indenter_.Indent() << '(' << '=' << std::endl;
@@ -180,6 +199,34 @@ class OpGetter::OpGetterImpl : public NonModifyingVisitor {
  public:
   std::string Op() const {
     return op_;
+  }
+
+  void Visit(const IncrExprNode&) override {
+    op_ = "++";
+  }
+
+  void Visit(const DecrExprNode&) override {
+    op_ = "--";
+  }
+
+  void Visit(const NegExprNode&) override {
+    op_ = "-";
+  }
+
+  void Visit(const AddrExprNode&) override {
+    op_ = "&";
+  }
+
+  void Visit(const DereferExprNode&) override {
+    op_ = "*";
+  }
+
+  void Visit(const NotExprNode&) override {
+    op_ = "!";
+  }
+
+  void Visit(const BitCompExprNode&) override {
+    op_ = "~";
   }
 
   void Visit(const PlusExprNode&) override {
@@ -230,8 +277,8 @@ class OpGetter::OpGetterImpl : public NonModifyingVisitor {
   std::string op_;
 };
 
-std::string OpGetter::OpOf(const BinaryExprNode& bin_expr) {
-  bin_expr.Accept(*impl_);
+std::string OpGetter::OpOf(const ExprNode& expr) {
+  expr.Accept(*impl_);
   return impl_->Op();
 }
 

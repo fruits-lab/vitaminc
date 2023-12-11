@@ -128,6 +128,72 @@ void IntConstExprNode::Accept(ModifyingVisitor& v) {
   v.Visit(*this);
 }
 
+void UnaryExprNode::Accept(NonModifyingVisitor& v) const {
+  v.Visit(*this);
+}
+
+void UnaryExprNode::Accept(ModifyingVisitor& v) {
+  v.Visit(*this);
+}
+
+UnaryExprNode::~UnaryExprNode() = default;
+
+void IncrExprNode::Accept(NonModifyingVisitor& v) const {
+  v.Visit(*this);
+}
+
+void IncrExprNode::Accept(ModifyingVisitor& v) {
+  v.Visit(*this);
+}
+
+void DecrExprNode::Accept(NonModifyingVisitor& v) const {
+  v.Visit(*this);
+}
+
+void DecrExprNode::Accept(ModifyingVisitor& v) {
+  v.Visit(*this);
+}
+
+void NegExprNode::Accept(NonModifyingVisitor& v) const {
+  v.Visit(*this);
+}
+
+void NegExprNode::Accept(ModifyingVisitor& v) {
+  v.Visit(*this);
+}
+
+void AddrExprNode::Accept(NonModifyingVisitor& v) const {
+  v.Visit(*this);
+}
+
+void AddrExprNode::Accept(ModifyingVisitor& v) {
+  v.Visit(*this);
+}
+
+void DereferExprNode::Accept(NonModifyingVisitor& v) const {
+  v.Visit(*this);
+}
+
+void DereferExprNode::Accept(ModifyingVisitor& v) {
+  v.Visit(*this);
+}
+
+void NotExprNode::Accept(NonModifyingVisitor& v) const {
+  v.Visit(*this);
+}
+
+void NotExprNode::Accept(ModifyingVisitor& v) {
+  v.Visit(*this);
+}
+
+void BitCompExprNode::Accept(NonModifyingVisitor& v) const {
+  v.Visit(*this);
+}
+
+void BitCompExprNode::Accept(ModifyingVisitor& v) {
+  v.Visit(*this);
+}
+
 void BinaryExprNode::Accept(NonModifyingVisitor& v) const {
   v.Visit(*this);
 }
