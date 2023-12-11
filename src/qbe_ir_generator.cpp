@@ -40,7 +40,7 @@ std::string PrefixLabel(const std::string& name, int label_num) {
 class OpNameGetter {
  public:
   /// @return The name of the operator used in the QBE IR, e.g., `add`.
-  std::string OpNameOf(const BinaryExprNode& bin_expr);
+  std::string OpNameOf(const ExprNode& expr);
 
   OpNameGetter();
 
@@ -242,6 +242,13 @@ void QbeIrGenerator::Visit(const IntConstExprNode& int_expr) {
   num_recorder.Record(num);
 }
 
+void QbeIrGenerator::Visit(const UnaryExprNode& unary_expr) {
+  unary_expr.operand->Accept(*this);
+  // TODO: The evaluation of certain unary expressions are the same as simple
+  // assignment. For instance, ++i is equivalant to i += 1. We need to handle
+  // this case by case.
+}
+
 void QbeIrGenerator::Visit(const BinaryExprNode& bin_expr) {
   bin_expr.lhs->Accept(*this);
   int left_num = num_recorder.NumOfPrevExpr();
@@ -254,27 +261,35 @@ void QbeIrGenerator::Visit(const BinaryExprNode& bin_expr) {
   num_recorder.Record(num);
 }
 
-/// @brief Dispatch the concrete binary expressions to the parent
-/// `BinaryExprNode`.
-/// @param classname A subclass of `BinaryExprNode`.
-#define DISPATCH_TO_VISIT_BINARY_EXPR(classname) \
+/// @brief Dispatch the concrete binary or unary expressions to the parent
+/// `BinaryExprNode` or `UnaryExprNode`.
+/// @param classname A subclass of `BinaryExprNode` or `UnaryExprNode`.
+#define DISPATCH_TO_VISIT_EXPR(parentname, classname) \
   void QbeIrGenerator::Visit(const classname& expr) { \
-    Visit(static_cast<const BinaryExprNode&>(expr)); \
+    Visit(static_cast<const parentname&>(expr)); \
   }
 
-DISPATCH_TO_VISIT_BINARY_EXPR(PlusExprNode);
-DISPATCH_TO_VISIT_BINARY_EXPR(SubExprNode);
-DISPATCH_TO_VISIT_BINARY_EXPR(MulExprNode);
-DISPATCH_TO_VISIT_BINARY_EXPR(DivExprNode);
-DISPATCH_TO_VISIT_BINARY_EXPR(ModExprNode);
-DISPATCH_TO_VISIT_BINARY_EXPR(GreaterThanExprNode);
-DISPATCH_TO_VISIT_BINARY_EXPR(GreaterThanOrEqualToExprNode);
-DISPATCH_TO_VISIT_BINARY_EXPR(LessThanExprNode);
-DISPATCH_TO_VISIT_BINARY_EXPR(LessThanOrEqualToExprNode);
-DISPATCH_TO_VISIT_BINARY_EXPR(EqualToExprNode);
-DISPATCH_TO_VISIT_BINARY_EXPR(NotEqualToExprNode);
+DISPATCH_TO_VISIT_EXPR(BinaryExprNode, PlusExprNode);
+DISPATCH_TO_VISIT_EXPR(BinaryExprNode, SubExprNode);
+DISPATCH_TO_VISIT_EXPR(BinaryExprNode, MulExprNode);
+DISPATCH_TO_VISIT_EXPR(BinaryExprNode, DivExprNode);
+DISPATCH_TO_VISIT_EXPR(BinaryExprNode, ModExprNode);
+DISPATCH_TO_VISIT_EXPR(BinaryExprNode, GreaterThanExprNode);
+DISPATCH_TO_VISIT_EXPR(BinaryExprNode, GreaterThanOrEqualToExprNode);
+DISPATCH_TO_VISIT_EXPR(BinaryExprNode, LessThanExprNode);
+DISPATCH_TO_VISIT_EXPR(BinaryExprNode, LessThanOrEqualToExprNode);
+DISPATCH_TO_VISIT_EXPR(BinaryExprNode, EqualToExprNode);
+DISPATCH_TO_VISIT_EXPR(BinaryExprNode, NotEqualToExprNode);
 
-#undef DISPATCH_TO_VISIT_BINARY_EXPR
+DISPATCH_TO_VISIT_EXPR(UnaryExprNode, IncrExprNode);
+DISPATCH_TO_VISIT_EXPR(UnaryExprNode, DecrExprNode);
+DISPATCH_TO_VISIT_EXPR(UnaryExprNode, NegExprNode);
+DISPATCH_TO_VISIT_EXPR(UnaryExprNode, AddrExprNode);
+DISPATCH_TO_VISIT_EXPR(UnaryExprNode, DereferExprNode);
+DISPATCH_TO_VISIT_EXPR(UnaryExprNode, NotExprNode);
+DISPATCH_TO_VISIT_EXPR(UnaryExprNode, BitCompExprNode);
+
+#undef DISPATCH_TO_VISIT_EXPR
 
 void QbeIrGenerator::Visit(const SimpleAssignmentExprNode& assign_expr) {
   assign_expr.expr->Accept(*this);
@@ -288,6 +303,36 @@ class OpNameGetter::OpNameGetterImpl : public NonModifyingVisitor {
  public:
   std::string OpName() const {
     return op_name_;
+  }
+
+  // TODO: Defer code generation implementation for unary expression since some
+  // unary expressions may need more than one instruction to complete.
+  void Visit(const IncrExprNode&) override {
+    op_name_ = "";
+  }
+
+  void Visit(const DecrExprNode&) override {
+    op_name_ = "";
+  }
+
+  void Visit(const NegExprNode&) override {
+    op_name_ = "";
+  }
+
+  void Visit(const AddrExprNode&) override {
+    op_name_ = "";
+  }
+
+  void Visit(const DereferExprNode&) override {
+    op_name_ = "";
+  }
+
+  void Visit(const NotExprNode&) override {
+    op_name_ = "";
+  }
+
+  void Visit(const BitCompExprNode&) override {
+    op_name_ = "";
   }
 
   void Visit(const PlusExprNode&) override {
@@ -338,8 +383,8 @@ class OpNameGetter::OpNameGetterImpl : public NonModifyingVisitor {
   std::string op_name_;
 };
 
-std::string OpNameGetter::OpNameOf(const BinaryExprNode& bin_expr) {
-  bin_expr.Accept(*impl_);
+std::string OpNameGetter::OpNameOf(const ExprNode& expr) {
+  expr.Accept(*impl_);
   return impl_->OpName();
 }
 
