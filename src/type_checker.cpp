@@ -73,6 +73,14 @@ void TypeChecker::Visit(ReturnStmtNode& ret_stmt) {
   }
 }
 
+void TypeChecker::Visit(BreakStmtNode& break_stmt) {
+  // TODO: check if it is in a loop body or a switch body
+}
+
+void TypeChecker::Visit(ContinueStmtNode& continue_stmt) {
+  // TODO: check if it is in a loop body
+}
+
 void TypeChecker::Visit(ExprStmtNode& expr_stmt) {
   expr_stmt.expr->Accept(*this);
 }

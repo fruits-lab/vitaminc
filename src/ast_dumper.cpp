@@ -115,6 +115,14 @@ void AstDumper::Visit(const ReturnStmtNode& ret_stmt) {
   std::cout << indenter_.Indent() << ')' << std::endl;
 }
 
+void AstDumper::Visit(const BreakStmtNode& break_stmt) {
+  std::cout << indenter_.Indent() << "(break)" << std::endl;
+}
+
+void AstDumper::Visit(const ContinueStmtNode& continue_stmt) {
+  std::cout << indenter_.Indent() << "(continue)" << std::endl;
+}
+
 void AstDumper::Visit(const ExprStmtNode& expr_stmt) {
   expr_stmt.expr->Accept(*this);
 }

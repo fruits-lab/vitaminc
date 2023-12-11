@@ -47,10 +47,11 @@ extern std::unique_ptr<AstNode> program;
 
 %token <int> NUM
 %token <std::string> ID
-%token INT MAIN RETURN
+%token INT MAIN
 %token IF ELSE
 %token EQ NE LE GE
 %token DO WHILE FOR
+%token CONTINUE BREAK RETURN
 // increment (INCR: ++) and decrement (DECR: --)
 %token INCR DECR
 %token EOF 0
@@ -140,6 +141,8 @@ stmt: expr_opt ';' { $$ = std::make_unique<ExprStmtNode>($1); }
     | WHILE '(' expr ')' stmt { $$ = std::make_unique<WhileStmtNode>($3, $5); }
     | DO stmt WHILE '(' expr ')' ';' { $$ = std::make_unique<WhileStmtNode>($5, $2, true); }
     | FOR '(' loop_init expr_opt ';' expr_opt ')' stmt { $$ = std::make_unique<ForStmtNode>($3, $4, $6, $8); }
+    | BREAK ';' { $$ = std::make_unique<BreakStmtNode>(); }
+    | CONTINUE ';' { $$ = std::make_unique<ContinueStmtNode>(); }
     ;
 
 loop_init: decl { $$ = std::make_unique<LoopInitNode>($1); }

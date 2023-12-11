@@ -159,6 +159,20 @@ struct ReturnStmtNode : public StmtNode {
   std::unique_ptr<ExprNode> expr;
 };
 
+struct BreakStmtNode : public StmtNode {
+  BreakStmtNode() {}
+
+  virtual void Accept(NonModifyingVisitor&) const override;
+  virtual void Accept(ModifyingVisitor&) override;
+};
+
+struct ContinueStmtNode : public StmtNode {
+  ContinueStmtNode() {}
+
+  virtual void Accept(NonModifyingVisitor&) const override;
+  virtual void Accept(ModifyingVisitor&) override;
+};
+
 /// @note Any expression can be turned into a statement by adding a semicolon
 /// to the end of the expression.
 struct ExprStmtNode : public StmtNode {
