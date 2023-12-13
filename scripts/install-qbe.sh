@@ -5,4 +5,4 @@ wget https://c9x.me/compile/release/qbe-1.1.tar.xz -O - | tar Jxf - &&
   make &&
   sudo make install &&
   cd .. &&
-  rm -r qbe-1.1/
+  rm -rf qbe-1.1/
