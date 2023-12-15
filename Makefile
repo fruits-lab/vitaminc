@@ -32,7 +32,8 @@ test: $(TARGET)
 	cd test/ && $(MAKE) test MAKEFLAGS=
 
 $(TARGET): $(OBJS)
-	$(CXX) $(CXXFLAGS) $(OBJS) -o $@
+	# Link fmt library after all object files, or else it will throw errors.
+	$(CXX) $(CXXFLAGS) $(OBJS) -lfmt -o $@
 
 lex.yy.cpp: lexer.l
 	$(LEX) -o $@ $<
