@@ -1,5 +1,7 @@
 #include "qbe_ir_generator.hpp"
 
+#include <fmt/ostream.h>
+
 #include <cassert>
 #include <fstream>
 #include <map>
@@ -13,6 +15,8 @@
 extern std::ofstream output;
 
 namespace {
+
+const int kIndentSize = 8;
 
 /// @brief Returns the next local number and increment it by 1. The first number
 /// will be 1.
@@ -35,6 +39,67 @@ std::string PrefixSigil(int local_num) {
 /// @brief Returns a label with prefix (`@`).
 std::string PrefixLabel(const std::string& name, int label_num) {
   return "@" + name + "." + std::to_string(label_num);
+}
+
+void OutputNoIndent(const std::string& str) {
+  fmt::print(output, "{}\n", str);
+}
+
+void OutputIndentComment(const std::string& comment) {
+  fmt::print(output, "{:{}}", "", kIndentSize);
+  fmt::print(output, "{}\n", comment);
+}
+
+void OutputIndentDeclare(const std::string& id, const std::string& data_type,
+                         int alignment, int stack_size) {
+  fmt::print(output, "{:{}}", "", kIndentSize);
+  fmt::print(output, "{} ={} alloc{} {}\n", id, data_type, alignment,
+             stack_size);
+}
+
+void OutputIndentStore(const std::string& data_type, const std::string& source,
+                       const std::string& dest) {
+  fmt::print(output, "{:{}}", "", kIndentSize);
+  fmt::print(output, "store{} {}, {}\n", data_type, source, dest);
+}
+
+void OutputIndentLoad(const std::string& data_type, const std::string& source,
+                      const std::string& dest) {
+  fmt::print(output, "{:{}}", "", kIndentSize);
+  fmt::print(output, "{} ={} load{} {}\n", dest, data_type, data_type, source);
+}
+
+void OutputIndentCopy(const std::string& data_type, int source,
+                      const std::string& dest) {
+  fmt::print(output, "{:{}}", "", kIndentSize);
+  fmt::print(output, "{} ={} copy {}\n", dest, data_type, source);
+}
+
+void OutputIndentJumpConditional(const std::string& cond,
+                                 const std::string& body_label,
+                                 const std::string& end_label) {
+  fmt::print(output, "{:{}}", "", kIndentSize);
+  fmt::print(output, "jnz {}, {}, {}\n", cond, body_label, end_label);
+}
+
+void OutputIndentJumpUnconditional(const std::string& dest) {
+  fmt::print(output, "{:{}}", "", kIndentSize);
+  fmt::print(output, "jmp {}\n", dest);
+}
+
+void OutputIndentReturn(const std::string& val) {
+  fmt::print(output, "{:{}}", "", kIndentSize);
+  // TODO: return value is optional
+  fmt::print(output, "ret {}\n", val);
+}
+
+void OutputIndentThreeAddr(const std::string& op, const std::string& data_type,
+                           const std::string& dest,
+                           const std::string& source_one,
+                           const std::string& source_two) {
+  fmt::print(output, "{:{}}", "", kIndentSize);
+  fmt::print(output, "{} ={} {} {}, {}\n", dest, data_type, op, source_one,
+             source_two);
 }
 
 class OpNameGetter {
@@ -84,13 +149,14 @@ auto num_recorder = PrevExprNumRecorder{};
 
 void QbeIrGenerator::Visit(const DeclNode& decl) {
   int id_num = NextLocalNum();
-  output << PrefixSigil(id_num) << " =l alloc4 4" << std::endl;
+  // TODO: declare based on data types
+  OutputIndentDeclare(PrefixSigil(id_num), "l", 4, 4);
 
   if (decl.init) {
     decl.init->Accept(*this);
     int init_num = num_recorder.NumOfPrevExpr();
-    output << "storew " << PrefixSigil(init_num) << ", " << PrefixSigil(id_num)
-           << std::endl;
+    // TODO: store to memory based on identifier's data type
+    OutputIndentStore("w", PrefixSigil(init_num), PrefixSigil(id_num));
   }
   // Set up the number of the id so we know were to load it back.
   id_to_num[decl.id] = id_num;
@@ -118,10 +184,10 @@ void QbeIrGenerator::Visit(const BlockStmtNode& block) {
 }
 
 void QbeIrGenerator::Visit(const ProgramNode& program) {
-  output << "export function w $main() {" << std::endl;
-  output << "@start" << std::endl;
+  OutputNoIndent("export function w $main() {");
+  OutputNoIndent("@start");
   program.block->Accept(*this);
-  output << "}";
+  OutputNoIndent("}");
 }
 
 void QbeIrGenerator::Visit(const IfStmtNode& if_stmt) {
@@ -136,23 +202,24 @@ void QbeIrGenerator::Visit(const IfStmtNode& if_stmt) {
   // If no "else" exists, falls through to "end".
   // If "else" exists, a second jump is needed after executing "then" to skip
   // it, as the generated code for "else" follows immediately after "then".
-  output << "# if" << std::endl;
-  output << "jnz " << PrefixSigil(predicate_num) << ", " << then_label << ", ";
+  OutputIndentComment("# if");
+  std::string is_else = "";
   if (if_stmt.or_else) {
-    output << else_label << std::endl;
+    is_else = else_label;
   } else {
-    output << end_label << std::endl;
+    is_else = end_label;
   }
+  OutputIndentJumpConditional(PrefixSigil(predicate_num), then_label, is_else);
 
-  output << then_label << std::endl;
+  OutputNoIndent(then_label);
   if_stmt.then->Accept(*this);
   if (if_stmt.or_else) {
     // Skip the "else" part after executing "then".
-    output << "jmp " << end_label << std::endl;
-    output << else_label << std::endl;
+    OutputIndentJumpUnconditional(end_label);
+    OutputNoIndent(else_label);
     if_stmt.or_else->Accept(*this);
   }
-  output << end_label << std::endl;
+  OutputNoIndent(end_label);
 }
 
 void QbeIrGenerator::Visit(const WhileStmtNode& while_stmt) {
@@ -167,23 +234,23 @@ void QbeIrGenerator::Visit(const WhileStmtNode& while_stmt) {
   // unconditional jump at the end of the body to jump back to the predicate.
   // For a do-while statement, it only needs one conditional jump.
   if (!while_stmt.is_do_while) {
-    output << pred_label << std::endl;
+    OutputNoIndent(pred_label);
     while_stmt.predicate->Accept(*this);
     int predicate_num = num_recorder.NumOfPrevExpr();
-    output << "jnz " << PrefixSigil(predicate_num) << ", " << body_label << ", "
-           << end_label << std::endl;
+    OutputIndentJumpConditional(PrefixSigil(predicate_num), body_label,
+                                end_label);
   }
-  output << body_label << std::endl;
+  OutputNoIndent(body_label);
   while_stmt.loop_body->Accept(*this);
   if (!while_stmt.is_do_while) {
-    output << "jmp " << pred_label << std::endl;
+    OutputIndentJumpUnconditional(pred_label);
   } else {
     while_stmt.predicate->Accept(*this);
     int predicate_num = num_recorder.NumOfPrevExpr();
-    output << "jnz " << PrefixSigil(predicate_num) << ", " << body_label << ", "
-           << end_label << std::endl;
+    OutputIndentJumpConditional(PrefixSigil(predicate_num), body_label,
+                                end_label);
   }
-  output << end_label << std::endl;
+  OutputNoIndent(end_label);
 }
 
 void QbeIrGenerator::Visit(const ForStmtNode& for_stmt) {
@@ -196,26 +263,26 @@ void QbeIrGenerator::Visit(const ForStmtNode& for_stmt) {
   // whereas a for statement's predicate specifies evaluation made before each
   // iteration. A step is an operation that is performed after each iteration.
   // Skip predicate generation if it is a null expression.
-  output << "# loop init" << std::endl;
+  OutputIndentComment("# loop init");
   for_stmt.loop_init->Accept(*this);
-  output << pred_label << std::endl;
+  OutputNoIndent(pred_label);
   for_stmt.predicate->Accept(*this);
   if (!dynamic_cast<NullExprNode*>((for_stmt.predicate).get())) {
     int predicate_num = num_recorder.NumOfPrevExpr();
-    output << "jnz " << PrefixSigil(predicate_num) << ", " << body_label << ", "
-           << end_label << std::endl;
+    OutputIndentJumpConditional(PrefixSigil(predicate_num), body_label,
+                                end_label);
   }
-  output << body_label << std::endl;
+  OutputNoIndent(body_label);
   for_stmt.loop_body->Accept(*this);
   for_stmt.step->Accept(*this);
-  output << "jmp " << pred_label << std::endl;
-  output << end_label << std::endl;
+  OutputIndentJumpUnconditional(pred_label);
+  OutputNoIndent(end_label);
 }
 
 void QbeIrGenerator::Visit(const ReturnStmtNode& ret_stmt) {
   ret_stmt.expr->Accept(*this);
   int ret_num = num_recorder.NumOfPrevExpr();
-  output << " ret " << PrefixSigil(ret_num) << std::endl;
+  OutputIndentReturn(PrefixSigil(ret_num));
 }
 
 void QbeIrGenerator::Visit(const ExprStmtNode& expr_stmt) {
@@ -231,14 +298,14 @@ void QbeIrGenerator::Visit(const IdExprNode& id_expr) {
   /// the register before use.
   int id_num = id_to_num.at(id_expr.id);
   int reg_num = NextLocalNum();
-  output << PrefixSigil(reg_num) << " =w loadw " << PrefixSigil(id_num)
-         << std::endl;
+  // TODO: load based on identifier's data type
+  OutputIndentLoad("w", PrefixSigil(id_num), PrefixSigil(reg_num));
   num_recorder.Record(reg_num);
 }
 
 void QbeIrGenerator::Visit(const IntConstExprNode& int_expr) {
   int num = NextLocalNum();
-  output << PrefixSigil(num) << " =w copy " << int_expr.val << std::endl;
+  OutputIndentCopy("w", int_expr.val, PrefixSigil(num));
   num_recorder.Record(num);
 }
 
@@ -255,9 +322,10 @@ void QbeIrGenerator::Visit(const BinaryExprNode& bin_expr) {
   bin_expr.rhs->Accept(*this);
   int right_num = num_recorder.NumOfPrevExpr();
   int num = NextLocalNum();
-  output << PrefixSigil(num) << " =w " << OpNameGetter{}.OpNameOf(bin_expr)
-         << " " << PrefixSigil(left_num) << ", " << PrefixSigil(right_num)
-         << std::endl;
+  // TODO: identify expression's data type
+  OutputIndentThreeAddr(OpNameGetter{}.OpNameOf(bin_expr), "w",
+                        PrefixSigil(num), PrefixSigil(left_num),
+                        PrefixSigil(right_num));
   num_recorder.Record(num);
 }
 
@@ -294,8 +362,9 @@ DISPATCH_TO_VISIT_EXPR(UnaryExprNode, BitCompExprNode);
 void QbeIrGenerator::Visit(const SimpleAssignmentExprNode& assign_expr) {
   assign_expr.expr->Accept(*this);
   int expr_num = num_recorder.NumOfPrevExpr();
-  output << "storew " << PrefixSigil(expr_num) << ", "
-         << PrefixSigil(id_to_num.at(assign_expr.id)) << std::endl;
+  // TODO: store to memory based on expression's data type
+  OutputIndentStore("w", PrefixSigil(expr_num),
+                    PrefixSigil(id_to_num.at(assign_expr.id)));
   num_recorder.Record(expr_num);
 }
 
