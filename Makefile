@@ -3,6 +3,7 @@ CXX := g++
 CC = $(CXX)
 CXXFLAGS = -g3 -std=c++17 -Wall -MMD -Iinclude -Werror
 CFLAGS = $(CXXFLAGS)
+LDLIBS = -lfmt
 LEX = lex
 # C++ features are used, yacc doesn't suffice
 YACC = bison
@@ -30,7 +31,7 @@ test: $(TARGET)
 	cd test/ && $(MAKE) test MAKEFLAGS=
 
 $(TARGET): $(OBJS)
-	$(CXX) $(CXXFLAGS) $(OBJS) -o $@
+	$(CXX) $(CXXFLAGS) $(OBJS) -o $@ $(LDLIBS)
 
 lex.yy.cpp: lexer.l y.tab.hpp
 	$(LEX) -o $@ $<
