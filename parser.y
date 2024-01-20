@@ -6,7 +6,6 @@
 #include <vector>
 
 #include "ast.hpp"
-#include "lex.yy.cpp"
 #include "type.hpp"
 
 extern std::unique_ptr<AstNode> program;
@@ -20,6 +19,11 @@ extern std::unique_ptr<AstNode> program;
   #include <vector>
 
   #include "ast.hpp"
+}
+
+// Placed after the usual contents of the parser header file.
+%code {
+  extern yy::parser::symbol_type yylex();
 }
 
 %skeleton "lalr1.cc"
