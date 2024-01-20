@@ -41,6 +41,19 @@ std::string PrefixLabel(const std::string& name, int label_num) {
   return fmt::format("@{}.{}", name, label_num);
 }
 
+/// @note This function is not meant to be used directly.
+void VWriteOut(fmt::string_view format, fmt::format_args args) {
+  fmt::vprint(output, format, args);
+}
+
+/// @brief Writes out the formatted string to `output`.
+/// @note This is a convenience function to avoid having to pass `output`
+/// everywhere.
+template <typename... T>
+void WriteOut(fmt::format_string<T...> format, T&&... args) {
+  VWriteOut(format, fmt::make_format_args(args...));
+}
+
 class OpNameGetter {
  public:
   /// @return The name of the operator used in the QBE IR, e.g., `add`.
@@ -88,13 +101,12 @@ auto num_recorder = PrevExprNumRecorder{};
 
 void QbeIrGenerator::Visit(const DeclNode& decl) {
   int id_num = NextLocalNum();
-  fmt::print(output, "{} =l alloc4 4\n", PrefixSigil(id_num));
+  WriteOut("{} =l alloc4 4\n", PrefixSigil(id_num));
 
   if (decl.init) {
     decl.init->Accept(*this);
     int init_num = num_recorder.NumOfPrevExpr();
-    fmt::print(output, "storew {}, {}\n", PrefixSigil(init_num),
-               PrefixSigil(id_num));
+    WriteOut("storew {}, {}\n", PrefixSigil(init_num), PrefixSigil(id_num));
   }
   // Set up the number of the id so we know were to load it back.
   id_to_num[decl.id] = id_num;
@@ -122,11 +134,11 @@ void QbeIrGenerator::Visit(const BlockStmtNode& block) {
 }
 
 void QbeIrGenerator::Visit(const ProgramNode& program) {
-  fmt::print(output,
-             "export function w $main() {{\n"
-             "@start\n");
+  WriteOut(
+      "export function w $main() {{\n"
+      "@start\n");
   program.block->Accept(*this);
-  fmt::print(output, "}}");
+  WriteOut("}}");
 }
 
 void QbeIrGenerator::Visit(const IfStmtNode& if_stmt) {
@@ -141,27 +153,27 @@ void QbeIrGenerator::Visit(const IfStmtNode& if_stmt) {
   // If no "else" exists, falls through to "end".
   // If "else" exists, a second jump is needed after executing "then" to skip
   // it, as the generated code for "else" follows immediately after "then".
-  fmt::print(output,
-             "# if\n"
-             "jnz {}, {}, ",
-             PrefixSigil(predicate_num), then_label);
+  WriteOut(
+      "# if\n"
+      "jnz {}, {}, ",
+      PrefixSigil(predicate_num), then_label);
   if (if_stmt.or_else) {
-    fmt::print(output, "{}\n", else_label);
+    WriteOut("{}\n", else_label);
   } else {
-    fmt::print(output, "{}\n", end_label);
+    WriteOut("{}\n", end_label);
   }
 
-  fmt::print(output, "{}\n", then_label);
+  WriteOut("{}\n", then_label);
   if_stmt.then->Accept(*this);
   if (if_stmt.or_else) {
     // Skip the "else" part after executing "then".
-    fmt::print(output,
-               "jmp {}\n"
-               "{}\n",
-               end_label, else_label);
+    WriteOut(
+        "jmp {}\n"
+        "{}\n",
+        end_label, else_label);
     if_stmt.or_else->Accept(*this);
   }
-  fmt::print(output, "{}\n", end_label);
+  WriteOut("{}\n", end_label);
 }
 
 void QbeIrGenerator::Visit(const WhileStmtNode& while_stmt) {
@@ -176,23 +188,23 @@ void QbeIrGenerator::Visit(const WhileStmtNode& while_stmt) {
   // unconditional jump at the end of the body to jump back to the predicate.
   // For a do-while statement, it only needs one conditional jump.
   if (!while_stmt.is_do_while) {
-    fmt::print(output, "{}\n", pred_label);
+    WriteOut("{}\n", pred_label);
     while_stmt.predicate->Accept(*this);
     int predicate_num = num_recorder.NumOfPrevExpr();
-    fmt::print(output, "jnz {}, {}, {}\n", PrefixSigil(predicate_num),
-               body_label, end_label);
+    WriteOut("jnz {}, {}, {}\n", PrefixSigil(predicate_num), body_label,
+             end_label);
   }
-  fmt::print(output, "{}\n", body_label);
+  WriteOut("{}\n", body_label);
   while_stmt.loop_body->Accept(*this);
   if (!while_stmt.is_do_while) {
-    fmt::print(output, "jmp {}\n", pred_label);
+    WriteOut("jmp {}\n", pred_label);
   } else {
     while_stmt.predicate->Accept(*this);
     int predicate_num = num_recorder.NumOfPrevExpr();
-    fmt::print(output, "jnz {}, {}, {}\n", PrefixSigil(predicate_num),
-               body_label, end_label);
+    WriteOut("jnz {}, {}, {}\n", PrefixSigil(predicate_num), body_label,
+             end_label);
   }
-  fmt::print(output, "{}\n", end_label);
+  WriteOut("{}\n", end_label);
 }
 
 void QbeIrGenerator::Visit(const ForStmtNode& for_stmt) {
@@ -205,28 +217,28 @@ void QbeIrGenerator::Visit(const ForStmtNode& for_stmt) {
   // whereas a for statement's predicate specifies evaluation made before each
   // iteration. A step is an operation that is performed after each iteration.
   // Skip predicate generation if it is a null expression.
-  fmt::print(output, "# loop init\n");
+  WriteOut("# loop init\n");
   for_stmt.loop_init->Accept(*this);
-  fmt::print(output, "{}\n", pred_label);
+  WriteOut("{}\n", pred_label);
   for_stmt.predicate->Accept(*this);
   if (!dynamic_cast<NullExprNode*>((for_stmt.predicate).get())) {
     int predicate_num = num_recorder.NumOfPrevExpr();
-    fmt::print(output, "jnz {}, {}, {}\n", PrefixSigil(predicate_num),
-               body_label, end_label);
+    WriteOut("jnz {}, {}, {}\n", PrefixSigil(predicate_num), body_label,
+             end_label);
   }
-  fmt::print(output, "{}\n", body_label);
+  WriteOut("{}\n", body_label);
   for_stmt.loop_body->Accept(*this);
   for_stmt.step->Accept(*this);
-  fmt::print(output,
-             "jmp {}\n"
-             "{}\n",
-             pred_label, end_label);
+  WriteOut(
+      "jmp {}\n"
+      "{}\n",
+      pred_label, end_label);
 }
 
 void QbeIrGenerator::Visit(const ReturnStmtNode& ret_stmt) {
   ret_stmt.expr->Accept(*this);
   int ret_num = num_recorder.NumOfPrevExpr();
-  fmt::print(output, "ret {}\n", PrefixSigil(ret_num));
+  WriteOut("ret {}\n", PrefixSigil(ret_num));
 }
 
 void QbeIrGenerator::Visit(const BreakStmtNode& break_stmt) {}
@@ -246,14 +258,13 @@ void QbeIrGenerator::Visit(const IdExprNode& id_expr) {
   /// the register before use.
   int id_num = id_to_num.at(id_expr.id);
   int reg_num = NextLocalNum();
-  fmt::print(output, "{} =w loadw {}\n", PrefixSigil(reg_num),
-             PrefixSigil(id_num));
+  WriteOut("{} =w loadw {}\n", PrefixSigil(reg_num), PrefixSigil(id_num));
   num_recorder.Record(reg_num);
 }
 
 void QbeIrGenerator::Visit(const IntConstExprNode& int_expr) {
   int num = NextLocalNum();
-  fmt::print(output, "{} =w copy {}\n", PrefixSigil(num), int_expr.val);
+  WriteOut("{} =w copy {}\n", PrefixSigil(num), int_expr.val);
   num_recorder.Record(num);
 }
 
@@ -270,9 +281,9 @@ void QbeIrGenerator::Visit(const BinaryExprNode& bin_expr) {
   bin_expr.rhs->Accept(*this);
   int right_num = num_recorder.NumOfPrevExpr();
   int num = NextLocalNum();
-  fmt::print(output, "{} =w {} {}, {}\n", PrefixSigil(num),
-             OpNameGetter{}.OpNameOf(bin_expr), PrefixSigil(left_num),
-             PrefixSigil(right_num));
+  WriteOut("{} =w {} {}, {}\n", PrefixSigil(num),
+           OpNameGetter{}.OpNameOf(bin_expr), PrefixSigil(left_num),
+           PrefixSigil(right_num));
   num_recorder.Record(num);
 }
 
@@ -309,8 +320,8 @@ DISPATCH_TO_VISIT_EXPR(UnaryExprNode, BitCompExprNode);
 void QbeIrGenerator::Visit(const SimpleAssignmentExprNode& assign_expr) {
   assign_expr.expr->Accept(*this);
   int expr_num = num_recorder.NumOfPrevExpr();
-  fmt::print(output, "storew {}, {}\n", PrefixSigil(expr_num),
-             PrefixSigil(id_to_num.at(assign_expr.id)));
+  WriteOut("storew {}, {}\n", PrefixSigil(expr_num),
+           PrefixSigil(id_to_num.at(assign_expr.id)));
   num_recorder.Record(expr_num);
 }
 
