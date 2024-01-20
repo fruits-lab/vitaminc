@@ -16,9 +16,7 @@ endif
 # Export variable to be visible for test/Makefile.
 export PARALLEL
 
-# Note that lex.yy.cpp is excluded deliberately, as "lex.yy.cpp" is considered a
-# header file (it's included by "y.tab.cpp").
-OBJS := $(shell find . -name "*.cpp" ! -name "y.tab.cpp" ! -name "lex.yy.cpp" ) y.tab.o
+OBJS := $(shell find . -name "*.cpp") lex.yy.o y.tab.o
 OBJS := $(OBJS:.cpp=.o)
 DEPS = $(OBJS:.o=.d)
 
@@ -34,11 +32,11 @@ test: $(TARGET)
 $(TARGET): $(OBJS)
 	$(CXX) $(CXXFLAGS) $(OBJS) -o $@
 
-lex.yy.cpp: lexer.l
+lex.yy.cpp: lexer.l y.tab.hpp
 	$(LEX) -o $@ $<
 
 y.tab.hpp: y.tab.cpp
-y.tab.cpp: parser.y lex.yy.cpp
+y.tab.cpp: parser.y
 	$(YACC) $(YFLAGS) $< -o $@
 
 #
