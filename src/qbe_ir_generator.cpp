@@ -8,6 +8,7 @@
 #include <map>
 #include <memory>
 #include <string>
+#include <variant>
 
 #include "ast.hpp"
 #include "visitor.hpp"
