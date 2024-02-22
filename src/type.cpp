@@ -1,6 +1,8 @@
 #include "type.hpp"
 
-const char* ExprTypeToCString(ExprType type) {
+#include <string>
+
+std::string ExprTypeToString(ExprType type) {
   switch (type) {
     case ExprType::kInt:
       return "int";

@@ -31,7 +31,7 @@ class OpGetter {
 
 void AstDumper::Visit(const DeclNode& decl) {
   std::cout << indenter_.Indent() << '(' << decl.id << ": "
-            << ExprTypeToCString(decl.type);
+            << ExprTypeToString(decl.type);
   if (decl.init) {
     std::cout << " =" << std::endl;
     indenter_.IncreaseLevel();
@@ -133,12 +133,12 @@ void AstDumper::Visit(const NullExprNode& null_expr) {
 
 void AstDumper::Visit(const IdExprNode& id_expr) {
   std::cout << indenter_.Indent() << id_expr.id << ": "
-            << ExprTypeToCString(id_expr.type) << std::endl;
+            << ExprTypeToString(id_expr.type) << std::endl;
 }
 
 void AstDumper::Visit(const IntConstExprNode& int_expr) {
   std::cout << indenter_.Indent() << int_expr.val << ": "
-            << ExprTypeToCString(int_expr.type) << std::endl;
+            << ExprTypeToString(int_expr.type) << std::endl;
 }
 
 void AstDumper::Visit(const UnaryExprNode& unary_expr) {
@@ -148,7 +148,7 @@ void AstDumper::Visit(const UnaryExprNode& unary_expr) {
   unary_expr.operand->Accept(*this);
   indenter_.DecreaseLevel();
   std::cout << indenter_.Indent() << ')' << ": "
-            << ExprTypeToCString(unary_expr.type) << std::endl;
+            << ExprTypeToString(unary_expr.type) << std::endl;
 }
 
 void AstDumper::Visit(const BinaryExprNode& bin_expr) {
@@ -159,7 +159,7 @@ void AstDumper::Visit(const BinaryExprNode& bin_expr) {
   bin_expr.rhs->Accept(*this);
   indenter_.DecreaseLevel();
   std::cout << indenter_.Indent() << ')' << ": "
-            << ExprTypeToCString(bin_expr.type) << std::endl;
+            << ExprTypeToString(bin_expr.type) << std::endl;
 }
 
 /// @brief Dispatch the concrete binary or unary expressions to the parent
@@ -196,11 +196,11 @@ void AstDumper::Visit(const SimpleAssignmentExprNode& assign_expr) {
   std::cout << indenter_.Indent() << '(' << '=' << std::endl;
   indenter_.IncreaseLevel();
   std::cout << indenter_.Indent() << assign_expr.id << ": "
-            << ExprTypeToCString(assign_expr.type) << std::endl;
+            << ExprTypeToString(assign_expr.type) << std::endl;
   assign_expr.expr->Accept(*this);
   indenter_.DecreaseLevel();
   std::cout << indenter_.Indent() << ')' << ": "
-            << ExprTypeToCString(assign_expr.expr->type) << std::endl;
+            << ExprTypeToString(assign_expr.expr->type) << std::endl;
 }
 
 class OpGetter::OpGetterImpl : public NonModifyingVisitor {
