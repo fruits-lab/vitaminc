@@ -58,3 +58,6 @@ venv.bak/
 
 # VS Code configs
 .vscode
+
+# Compilation database
+compile_commands.json
