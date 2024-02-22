@@ -17,11 +17,14 @@ endif
 # Export variable to be visible for test/Makefile.
 export PARALLEL
 
-OBJS := $(shell find . -name "*.cpp") lex.yy.o y.tab.o
+SRC := $(shell find -name "*.cpp")
+INC := $(shell find -name "*.hpp")
+
+OBJS := $(SRC) lex.yy.o y.tab.o
 OBJS := $(OBJS:.cpp=.o)
 DEPS = $(OBJS:.o=.d)
 
-.PHONY: all clean test
+.PHONY: all clean test tidy
 
 all: $(TARGET)
 
@@ -47,6 +50,9 @@ y.tab.cpp: parser.y
 #
 
 main.o: %.o: %.cpp y.tab.hpp
+
+tidy:
+	clang-tidy $(CLANG_TIDY_FLAGS) -p . $(SRC) $(INC) -- $(CXXFLAGS)
 
 clean:
 	rm -rf *.s *.o lex.yy.* y.tab.* *.output *.ssa $(TARGET) $(OBJS) $(DEPS)
