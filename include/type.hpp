@@ -1,6 +1,8 @@
 #ifndef TYPE_HPP_
 #define TYPE_HPP_
 
+#include <string>
+
 /// @note C has a lots of primitive type. We might need to use classes to
 /// implement type coercion rules.
 enum class ExprType {
@@ -8,6 +10,6 @@ enum class ExprType {
   kInt,
 };
 
-const char* ExprTypeToCString(ExprType type);
+std::string ExprTypeToString(ExprType type);
 
 #endif  // TYPE_HPP_
