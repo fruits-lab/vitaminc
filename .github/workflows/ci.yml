@@ -13,10 +13,30 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v3
+        with:
+          # Fetch all history for proper diffing.
+          fetch-depth: 0
       - name: coding convention
         run: |
           sudo apt-get install -q -y clang-format
           scripts/check-format.sh
+      - name: Install cxxopts
+        run: scripts/install-cxxopts.sh
+      - name: Install fmt
+        run: scripts/install-fmt.sh
+      - name: Install bear
+        run: sudo apt-get install -q -y bear
+      - name: Install clang-tidy
+        run: |
+          sudo add-apt-repository -y 'deb http://apt.llvm.org/jammy/ llvm-toolchain-jammy-18 main'
+          wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
+          sudo apt-get update
+          sudo apt-get install -q -y clang-tidy-18
+      - name: static checks
+        run: |
+          export CLANG_TIDY_DIFF=clang-tidy-diff-18.py
+          scripts/check-tidy.sh
+
   test:
     runs-on: ubuntu-22.04
     strategy:
