@@ -1,7 +1,9 @@
 #ifndef OPERATOR_HPP_
 #define OPERATOR_HPP_
 
-enum class BinaryOperator {
+#include <cstdint>
+
+enum class BinaryOperator : std::uint8_t {
   kAdd,
   kSub,
   kMul,
@@ -15,7 +17,7 @@ enum class BinaryOperator {
   kNeq,
 };
 
-enum class UnaryOperator {
+enum class UnaryOperator : std::uint8_t {
   kIncr,
   kDecr,
   kNeg,
