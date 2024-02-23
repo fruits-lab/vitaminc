@@ -10,7 +10,7 @@
 
 struct SymbolEntry {
   std::string id;
-  ExprType expr_type;
+  ExprType expr_type{ExprType::kUnknown};
 
   SymbolEntry(std::string id) : id{std::move(id)} {}
 };
