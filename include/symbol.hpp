@@ -4,6 +4,7 @@
 #include <map>
 #include <memory>
 #include <string>
+#include <utility>
 
 #include "type.hpp"
 
@@ -11,7 +12,7 @@ struct SymbolEntry {
   std::string id;
   ExprType expr_type;
 
-  SymbolEntry(std::string id) : id{id} {}
+  SymbolEntry(std::string id) : id{std::move(id)} {}
 };
 
 class SymbolTable {

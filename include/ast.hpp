@@ -54,9 +54,9 @@ struct ExprNode : public AstNode {
 };
 
 struct DeclNode : public AstNode {
-  DeclNode(const std::string& id, ExprType decl_type,
+  DeclNode(std::string id, ExprType decl_type,
            std::unique_ptr<ExprNode> init = {})
-      : id{id}, type{decl_type}, init{std::move(init)} {}
+      : id{std::move(id)}, type{decl_type}, init{std::move(init)} {}
 
   void Accept(NonModifyingVisitor&) const override;
   void Accept(ModifyingVisitor&) override;
@@ -192,7 +192,7 @@ struct NullExprNode : public ExprNode {
 };
 
 struct IdExprNode : public ExprNode {
-  IdExprNode(const std::string& id) : id{id} {}
+  IdExprNode(std::string id) : id{std::move(id)} {}
 
   void Accept(NonModifyingVisitor&) const override;
   void Accept(ModifyingVisitor&) override;
