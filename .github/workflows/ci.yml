@@ -37,11 +37,11 @@ jobs:
           wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
           sudo apt-get update
           sudo apt-get install -q -y clang-tidy-18
-      - name: static checks
+      - name: static checks on diff
         if: ${{ github.event_name == 'pull_request' }}
         run: |
           export CLANG_TIDY_DIFF=clang-tidy-diff-18.py
-          scripts/check-tidy.sh
+          scripts/check-tidy-diff.sh
       - name: static checks
         if : ${{ github.event_name == 'push' }}
         run: |
