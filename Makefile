@@ -1,6 +1,7 @@
 TARGET := vitaminc
 CXX := g++
 CC = $(CXX)
+CLANG_TIDY ?= clang-tidy
 CXXFLAGS = -g3 -std=c++17 -Wall -MMD -Iinclude -Werror
 CFLAGS = $(CXXFLAGS)
 LDLIBS = -lfmt
@@ -52,7 +53,7 @@ y.tab.cpp: parser.y
 main.o: %.o: %.cpp y.tab.hpp
 
 tidy:
-	clang-tidy $(CLANG_TIDY_FLAGS) -p . $(SRC) $(INC) -- $(CXXFLAGS)
+	$(CLANG_TIDY) $(CLANG_TIDY_FLAGS) -p . $(SRC) $(INC) -- $(CXXFLAGS)
 
 clean:
 	rm -rf *.s *.o lex.yy.* y.tab.* *.output *.ssa $(TARGET) $(OBJS) $(DEPS)

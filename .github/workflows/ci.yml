@@ -38,9 +38,15 @@ jobs:
           sudo apt-get update
           sudo apt-get install -q -y clang-tidy-18
       - name: static checks
+        if: ${{ github.event_name == 'pull_request' }}
         run: |
           export CLANG_TIDY_DIFF=clang-tidy-diff-18.py
           scripts/check-tidy.sh
+      - name: static checks
+        if : ${{ github.event_name == 'push' }}
+        run: |
+          export CLANG_TIDY=clang-tidy-18
+          make tidy
 
   test:
     runs-on: ubuntu-22.04
