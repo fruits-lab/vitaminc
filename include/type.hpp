@@ -1,11 +1,12 @@
 #ifndef TYPE_HPP_
 #define TYPE_HPP_
 
+#include <cstdint>
 #include <string>
 
 /// @note C has a lots of primitive type. We might need to use classes to
 /// implement type coercion rules.
-enum class ExprType {
+enum class ExprType : std::uint8_t {
   kUnknown = 0,  // HACK: default initialized to 0 -> unknown
   kInt,
 };
