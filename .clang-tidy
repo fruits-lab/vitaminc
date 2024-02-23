@@ -5,6 +5,9 @@
 #
 # -modernize-use-nodiscard:
 #   The leading [[nodiscard]] attribute adds noise to the code when reading it and may not provide considerable benefits.
+#
+# -cppcoreguidelines-explicit-virtual-functions:
+#   It's an alias of "modernize-use-override".
 
 # Warnings are easily be overlooked when they are not treated as errors.
 WarningsAsErrors: "*"
@@ -15,6 +18,7 @@ Checks: >
   performance-*,
   clang-analyzer-*,
   cppcoreguidelines-*,
+  -cppcoreguidelines-explicit-virtual-functions,
   modernize-*,
   -modernize-use-trailing-return-type,
   -modernize-use-nodiscard,
