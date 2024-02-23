@@ -2,7 +2,7 @@
 
 #
 # Runs clang-tidy on the diff between main and HEAD.
-# Note: This script is intended to be run in CI.
+# Note: This script is intended to be run in CI triggered by pull requests.
 #
 
 set -eu
