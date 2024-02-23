@@ -97,21 +97,21 @@ std::map<std::string, int> id_to_num{};
 class PrevExprNumRecorder {
  public:
   void Record(int num) {
-    num_of_prev_expr = num;
+    num_of_prev_expr_ = num;
   }
 
   /// @note The local number can only be gotten once. This is to reduce the
   /// possibility of getting obsolete number.
   int NumOfPrevExpr() {
-    assert(num_of_prev_expr != kNoRecord);
-    int tmp = num_of_prev_expr;
-    num_of_prev_expr = kNoRecord;
+    assert(num_of_prev_expr_ != kNoRecord);
+    int tmp = num_of_prev_expr_;
+    num_of_prev_expr_ = kNoRecord;
     return tmp;
   }
 
  private:
   static constexpr int kNoRecord = -1;
-  int num_of_prev_expr = kNoRecord;
+  int num_of_prev_expr_ = kNoRecord;
 };
 
 auto num_recorder = PrevExprNumRecorder{};
