@@ -4,7 +4,9 @@
 #include <string>
 
 std::string Indenter::Indent() const {
-  return std::string(size_per_level_ * level_, symbol_);
+  return std::string(  // NOLINT(modernize-return-braced-init-list:
+                       // False-positive on (size, value) constructor.
+      size_per_level_ * level_, symbol_);
 }
 
 void Indenter::IncreaseLevel() {
