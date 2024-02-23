@@ -34,6 +34,12 @@ struct AstNode {
   AstNode& operator=(AstNode&&) = delete;
 };
 
+// NOLINTBEGIN(cppcoreguidelines-special-member-functions):
+// Since the base class `AstNode` doesn't have a pure virtual destructor,
+// subclasses have to mark their destructors as pure virtual again to make the
+// class abstract. The destructor is then defined out-of-class using `=
+// default`; we do not actually define a custom destructor.
+
 /// @note This is an abstract class.
 struct StmtNode : public AstNode {
   void Accept(NonModifyingVisitor&) const override;
@@ -43,8 +49,11 @@ struct StmtNode : public AstNode {
   ~StmtNode() override = 0;
 };
 
+// NOLINTEND(cppcoreguidelines-special-member-functions)
+
 /// @note This is an abstract class.
-struct ExprNode : public AstNode {
+struct ExprNode  // NOLINT(cppcoreguidelines-special-member-functions)
+    : public AstNode {
   ExprType type = ExprType::kUnknown;
   void Accept(NonModifyingVisitor&) const override;
   void Accept(ModifyingVisitor&) override;
@@ -234,7 +243,8 @@ struct BinaryExprNode : public ExprNode {
 };
 
 /// @note This is an abstract class.
-struct AssignmentExprNode : public ExprNode {
+struct AssignmentExprNode  // NOLINT(cppcoreguidelines-special-member-functions)
+    : public ExprNode {
   void Accept(NonModifyingVisitor&) const override;
   void Accept(ModifyingVisitor&) override;
 

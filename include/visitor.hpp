@@ -69,6 +69,14 @@ class Visitor {
   /// @note To make the class abstract. But still we have to provide an
   /// out-of-class definition for the destructor.
   virtual ~Visitor() = 0;
+  Visitor() = default;
+
+  // Delete copy/move operations to avoid slicing.
+
+  Visitor(const Visitor&) = delete;
+  Visitor& operator=(const Visitor&) = delete;
+  Visitor(Visitor&&) = delete;
+  Visitor& operator=(Visitor&&) = delete;
 };
 
 template <bool is_modifying>

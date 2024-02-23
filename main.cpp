@@ -48,14 +48,14 @@ int main(int argc, char** argv) {
 
   // perform analyses and transformations on the ast
   auto scopes = ScopeStack{};
-  auto type_checker = TypeChecker{scopes};
+  TypeChecker type_checker{scopes};
   program->Accept(type_checker);
   if (args["dump"].as<bool>()) {
     auto indenter = Indenter{' ', 2, 80};
-    auto ast_dumper = AstDumper{indenter};
+    AstDumper ast_dumper{indenter};
     program->Accept(ast_dumper);
   }
-  auto code_generator = QbeIrGenerator{};
+  QbeIrGenerator code_generator{};
   program->Accept(code_generator);
 
   output.close();
