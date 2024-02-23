@@ -36,21 +36,21 @@ struct AstNode {
 
 /// @note This is an abstract class.
 struct StmtNode : public AstNode {
-  virtual void Accept(NonModifyingVisitor&) const override;
-  virtual void Accept(ModifyingVisitor&) override;
+  void Accept(NonModifyingVisitor&) const override;
+  void Accept(ModifyingVisitor&) override;
 
   /// @note To make the class abstract.
-  virtual ~StmtNode() = 0;
+  ~StmtNode() override = 0;
 };
 
 /// @note This is an abstract class.
 struct ExprNode : public AstNode {
   ExprType type = ExprType::kUnknown;
-  virtual void Accept(NonModifyingVisitor&) const override;
-  virtual void Accept(ModifyingVisitor&) override;
+  void Accept(NonModifyingVisitor&) const override;
+  void Accept(ModifyingVisitor&) override;
 
   /// @note To make the class abstract.
-  virtual ~ExprNode() = 0;
+  ~ExprNode() override = 0;
 };
 
 struct DeclNode : public AstNode {
@@ -58,8 +58,8 @@ struct DeclNode : public AstNode {
            std::unique_ptr<ExprNode> init = {})
       : id{id}, type{decl_type}, init{std::move(init)} {}
 
-  virtual void Accept(NonModifyingVisitor&) const override;
-  virtual void Accept(ModifyingVisitor&) override;
+  void Accept(NonModifyingVisitor&) const override;
+  void Accept(ModifyingVisitor&) override;
 
   std::string id;
   ExprType type;
@@ -72,8 +72,8 @@ struct LoopInitNode : public AstNode {
       std::variant<std::unique_ptr<DeclNode>, std::unique_ptr<ExprNode>> clause)
       : clause{std::move(clause)} {}
 
-  virtual void Accept(NonModifyingVisitor&) const override;
-  virtual void Accept(ModifyingVisitor&) override;
+  void Accept(NonModifyingVisitor&) const override;
+  void Accept(ModifyingVisitor&) override;
 
   std::variant<std::unique_ptr<DeclNode>, std::unique_ptr<ExprNode>> clause;
 };
@@ -84,8 +84,8 @@ struct BlockStmtNode : public StmtNode {
                 std::vector<std::unique_ptr<StmtNode>>&& stmts)
       : decls{std::move(decls)}, stmts{std::move(stmts)} {}
 
-  virtual void Accept(NonModifyingVisitor&) const override;
-  virtual void Accept(ModifyingVisitor&) override;
+  void Accept(NonModifyingVisitor&) const override;
+  void Accept(ModifyingVisitor&) override;
 
   std::vector<std::unique_ptr<DeclNode>> decls;
   std::vector<std::unique_ptr<StmtNode>> stmts;
@@ -96,8 +96,8 @@ struct ProgramNode : public AstNode {
   /// @note vector of move-only elements are move-only
   ProgramNode(std::unique_ptr<BlockStmtNode> block) : block{std::move(block)} {}
 
-  virtual void Accept(NonModifyingVisitor&) const override;
-  virtual void Accept(ModifyingVisitor&) override;
+  void Accept(NonModifyingVisitor&) const override;
+  void Accept(ModifyingVisitor&) override;
 
   std::unique_ptr<BlockStmtNode> block;
 };
@@ -109,8 +109,8 @@ struct IfStmtNode : public StmtNode {
         then{std::move(then)},
         or_else{std::move(or_else)} {}
 
-  virtual void Accept(NonModifyingVisitor&) const override;
-  virtual void Accept(ModifyingVisitor&) override;
+  void Accept(NonModifyingVisitor&) const override;
+  void Accept(ModifyingVisitor&) override;
 
   std::unique_ptr<ExprNode> predicate;
   std::unique_ptr<StmtNode> then;
@@ -124,8 +124,8 @@ struct WhileStmtNode : public StmtNode {
         loop_body{std::move(loop_body)},
         is_do_while{is_do_while} {}
 
-  virtual void Accept(NonModifyingVisitor&) const override;
-  virtual void Accept(ModifyingVisitor&) override;
+  void Accept(NonModifyingVisitor&) const override;
+  void Accept(ModifyingVisitor&) override;
 
   std::unique_ptr<ExprNode> predicate;
   std::unique_ptr<StmtNode> loop_body;
@@ -142,8 +142,8 @@ struct ForStmtNode : public StmtNode {
         step{std::move(step)},
         loop_body{std::move(loop_body)} {}
 
-  virtual void Accept(NonModifyingVisitor&) const override;
-  virtual void Accept(ModifyingVisitor&) override;
+  void Accept(NonModifyingVisitor&) const override;
+  void Accept(ModifyingVisitor&) override;
 
   std::unique_ptr<LoopInitNode> loop_init;
   std::unique_ptr<ExprNode> predicate;
@@ -154,8 +154,8 @@ struct ForStmtNode : public StmtNode {
 struct ReturnStmtNode : public StmtNode {
   ReturnStmtNode(std::unique_ptr<ExprNode> expr) : expr{std::move(expr)} {}
 
-  virtual void Accept(NonModifyingVisitor&) const override;
-  virtual void Accept(ModifyingVisitor&) override;
+  void Accept(NonModifyingVisitor&) const override;
+  void Accept(ModifyingVisitor&) override;
 
   std::unique_ptr<ExprNode> expr;
 };
@@ -163,15 +163,15 @@ struct ReturnStmtNode : public StmtNode {
 struct BreakStmtNode : public StmtNode {
   BreakStmtNode() {}
 
-  virtual void Accept(NonModifyingVisitor&) const override;
-  virtual void Accept(ModifyingVisitor&) override;
+  void Accept(NonModifyingVisitor&) const override;
+  void Accept(ModifyingVisitor&) override;
 };
 
 struct ContinueStmtNode : public StmtNode {
   ContinueStmtNode() {}
 
-  virtual void Accept(NonModifyingVisitor&) const override;
-  virtual void Accept(ModifyingVisitor&) override;
+  void Accept(NonModifyingVisitor&) const override;
+  void Accept(ModifyingVisitor&) override;
 };
 
 /// @note Any expression can be turned into a statement by adding a semicolon
@@ -179,23 +179,23 @@ struct ContinueStmtNode : public StmtNode {
 struct ExprStmtNode : public StmtNode {
   ExprStmtNode(std::unique_ptr<ExprNode> expr) : expr{std::move(expr)} {}
 
-  virtual void Accept(NonModifyingVisitor&) const override;
-  virtual void Accept(ModifyingVisitor&) override;
+  void Accept(NonModifyingVisitor&) const override;
+  void Accept(ModifyingVisitor&) override;
 
   std::unique_ptr<ExprNode> expr;
 };
 
 /// @note Only appears in for statement's expressions and null statement.
 struct NullExprNode : public ExprNode {
-  virtual void Accept(NonModifyingVisitor&) const override;
-  virtual void Accept(ModifyingVisitor&) override;
+  void Accept(NonModifyingVisitor&) const override;
+  void Accept(ModifyingVisitor&) override;
 };
 
 struct IdExprNode : public ExprNode {
   IdExprNode(const std::string& id) : id{id} {}
 
-  virtual void Accept(NonModifyingVisitor&) const override;
-  virtual void Accept(ModifyingVisitor&) override;
+  void Accept(NonModifyingVisitor&) const override;
+  void Accept(ModifyingVisitor&) override;
 
   std::string id;
 };
@@ -203,8 +203,8 @@ struct IdExprNode : public ExprNode {
 struct IntConstExprNode : public ExprNode {
   IntConstExprNode(int val) : val{val} {}
 
-  virtual void Accept(NonModifyingVisitor&) const override;
-  virtual void Accept(ModifyingVisitor&) override;
+  void Accept(NonModifyingVisitor&) const override;
+  void Accept(ModifyingVisitor&) override;
 
   int val;
 };
@@ -213,8 +213,8 @@ struct UnaryExprNode : public ExprNode {
   UnaryExprNode(UnaryOperator op, std::unique_ptr<ExprNode> operand)
       : op{op}, operand{std::move(operand)} {}
 
-  virtual void Accept(NonModifyingVisitor&) const override;
-  virtual void Accept(ModifyingVisitor&) override;
+  void Accept(NonModifyingVisitor&) const override;
+  void Accept(ModifyingVisitor&) override;
 
   UnaryOperator op;
   std::unique_ptr<ExprNode> operand;
@@ -225,8 +225,8 @@ struct BinaryExprNode : public ExprNode {
                  std::unique_ptr<ExprNode> rhs)
       : op{op}, lhs{std::move(lhs)}, rhs{std::move(rhs)} {}
 
-  virtual void Accept(NonModifyingVisitor&) const override;
-  virtual void Accept(ModifyingVisitor&) override;
+  void Accept(NonModifyingVisitor&) const override;
+  void Accept(ModifyingVisitor&) override;
 
   BinaryOperator op;
   std::unique_ptr<ExprNode> lhs;
@@ -235,19 +235,19 @@ struct BinaryExprNode : public ExprNode {
 
 /// @note This is an abstract class.
 struct AssignmentExprNode : public ExprNode {
-  virtual void Accept(NonModifyingVisitor&) const override;
-  virtual void Accept(ModifyingVisitor&) override;
+  void Accept(NonModifyingVisitor&) const override;
+  void Accept(ModifyingVisitor&) override;
 
   /// @note To make the class abstract.
-  virtual ~AssignmentExprNode() = 0;
+  ~AssignmentExprNode() override = 0;
 };
 
 struct SimpleAssignmentExprNode : public AssignmentExprNode {
   SimpleAssignmentExprNode(std::string id, std::unique_ptr<ExprNode> expr)
       : id{std::move(id)}, expr{std::move(expr)} {}
 
-  virtual void Accept(NonModifyingVisitor&) const override;
-  virtual void Accept(ModifyingVisitor&) override;
+  void Accept(NonModifyingVisitor&) const override;
+  void Accept(ModifyingVisitor&) override;
 
   std::string id;
   std::unique_ptr<ExprNode> expr;
