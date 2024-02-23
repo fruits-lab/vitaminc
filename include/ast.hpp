@@ -161,14 +161,14 @@ struct ReturnStmtNode : public StmtNode {
 };
 
 struct BreakStmtNode : public StmtNode {
-  BreakStmtNode() {}
+  BreakStmtNode() = default;
 
   void Accept(NonModifyingVisitor&) const override;
   void Accept(ModifyingVisitor&) override;
 };
 
 struct ContinueStmtNode : public StmtNode {
-  ContinueStmtNode() {}
+  ContinueStmtNode() = default;
 
   void Accept(NonModifyingVisitor&) const override;
   void Accept(ModifyingVisitor&) override;
