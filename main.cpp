@@ -17,7 +17,8 @@ std::ofstream output;
 /// @brief The root node of the program.
 auto program = std::unique_ptr<AstNode>{};
 
-extern void yylex_destroy();
+extern void yylex_destroy();  // NOLINT(readability-identifier-naming): extern
+                              // from flex generated code.
 
 int main(int argc, char** argv) {
   auto cmd_options = cxxopts::Options{argv[0], "A simple C compiler."};

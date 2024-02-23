@@ -19,7 +19,9 @@ namespace qbe {
 class Sigil {
  public:
   /// @brief Returns the name.
-  std::string_view name() const noexcept {
+  std::string_view name()  // NOLINT(readability-identifier-naming): Accessors
+                           // may be named like variables.
+      const noexcept {
     return name_;
   }
 
