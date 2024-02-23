@@ -32,7 +32,7 @@ int main(int argc, char** argv) {
 
   auto args = cmd_options.parse(argc, argv);
   if (args.count("help")) {
-    std::cerr << cmd_options.help() << std::endl;
+    std::cerr << cmd_options.help() << '\n';
     std::exit(0);
   }
 

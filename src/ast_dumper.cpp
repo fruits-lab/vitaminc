@@ -66,12 +66,12 @@ void AstDumper::Visit(const DeclNode& decl) {
   std::cout << indenter_.Indent() << '(' << decl.id << ": "
             << ExprTypeToString(decl.type);
   if (decl.init) {
-    std::cout << " =" << std::endl;
+    std::cout << " =" << '\n';
     indenter_.IncreaseLevel();
     decl.init->Accept(*this);
     indenter_.DecreaseLevel();
   }
-  std::cout << indenter_.Indent() << ')' << std::endl;
+  std::cout << indenter_.Indent() << ')' << '\n';
 }
 
 void AstDumper::Visit(const LoopInitNode& loop_init) {
@@ -96,64 +96,64 @@ void AstDumper::Visit(const ProgramNode& program) {
 }
 
 void AstDumper::Visit(const IfStmtNode& if_stmt) {
-  std::cout << indenter_.Indent() << "(if" << std::endl;
+  std::cout << indenter_.Indent() << "(if" << '\n';
   indenter_.IncreaseLevel();
   if_stmt.predicate->Accept(*this);
   if_stmt.then->Accept(*this);
   indenter_.DecreaseLevel();
-  std::cout << indenter_.Indent() << ')' << std::endl;
+  std::cout << indenter_.Indent() << ')' << '\n';
   if (if_stmt.or_else) {
-    std::cout << indenter_.Indent() << "(else" << std::endl;
+    std::cout << indenter_.Indent() << "(else" << '\n';
     indenter_.IncreaseLevel();
     if_stmt.or_else->Accept(*this);
     indenter_.DecreaseLevel();
-    std::cout << indenter_.Indent() << ')' << std::endl;
+    std::cout << indenter_.Indent() << ')' << '\n';
   }
 }
 
 void AstDumper::Visit(const WhileStmtNode& while_stmt) {
   if (while_stmt.is_do_while) {
-    std::cout << indenter_.Indent() << "(do" << std::endl;
+    std::cout << indenter_.Indent() << "(do" << '\n';
     indenter_.IncreaseLevel();
     while_stmt.loop_body->Accept(*this);
     indenter_.DecreaseLevel();
-    std::cout << indenter_.Indent() << ')' << std::endl;
+    std::cout << indenter_.Indent() << ')' << '\n';
   }
-  std::cout << indenter_.Indent() << "(while" << std::endl;
+  std::cout << indenter_.Indent() << "(while" << '\n';
   indenter_.IncreaseLevel();
   while_stmt.predicate->Accept(*this);
   if (!while_stmt.is_do_while) {
     while_stmt.loop_body->Accept(*this);
   }
   indenter_.DecreaseLevel();
-  std::cout << indenter_.Indent() << ')' << std::endl;
+  std::cout << indenter_.Indent() << ')' << '\n';
 }
 
 void AstDumper::Visit(const ForStmtNode& for_stmt) {
-  std::cout << indenter_.Indent() << "(for" << std::endl;
+  std::cout << indenter_.Indent() << "(for" << '\n';
   indenter_.IncreaseLevel();
   for_stmt.loop_init->Accept(*this);
   for_stmt.predicate->Accept(*this);
   for_stmt.step->Accept(*this);
   for_stmt.loop_body->Accept(*this);
   indenter_.DecreaseLevel();
-  std::cout << indenter_.Indent() << ')' << std::endl;
+  std::cout << indenter_.Indent() << ')' << '\n';
 }
 
 void AstDumper::Visit(const ReturnStmtNode& ret_stmt) {
-  std::cout << indenter_.Indent() << "(ret" << std::endl;
+  std::cout << indenter_.Indent() << "(ret" << '\n';
   indenter_.IncreaseLevel();
   ret_stmt.expr->Accept(*this);
   indenter_.DecreaseLevel();
-  std::cout << indenter_.Indent() << ')' << std::endl;
+  std::cout << indenter_.Indent() << ')' << '\n';
 }
 
 void AstDumper::Visit(const BreakStmtNode& break_stmt) {
-  std::cout << indenter_.Indent() << "(break)" << std::endl;
+  std::cout << indenter_.Indent() << "(break)" << '\n';
 }
 
 void AstDumper::Visit(const ContinueStmtNode& continue_stmt) {
-  std::cout << indenter_.Indent() << "(continue)" << std::endl;
+  std::cout << indenter_.Indent() << "(continue)" << '\n';
 }
 
 void AstDumper::Visit(const ExprStmtNode& expr_stmt) {
@@ -161,47 +161,47 @@ void AstDumper::Visit(const ExprStmtNode& expr_stmt) {
 }
 
 void AstDumper::Visit(const NullExprNode& null_expr) {
-  std::cout << indenter_.Indent() << "()" << std::endl;
+  std::cout << indenter_.Indent() << "()" << '\n';
 }
 
 void AstDumper::Visit(const IdExprNode& id_expr) {
   std::cout << indenter_.Indent() << id_expr.id << ": "
-            << ExprTypeToString(id_expr.type) << std::endl;
+            << ExprTypeToString(id_expr.type) << '\n';
 }
 
 void AstDumper::Visit(const IntConstExprNode& int_expr) {
   std::cout << indenter_.Indent() << int_expr.val << ": "
-            << ExprTypeToString(int_expr.type) << std::endl;
+            << ExprTypeToString(int_expr.type) << '\n';
 }
 
 void AstDumper::Visit(const UnaryExprNode& unary_expr) {
   std::cout << indenter_.Indent() << '(' << GetUnaryOperator(unary_expr.op)
-            << std::endl;
+            << '\n';
   indenter_.IncreaseLevel();
   unary_expr.operand->Accept(*this);
   indenter_.DecreaseLevel();
   std::cout << indenter_.Indent() << ')' << ": "
-            << ExprTypeToString(unary_expr.type) << std::endl;
+            << ExprTypeToString(unary_expr.type) << '\n';
 }
 
 void AstDumper::Visit(const BinaryExprNode& bin_expr) {
   std::cout << indenter_.Indent() << '(' << GetBinaryOperator(bin_expr.op)
-            << std::endl;
+            << '\n';
   indenter_.IncreaseLevel();
   bin_expr.lhs->Accept(*this);
   bin_expr.rhs->Accept(*this);
   indenter_.DecreaseLevel();
   std::cout << indenter_.Indent() << ')' << ": "
-            << ExprTypeToString(bin_expr.type) << std::endl;
+            << ExprTypeToString(bin_expr.type) << '\n';
 }
 
 void AstDumper::Visit(const SimpleAssignmentExprNode& assign_expr) {
-  std::cout << indenter_.Indent() << '(' << '=' << std::endl;
+  std::cout << indenter_.Indent() << '(' << '=' << '\n';
   indenter_.IncreaseLevel();
   std::cout << indenter_.Indent() << assign_expr.id << ": "
-            << ExprTypeToString(assign_expr.type) << std::endl;
+            << ExprTypeToString(assign_expr.type) << '\n';
   assign_expr.expr->Accept(*this);
   indenter_.DecreaseLevel();
   std::cout << indenter_.Indent() << ')' << ": "
-            << ExprTypeToString(assign_expr.expr->type) << std::endl;
+            << ExprTypeToString(assign_expr.expr->type) << '\n';
 }
