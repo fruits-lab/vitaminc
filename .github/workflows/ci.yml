@@ -9,17 +9,22 @@ on:
       - main
 
 jobs:
-  lint:
+  format:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v3
+      - name: coding convention
+        run: |
+          sudo apt-get install -q -y clang-format
+          scripts/check-format.sh
+
+  tidy:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v3
         with:
           # Fetch all history for proper diffing.
           fetch-depth: 0
-      - name: coding convention
-        run: |
-          sudo apt-get install -q -y clang-format
-          scripts/check-format.sh
       - name: Install cxxopts
         run: scripts/install-cxxopts.sh
       - name: Install fmt
