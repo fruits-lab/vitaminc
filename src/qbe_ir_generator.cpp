@@ -86,7 +86,9 @@ std::string GetUnaryOperator(UnaryOperator op) {
 /// @note This is a convenience function to avoid having to pass `output`
 /// everywhere.
 template <typename... T>
-void WriteOut(fmt::format_string<T...> format, T&&... args) {
+void WriteOut(fmt::format_string<T...> format,
+              T&&... args) {  // NOLINT(cppcoreguidelines-missing-std-forward):
+                              // `make_format_args` takes rvalue references.
   VWriteOut(format, fmt::make_format_args(args...));
 }
 
