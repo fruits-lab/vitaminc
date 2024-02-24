@@ -25,10 +25,10 @@ class AstDumper : public NonModifyingVisitor {
   void Visit(const BinaryExprNode&) override;
   void Visit(const SimpleAssignmentExprNode&) override;
 
-  AstDumper(Indenter& indenter) : indenter_{indenter} {}
+  AstDumper(Indenter indenter) : indenter_{indenter} {}
 
  private:
-  Indenter& indenter_;
+  Indenter indenter_;
 };
 
 #endif  // AST_DUMPER_HPP_
