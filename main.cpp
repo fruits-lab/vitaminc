@@ -15,7 +15,11 @@
 extern void yylex_destroy();  // NOLINT(readability-identifier-naming): extern
                               // from flex generated code.
 
-int main(int argc, char** argv) {
+int main(  // NOLINT(bugprone-exception-escape): Using a big try-catch block to
+           // catch all exceptions isn't reasonable.
+    int argc, char** argv)
+
+{
   auto cmd_options = cxxopts::Options{
       argv[0],  // NOLINT(cppcoreguidelines-pro-bounds-pointer-arithmetic):
                 // std::span is available in C++20.
