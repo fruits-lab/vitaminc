@@ -53,7 +53,10 @@ y.tab.cpp: parser.y
 
 main.o: %.o: %.cpp y.tab.hpp
 
-tidy:
+# Since y.tab.hpp is included by the source files, it must exist;
+# otherwise, a clang-diagnostic-error will be raised.
+
+tidy: y.tab.hpp
 	$(CLANG_TIDY) $(CLANG_TIDY_FLAGS) -p . $(SRC) $(INC) -- $(CXXFLAGS)
 
 clean:
