@@ -7,6 +7,7 @@
 #include <variant>
 #include <vector>
 
+#include "operator.hpp"
 #include "type.hpp"
 #include "visitor.hpp"
 
@@ -210,8 +211,8 @@ struct IntConstExprNode : public ExprNode {
 
 /// @note This is an abstract class.
 struct UnaryExprNode : public ExprNode {
-  UnaryExprNode(std::unique_ptr<ExprNode> operand)
-      : operand{std::move(operand)} {}
+  UnaryExprNode(UnaryOperator op, std::unique_ptr<ExprNode> operand)
+      : op{op}, operand{std::move(operand)} {}
 
   virtual void Accept(NonModifyingVisitor&) const override;
   virtual void Accept(ModifyingVisitor&) override;
@@ -219,6 +220,7 @@ struct UnaryExprNode : public ExprNode {
   /// @note To make the class abstract.
   virtual ~UnaryExprNode() = 0;
 
+  UnaryOperator op;
   std::unique_ptr<ExprNode> operand;
 };
 
@@ -274,8 +276,9 @@ struct BitCompExprNode : public UnaryExprNode {
 
 /// @note This is an abstract class.
 struct BinaryExprNode : public ExprNode {
-  BinaryExprNode(std::unique_ptr<ExprNode> lhs, std::unique_ptr<ExprNode> rhs)
-      : lhs{std::move(lhs)}, rhs{std::move(rhs)} {}
+  BinaryExprNode(BinaryOperator op, std::unique_ptr<ExprNode> lhs,
+                 std::unique_ptr<ExprNode> rhs)
+      : op{op}, lhs{std::move(lhs)}, rhs{std::move(rhs)} {}
 
   virtual void Accept(NonModifyingVisitor&) const override;
   virtual void Accept(ModifyingVisitor&) override;
@@ -283,6 +286,7 @@ struct BinaryExprNode : public ExprNode {
   /// @note To make the class abstract.
   virtual ~BinaryExprNode() = 0;
 
+  BinaryOperator op;
   std::unique_ptr<ExprNode> lhs;
   std::unique_ptr<ExprNode> rhs;
 };
