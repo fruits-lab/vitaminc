@@ -9,7 +9,6 @@
 #include "ast.hpp"
 #include "type.hpp"
 
-extern std::unique_ptr<AstNode> program;
 %}
 
 // Dependency code required for the value and location types;
@@ -30,6 +29,8 @@ extern std::unique_ptr<AstNode> program;
 %skeleton "lalr1.cc"
 %require "3.2"
 %language "c++"
+
+%parse-param {std::unique_ptr<AstNode>& program}
 
 // Use complete symbols (parser::symbol_type).
 %define api.token.constructor

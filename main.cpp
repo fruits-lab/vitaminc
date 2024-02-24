@@ -12,11 +12,6 @@
 #include "util.hpp"
 #include "y.tab.hpp"
 
-/// @brief Where the generated code goes.
-std::ofstream output;
-/// @brief The root node of the program.
-auto program = std::unique_ptr<AstNode>{};
-
 extern void yylex_destroy();  // NOLINT(readability-identifier-naming): extern
                               // from flex generated code.
 
@@ -39,8 +34,10 @@ int main(int argc, char** argv) {
     std::exit(0);
   }
 
-  output.open(args["output"].as<std::string>());
-  yy::parser parser{};
+  auto output = std::ofstream{args["output"].as<std::string>()};
+  /// @brief The root node of the program.
+  auto program = std::unique_ptr<AstNode>{};
+  yy::parser parser{program};
   int ret = parser.parse();
 
   yylex_destroy();
@@ -59,7 +56,7 @@ int main(int argc, char** argv) {
     AstDumper ast_dumper{Indenter{' ', 2, max_level}};
     program->Accept(ast_dumper);
   }
-  QbeIrGenerator code_generator{};
+  QbeIrGenerator code_generator{output};
   program->Accept(code_generator);
 
   output.close();
