@@ -72,7 +72,10 @@ std::string GetUnaryOperator(UnaryOperator op) {
   }
 }
 
-std::map<std::string, int> id_to_num{};
+auto id_to_num  // NOLINT(cppcoreguidelines-avoid-non-const-global-variables):
+                // Accessible only within this translation unit; declaring as a
+                // data member introduces unnecessary dependency.
+    = std::map<std::string, int>{};
 
 /// @brief Every expression generates a temporary. The local number of such
 /// temporary should be stored, so can propagate to later uses.
@@ -96,7 +99,11 @@ class PrevExprNumRecorder {
   int num_of_prev_expr_ = kNoRecord;
 };
 
-auto num_recorder = PrevExprNumRecorder{};
+auto
+    num_recorder  // NOLINT(cppcoreguidelines-avoid-non-const-global-variables):
+                  // Accessible only within this translation unit; declaring as
+                  // a data member introduces unnecessary dependency.
+    = PrevExprNumRecorder{};
 
 }  // namespace
 
