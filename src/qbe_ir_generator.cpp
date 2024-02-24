@@ -294,6 +294,8 @@ void QbeIrGenerator::Visit(const UnaryExprNode& unary_expr) {
   // TODO: The evaluation of certain unary expressions are the same as simple
   // assignment. For instance, ++i is equivalent to i += 1. We need to handle
   // this case by case.
+  // @note: Temporary fix for unused 'GetUnaryOperator' function error.
+  std::string op = GetUnaryOperator(unary_expr.op);
 }
 
 void QbeIrGenerator::Visit(const BinaryExprNode& bin_expr) {
