@@ -56,8 +56,7 @@ int main(int argc, char** argv) {
   program->Accept(type_checker);
   if (args["dump"].as<bool>()) {
     const auto max_level = 80u;
-    auto indenter = Indenter{' ', 2, max_level};
-    AstDumper ast_dumper{indenter};
+    AstDumper ast_dumper{Indenter{' ', 2, max_level}};
     program->Accept(ast_dumper);
   }
   QbeIrGenerator code_generator{};
