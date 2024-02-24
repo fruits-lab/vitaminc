@@ -21,7 +21,10 @@ extern void yylex_destroy();  // NOLINT(readability-identifier-naming): extern
                               // from flex generated code.
 
 int main(int argc, char** argv) {
-  auto cmd_options = cxxopts::Options{argv[0], "A simple C compiler."};
+  auto cmd_options = cxxopts::Options{
+      argv[0],  // NOLINT(cppcoreguidelines-pro-bounds-pointer-arithmetic):
+                // std::span is available in C++20.
+      "A simple C compiler."};
   // clang-format off
   cmd_options.add_options()
       ("o, output", "Write output to <file>", cxxopts::value<std::string>()->default_value("test.ssa"), "<file>")
