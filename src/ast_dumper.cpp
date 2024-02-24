@@ -9,23 +9,56 @@
 #include "visitor.hpp"
 
 namespace {
-class OpGetter {
- public:
-  /// @return The mathematical symbol of the binary or unary operator, e.g.,
-  /// `+`, `&`.
-  std::string OpOf(const ExprNode& bin_expr);
 
-  OpGetter();
+std::string GetBinaryOperator(BinaryOperator op) {
+  switch (op) {
+    case BinaryOperator::kAdd:
+      return "+";
+    case BinaryOperator::kSub:
+      return "-";
+    case BinaryOperator::kMul:
+      return "*";
+    case BinaryOperator::kDiv:
+      return "/";
+    case BinaryOperator::kMod:
+      return "%";
+    case BinaryOperator::kGt:
+      return ">";
+    case BinaryOperator::kGte:
+      return ">=";
+    case BinaryOperator::kLt:
+      return "<";
+    case BinaryOperator::kLte:
+      return "<=";
+    case BinaryOperator::kEq:
+      return "==";
+    case BinaryOperator::kNeq:
+      return "!=";
+    default:
+      return "Unknown";
+  }
+}
 
- private:
-  /// @note An alternative approach would be to directly implement `OpGetter` as
-  /// a `Visitor`, but this is intended to be used exclusively with binary
-  /// expressions. Therefore, we encapsulate it to prevent unintended usage in
-  /// other contexts. We also employ the Pimpl idiom, allowing deferred
-  /// implementation details later in this file.
-  class OpGetterImpl;
-  std::unique_ptr<OpGetterImpl> impl_;
-};
+std::string GetUnaryOperator(UnaryOperator op) {
+  switch (op) {
+    case UnaryOperator::kIncr:
+      return "++";
+    case UnaryOperator::kDecr:
+      return "--";
+    case UnaryOperator::kNeg:
+      return "-";
+    case UnaryOperator::kNot:
+      return "!";
+    case UnaryOperator::kAddr:
+      return "&";
+    case UnaryOperator::kDeref:
+      return "*";
+    case UnaryOperator::kBitComp:
+      return "~";
+    default:
+      return "Unknown";
+  }
+}
 
 }  // namespace
 
@@ -142,7 +175,7 @@ void AstDumper::Visit(const IntConstExprNode& int_expr) {
 }
 
 void AstDumper::Visit(const UnaryExprNode& unary_expr) {
-  std::cout << indenter_.Indent() << '(' << OpGetter{}.OpOf(unary_expr)
+  std::cout << indenter_.Indent() << '(' << GetUnaryOperator(unary_expr.op)
             << std::endl;
   indenter_.IncreaseLevel();
   unary_expr.operand->Accept(*this);
@@ -152,7 +185,7 @@ void AstDumper::Visit(const UnaryExprNode& unary_expr) {
 }
 
 void AstDumper::Visit(const BinaryExprNode& bin_expr) {
-  std::cout << indenter_.Indent() << '(' << OpGetter{}.OpOf(bin_expr)
+  std::cout << indenter_.Indent() << '(' << GetBinaryOperator(bin_expr.op)
             << std::endl;
   indenter_.IncreaseLevel();
   bin_expr.lhs->Accept(*this);
@@ -202,92 +235,3 @@ void AstDumper::Visit(const SimpleAssignmentExprNode& assign_expr) {
   std::cout << indenter_.Indent() << ')' << ": "
             << ExprTypeToString(assign_expr.expr->type) << std::endl;
 }
-
-class OpGetter::OpGetterImpl : public NonModifyingVisitor {
- public:
-  std::string Op() const {
-    return op_;
-  }
-
-  void Visit(const IncrExprNode&) override {
-    op_ = "++";
-  }
-
-  void Visit(const DecrExprNode&) override {
-    op_ = "--";
-  }
-
-  void Visit(const NegExprNode&) override {
-    op_ = "-";
-  }
-
-  void Visit(const AddrExprNode&) override {
-    op_ = "&";
-  }
-
-  void Visit(const DereferExprNode&) override {
-    op_ = "*";
-  }
-
-  void Visit(const NotExprNode&) override {
-    op_ = "!";
-  }
-
-  void Visit(const BitCompExprNode&) override {
-    op_ = "~";
-  }
-
-  void Visit(const PlusExprNode&) override {
-    op_ = "+";
-  }
-
-  void Visit(const SubExprNode&) override {
-    op_ = "-";
-  }
-
-  void Visit(const MulExprNode&) override {
-    op_ = "*";
-  }
-
-  void Visit(const DivExprNode&) override {
-    op_ = "/";
-  }
-
-  void Visit(const ModExprNode&) override {
-    op_ = "%";
-  }
-
-  void Visit(const GreaterThanExprNode&) override {
-    op_ = ">";
-  }
-
-  void Visit(const GreaterThanOrEqualToExprNode&) override {
-    op_ = ">=";
-  }
-
-  void Visit(const LessThanExprNode&) override {
-    op_ = "<";
-  }
-
-  void Visit(const LessThanOrEqualToExprNode&) override {
-    op_ = "<=";
-  }
-
-  void Visit(const EqualToExprNode&) override {
-    op_ = "==";
-  }
-
-  void Visit(const NotEqualToExprNode&) override {
-    op_ = "!=";
-  }
-
- private:
-  std::string op_;
-};
-
-std::string OpGetter::OpOf(const ExprNode& expr) {
-  expr.Accept(*impl_);
-  return impl_->Op();
-}
-
-OpGetter::OpGetter() : impl_{std::make_unique<OpGetterImpl>()} {}

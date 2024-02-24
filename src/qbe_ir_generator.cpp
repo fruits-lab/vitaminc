@@ -11,6 +11,7 @@
 #include <variant>
 
 #include "ast.hpp"
+#include "operator.hpp"
 #include "qbe/sigil.hpp"
 #include "visitor.hpp"
 
@@ -37,6 +38,50 @@ void VWriteOut(fmt::string_view format, fmt::format_args args) {
   fmt::vprint(output, format, args);
 }
 
+std::string GetBinaryOperator(BinaryOperator op) {
+  switch (op) {
+    case BinaryOperator::kAdd:
+      return "add";
+    case BinaryOperator::kSub:
+      return "sub";
+    case BinaryOperator::kMul:
+      return "mul";
+    case BinaryOperator::kDiv:
+      return "div";
+    case BinaryOperator::kMod:
+      return "rem";
+    // TODO: update comparison instructions with no data type, such as "gt".
+    case BinaryOperator::kGt:
+      return "csgtw";
+    case BinaryOperator::kGte:
+      return "csgew";
+    case BinaryOperator::kLt:
+      return "csltw";
+    case BinaryOperator::kLte:
+      return "cslew";
+    case BinaryOperator::kEq:
+      return "ceqw";
+    case BinaryOperator::kNeq:
+      return "cnew";
+    default:
+      return "Unknown";
+  }
+}
+
+std::string GetUnaryOperator(UnaryOperator op) {
+  switch (op) {
+    case UnaryOperator::kIncr:
+    case UnaryOperator::kDecr:
+    case UnaryOperator::kNeg:
+    case UnaryOperator::kNot:
+    case UnaryOperator::kAddr:
+    case UnaryOperator::kDeref:
+    case UnaryOperator::kBitComp:
+    default:
+      return "Unknown";
+  }
+}
+
 /// @brief Writes out the formatted string to `output`.
 /// @note This is a convenience function to avoid having to pass `output`
 /// everywhere.
@@ -44,23 +89,6 @@ template <typename... T>
 void WriteOut(fmt::format_string<T...> format, T&&... args) {
   VWriteOut(format, fmt::make_format_args(args...));
 }
-
-class OpNameGetter {
- public:
-  /// @return The name of the operator used in the QBE IR, e.g., `add`.
-  std::string OpNameOf(const ExprNode& expr);
-
-  OpNameGetter();
-
- private:
-  /// @note An alternative approach would be to directly implement
-  /// `OpNameGetterImpl` as a `Visitor`, but this is intended to be used
-  /// exclusively with binary expressions. Therefore, we encapsulate it to
-  /// prevent unintended usage in other contexts. We also employ the Pimpl
-  /// idiom, allowing deferred implementation details later in this file.
-  class OpNameGetterImpl;
-  std::unique_ptr<OpNameGetterImpl> impl_;
-};
 
 std::map<std::string, int> id_to_num{};
 
@@ -274,8 +302,11 @@ void QbeIrGenerator::Visit(const BinaryExprNode& bin_expr) {
   bin_expr.rhs->Accept(*this);
   int right_num = num_recorder.NumOfPrevExpr();
   int num = NextLocalNum();
+  // TODO: use the correct instruction for specific data type:
+  // 1. signed or unsigned: currently only supports signed integers.
+  // 2. QBE base data type 'w' | 'l' | 's' | 'd': currently only supports 'w'.
   WriteOut("{} =w {} {}, {}\n", FuncScopeTemp{num},
-           OpNameGetter{}.OpNameOf(bin_expr), FuncScopeTemp{left_num},
+           GetBinaryOperator(bin_expr.op), FuncScopeTemp{left_num},
            FuncScopeTemp{right_num});
   num_recorder.Record(num);
 }
@@ -317,94 +348,3 @@ void QbeIrGenerator::Visit(const SimpleAssignmentExprNode& assign_expr) {
            FuncScopeTemp{id_to_num.at(assign_expr.id)});
   num_recorder.Record(expr_num);
 }
-
-class OpNameGetter::OpNameGetterImpl : public NonModifyingVisitor {
- public:
-  std::string OpName() const {
-    return op_name_;
-  }
-
-  // TODO: Defer code generation implementation for unary expression since some
-  // unary expressions may need more than one instruction to complete.
-  void Visit(const IncrExprNode&) override {
-    op_name_ = "";
-  }
-
-  void Visit(const DecrExprNode&) override {
-    op_name_ = "";
-  }
-
-  void Visit(const NegExprNode&) override {
-    op_name_ = "";
-  }
-
-  void Visit(const AddrExprNode&) override {
-    op_name_ = "";
-  }
-
-  void Visit(const DereferExprNode&) override {
-    op_name_ = "";
-  }
-
-  void Visit(const NotExprNode&) override {
-    op_name_ = "";
-  }
-
-  void Visit(const BitCompExprNode&) override {
-    op_name_ = "";
-  }
-
-  void Visit(const PlusExprNode&) override {
-    op_name_ = "add";
-  }
-
-  void Visit(const SubExprNode&) override {
-    op_name_ = "sub";
-  }
-
-  void Visit(const MulExprNode&) override {
-    op_name_ = "mul";
-  }
-
-  void Visit(const DivExprNode&) override {
-    op_name_ = "div";
-  }
-
-  void Visit(const ModExprNode&) override {
-    op_name_ = "rem";
-  }
-
-  void Visit(const GreaterThanExprNode&) override {
-    op_name_ = "csgtw";
-  }
-
-  void Visit(const GreaterThanOrEqualToExprNode&) override {
-    op_name_ = "csgew";
-  }
-
-  void Visit(const LessThanExprNode&) override {
-    op_name_ = "csltw";
-  }
-
-  void Visit(const LessThanOrEqualToExprNode&) override {
-    op_name_ = "cslew";
-  }
-
-  void Visit(const EqualToExprNode&) override {
-    op_name_ = "ceqw";
-  }
-
-  void Visit(const NotEqualToExprNode&) override {
-    op_name_ = "cnew";
-  }
-
- private:
-  std::string op_name_;
-};
-
-std::string OpNameGetter::OpNameOf(const ExprNode& expr) {
-  expr.Accept(*impl_);
-  return impl_->OpName();
-}
-
-OpNameGetter::OpNameGetter() : impl_{std::make_unique<OpNameGetterImpl>()} {}
