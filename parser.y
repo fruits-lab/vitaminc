@@ -160,34 +160,34 @@ expr_opt: expr { $$ = $1; }
 
 expr: unary_expr { $$ = $1; }
   /* additive 6.5.6 */
-  | expr '+' expr { $$ = std::make_unique<PlusExprNode>(BinaryOperator::kAdd, $1, $3); }
-  | expr '-' expr { $$ = std::make_unique<SubExprNode>(BinaryOperator::kSub, $1, $3); }
+  | expr '+' expr { $$ = std::make_unique<BinaryExprNode>(BinaryOperator::kAdd, $1, $3); }
+  | expr '-' expr { $$ = std::make_unique<BinaryExprNode>(BinaryOperator::kSub, $1, $3); }
   /* multiplicative 6.5.5 */
-  | expr '*' expr { $$ = std::make_unique<MulExprNode>(BinaryOperator::kMul, $1, $3); }
-  | expr '/' expr { $$ = std::make_unique<DivExprNode>(BinaryOperator::kDiv, $1, $3); }
-  | expr '%' expr { $$ = std::make_unique<ModExprNode>(BinaryOperator::kMod, $1, $3); }
+  | expr '*' expr { $$ = std::make_unique<BinaryExprNode>(BinaryOperator::kMul, $1, $3); }
+  | expr '/' expr { $$ = std::make_unique<BinaryExprNode>(BinaryOperator::kDiv, $1, $3); }
+  | expr '%' expr { $$ = std::make_unique<BinaryExprNode>(BinaryOperator::kMod, $1, $3); }
   /* relational 6.5.8 */
-  | expr '>' expr { $$ = std::make_unique<GreaterThanExprNode>(BinaryOperator::kGt, $1, $3); }
-  | expr '<' expr { $$ = std::make_unique<LessThanExprNode>(BinaryOperator::kLt, $1, $3); }
-  | expr GE expr { $$ = std::make_unique<GreaterThanOrEqualToExprNode>(BinaryOperator::kGte, $1, $3); }
-  | expr LE expr { $$ = std::make_unique<LessThanOrEqualToExprNode>(BinaryOperator::kLte, $1, $3); }
+  | expr '>' expr { $$ = std::make_unique<BinaryExprNode>(BinaryOperator::kGt, $1, $3); }
+  | expr '<' expr { $$ = std::make_unique<BinaryExprNode>(BinaryOperator::kLt, $1, $3); }
+  | expr GE expr { $$ = std::make_unique<BinaryExprNode>(BinaryOperator::kGte, $1, $3); }
+  | expr LE expr { $$ = std::make_unique<BinaryExprNode>(BinaryOperator::kLte, $1, $3); }
   /* equality 6.5.9 */
-  | expr EQ expr { $$ = std::make_unique<EqualToExprNode>(BinaryOperator::kEq, $1, $3); }
-  | expr NE expr { $$ = std::make_unique<NotEqualToExprNode>(BinaryOperator::kNeq, $1, $3); }
+  | expr EQ expr { $$ = std::make_unique<BinaryExprNode>(BinaryOperator::kEq, $1, $3); }
+  | expr NE expr { $$ = std::make_unique<BinaryExprNode>(BinaryOperator::kNeq, $1, $3); }
   /* assignment 6.5.16 */
   | ID '=' expr { $$ = std::make_unique<SimpleAssignmentExprNode>($1, $3); }
   ;
 
 unary_expr: postfix_expr { $$ = $1; }
-  | INCR unary_expr { $$ = std::make_unique<IncrExprNode>(UnaryOperator::kIncr, $2); }
-  | DECR unary_expr { $$ = std::make_unique<DecrExprNode>(UnaryOperator::kDecr, $2); }
-  | '-' unary_expr { $$ = std::make_unique<NegExprNode>(UnaryOperator::kNeg, $2); }
-  | '!' unary_expr { $$ = std::make_unique<NotExprNode>(UnaryOperator::kNot, $2); }
+  | INCR unary_expr { $$ = std::make_unique<UnaryExprNode>(UnaryOperator::kIncr, $2); }
+  | DECR unary_expr { $$ = std::make_unique<UnaryExprNode>(UnaryOperator::kDecr, $2); }
+  | '-' unary_expr { $$ = std::make_unique<UnaryExprNode>(UnaryOperator::kNeg, $2); }
+  | '!' unary_expr { $$ = std::make_unique<UnaryExprNode>(UnaryOperator::kNot, $2); }
   /* TODO: implement pointer type */
-  | '&' unary_expr { $$ = std::make_unique<AddrExprNode>(UnaryOperator::kAddr, $2); }
-  | '*' unary_expr { $$ = std::make_unique<DereferExprNode>(UnaryOperator::kDeref, $2); }
+  | '&' unary_expr { $$ = std::make_unique<UnaryExprNode>(UnaryOperator::kAddr, $2); }
+  | '*' unary_expr { $$ = std::make_unique<UnaryExprNode>(UnaryOperator::kDeref, $2); }
   /* TODO: implement bitwise operations */
-  | '~' unary_expr { $$ = std::make_unique<BitCompExprNode>(UnaryOperator::kBitComp, $2); }
+  | '~' unary_expr { $$ = std::make_unique<UnaryExprNode>(UnaryOperator::kBitComp, $2); }
   ;
 
 postfix_expr: primary_expr {

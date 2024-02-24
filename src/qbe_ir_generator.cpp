@@ -311,36 +311,6 @@ void QbeIrGenerator::Visit(const BinaryExprNode& bin_expr) {
   num_recorder.Record(num);
 }
 
-/// @brief Dispatch the concrete binary or unary expressions to the parent
-/// `BinaryExprNode` or `UnaryExprNode`.
-/// @param classname A subclass of `BinaryExprNode` or `UnaryExprNode`.
-#define DISPATCH_TO_VISIT_EXPR(parentname, classname) \
-  void QbeIrGenerator::Visit(const classname& expr) { \
-    Visit(static_cast<const parentname&>(expr)); \
-  }
-
-DISPATCH_TO_VISIT_EXPR(BinaryExprNode, PlusExprNode);
-DISPATCH_TO_VISIT_EXPR(BinaryExprNode, SubExprNode);
-DISPATCH_TO_VISIT_EXPR(BinaryExprNode, MulExprNode);
-DISPATCH_TO_VISIT_EXPR(BinaryExprNode, DivExprNode);
-DISPATCH_TO_VISIT_EXPR(BinaryExprNode, ModExprNode);
-DISPATCH_TO_VISIT_EXPR(BinaryExprNode, GreaterThanExprNode);
-DISPATCH_TO_VISIT_EXPR(BinaryExprNode, GreaterThanOrEqualToExprNode);
-DISPATCH_TO_VISIT_EXPR(BinaryExprNode, LessThanExprNode);
-DISPATCH_TO_VISIT_EXPR(BinaryExprNode, LessThanOrEqualToExprNode);
-DISPATCH_TO_VISIT_EXPR(BinaryExprNode, EqualToExprNode);
-DISPATCH_TO_VISIT_EXPR(BinaryExprNode, NotEqualToExprNode);
-
-DISPATCH_TO_VISIT_EXPR(UnaryExprNode, IncrExprNode);
-DISPATCH_TO_VISIT_EXPR(UnaryExprNode, DecrExprNode);
-DISPATCH_TO_VISIT_EXPR(UnaryExprNode, NegExprNode);
-DISPATCH_TO_VISIT_EXPR(UnaryExprNode, AddrExprNode);
-DISPATCH_TO_VISIT_EXPR(UnaryExprNode, DereferExprNode);
-DISPATCH_TO_VISIT_EXPR(UnaryExprNode, NotExprNode);
-DISPATCH_TO_VISIT_EXPR(UnaryExprNode, BitCompExprNode);
-
-#undef DISPATCH_TO_VISIT_EXPR
-
 void QbeIrGenerator::Visit(const SimpleAssignmentExprNode& assign_expr) {
   assign_expr.expr->Accept(*this);
   int expr_num = num_recorder.NumOfPrevExpr();

@@ -25,25 +25,7 @@ class TypeChecker : public ModifyingVisitor {
   void Visit(IdExprNode&) override;
   void Visit(IntConstExprNode&) override;
   void Visit(UnaryExprNode&) override;
-  void Visit(IncrExprNode&) override;
-  void Visit(DecrExprNode&) override;
-  void Visit(NegExprNode&) override;
-  void Visit(AddrExprNode&) override;
-  void Visit(DereferExprNode&) override;
-  void Visit(NotExprNode&) override;
-  void Visit(BitCompExprNode&) override;
   void Visit(BinaryExprNode&) override;
-  void Visit(PlusExprNode&) override;
-  void Visit(SubExprNode&) override;
-  void Visit(MulExprNode&) override;
-  void Visit(DivExprNode&) override;
-  void Visit(ModExprNode&) override;
-  void Visit(GreaterThanExprNode&) override;
-  void Visit(GreaterThanOrEqualToExprNode&) override;
-  void Visit(LessThanExprNode&) override;
-  void Visit(LessThanOrEqualToExprNode&) override;
-  void Visit(EqualToExprNode&) override;
-  void Visit(NotEqualToExprNode&) override;
   void Visit(SimpleAssignmentExprNode&) override;
 
  private:
