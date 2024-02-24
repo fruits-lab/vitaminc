@@ -18,8 +18,9 @@ endif
 # Export variable to be visible for test/Makefile.
 export PARALLEL
 
-SRC := $(shell find -name "*.cpp")
-INC := $(shell find -name "*.hpp")
+# The Flex or Bison-generated files are not included.
+SRC := $(shell find src/ -name "*.cpp") main.cpp
+INC := $(shell find include/ -name "*.hpp")
 
 OBJS := $(SRC) lex.yy.o y.tab.o
 OBJS := $(OBJS:.cpp=.o)
