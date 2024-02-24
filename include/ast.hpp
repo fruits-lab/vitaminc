@@ -209,7 +209,6 @@ struct IntConstExprNode : public ExprNode {
   int val;
 };
 
-/// @note This is an abstract class.
 struct UnaryExprNode : public ExprNode {
   UnaryExprNode(UnaryOperator op, std::unique_ptr<ExprNode> operand)
       : op{op}, operand{std::move(operand)} {}
@@ -217,64 +216,10 @@ struct UnaryExprNode : public ExprNode {
   virtual void Accept(NonModifyingVisitor&) const override;
   virtual void Accept(ModifyingVisitor&) override;
 
-  /// @note To make the class abstract.
-  virtual ~UnaryExprNode() = 0;
-
   UnaryOperator op;
   std::unique_ptr<ExprNode> operand;
 };
 
-struct IncrExprNode : public UnaryExprNode {
-  using UnaryExprNode::UnaryExprNode;
-
-  virtual void Accept(NonModifyingVisitor&) const override;
-  virtual void Accept(ModifyingVisitor&) override;
-};
-
-struct DecrExprNode : public UnaryExprNode {
-  using UnaryExprNode::UnaryExprNode;
-
-  virtual void Accept(NonModifyingVisitor&) const override;
-  virtual void Accept(ModifyingVisitor&) override;
-};
-
-struct NegExprNode : public UnaryExprNode {
-  using UnaryExprNode::UnaryExprNode;
-
-  virtual void Accept(NonModifyingVisitor&) const override;
-  virtual void Accept(ModifyingVisitor&) override;
-};
-
-struct AddrExprNode : public UnaryExprNode {
-  using UnaryExprNode::UnaryExprNode;
-
-  virtual void Accept(NonModifyingVisitor&) const override;
-  virtual void Accept(ModifyingVisitor&) override;
-};
-
-struct DereferExprNode : public UnaryExprNode {
-  using UnaryExprNode::UnaryExprNode;
-
-  virtual void Accept(NonModifyingVisitor&) const override;
-  virtual void Accept(ModifyingVisitor&) override;
-};
-
-struct NotExprNode : public UnaryExprNode {
-  using UnaryExprNode::UnaryExprNode;
-
-  virtual void Accept(NonModifyingVisitor&) const override;
-  virtual void Accept(ModifyingVisitor&) override;
-};
-
-/// @brief This is a bitwise complement unary expression node.
-struct BitCompExprNode : public UnaryExprNode {
-  using UnaryExprNode::UnaryExprNode;
-
-  virtual void Accept(NonModifyingVisitor&) const override;
-  virtual void Accept(ModifyingVisitor&) override;
-};
-
-/// @note This is an abstract class.
 struct BinaryExprNode : public ExprNode {
   BinaryExprNode(BinaryOperator op, std::unique_ptr<ExprNode> lhs,
                  std::unique_ptr<ExprNode> rhs)
@@ -283,89 +228,9 @@ struct BinaryExprNode : public ExprNode {
   virtual void Accept(NonModifyingVisitor&) const override;
   virtual void Accept(ModifyingVisitor&) override;
 
-  /// @note To make the class abstract.
-  virtual ~BinaryExprNode() = 0;
-
   BinaryOperator op;
   std::unique_ptr<ExprNode> lhs;
   std::unique_ptr<ExprNode> rhs;
-};
-
-struct PlusExprNode : public BinaryExprNode {
-  using BinaryExprNode::BinaryExprNode;
-
-  virtual void Accept(NonModifyingVisitor&) const override;
-  virtual void Accept(ModifyingVisitor&) override;
-};
-
-struct SubExprNode : public BinaryExprNode {
-  using BinaryExprNode::BinaryExprNode;
-
-  virtual void Accept(NonModifyingVisitor&) const override;
-  virtual void Accept(ModifyingVisitor&) override;
-};
-
-struct MulExprNode : public BinaryExprNode {
-  using BinaryExprNode::BinaryExprNode;
-
-  virtual void Accept(NonModifyingVisitor&) const override;
-  virtual void Accept(ModifyingVisitor&) override;
-};
-
-struct DivExprNode : public BinaryExprNode {
-  using BinaryExprNode::BinaryExprNode;
-
-  virtual void Accept(NonModifyingVisitor&) const override;
-  virtual void Accept(ModifyingVisitor&) override;
-};
-
-struct ModExprNode : public BinaryExprNode {
-  using BinaryExprNode::BinaryExprNode;
-
-  virtual void Accept(NonModifyingVisitor&) const override;
-  virtual void Accept(ModifyingVisitor&) override;
-};
-
-struct GreaterThanExprNode : public BinaryExprNode {
-  using BinaryExprNode::BinaryExprNode;
-
-  virtual void Accept(NonModifyingVisitor&) const override;
-  virtual void Accept(ModifyingVisitor&) override;
-};
-
-struct GreaterThanOrEqualToExprNode : public BinaryExprNode {
-  using BinaryExprNode::BinaryExprNode;
-
-  virtual void Accept(NonModifyingVisitor&) const override;
-  virtual void Accept(ModifyingVisitor&) override;
-};
-
-struct LessThanExprNode : public BinaryExprNode {
-  using BinaryExprNode::BinaryExprNode;
-
-  virtual void Accept(NonModifyingVisitor&) const override;
-  virtual void Accept(ModifyingVisitor&) override;
-};
-
-struct LessThanOrEqualToExprNode : public BinaryExprNode {
-  using BinaryExprNode::BinaryExprNode;
-
-  virtual void Accept(NonModifyingVisitor&) const override;
-  virtual void Accept(ModifyingVisitor&) override;
-};
-
-struct EqualToExprNode : public BinaryExprNode {
-  using BinaryExprNode::BinaryExprNode;
-
-  virtual void Accept(NonModifyingVisitor&) const override;
-  virtual void Accept(ModifyingVisitor&) override;
-};
-
-struct NotEqualToExprNode : public BinaryExprNode {
-  using BinaryExprNode::BinaryExprNode;
-
-  virtual void Accept(NonModifyingVisitor&) const override;
-  virtual void Accept(ModifyingVisitor&) override;
 };
 
 /// @note This is an abstract class.
