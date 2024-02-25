@@ -11,7 +11,7 @@ struct StmtNode;
 struct ExprNode;
 struct DeclNode;
 struct LoopInitNode;
-struct BlockStmtNode;
+struct CompoundStmtNode;
 struct ProgramNode;
 struct IfStmtNode;
 struct WhileStmtNode;
@@ -49,7 +49,7 @@ class Visitor {
   virtual void Visit(CondMut<ExprNode>&){};
   virtual void Visit(CondMut<DeclNode>&){};
   virtual void Visit(CondMut<LoopInitNode>&){};
-  virtual void Visit(CondMut<BlockStmtNode>&){};
+  virtual void Visit(CondMut<CompoundStmtNode>&){};
   virtual void Visit(CondMut<ProgramNode>&){};
   virtual void Visit(CondMut<IfStmtNode>&){};
   virtual void Visit(CondMut<WhileStmtNode>&){};

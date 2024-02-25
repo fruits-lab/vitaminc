@@ -87,10 +87,9 @@ struct LoopInitNode : public AstNode {
   std::variant<std::unique_ptr<DeclNode>, std::unique_ptr<ExprNode>> clause;
 };
 
-/// @brief A block is a set of declarations and statements.
-struct BlockStmtNode : public StmtNode {
-  BlockStmtNode(std::vector<std::unique_ptr<DeclNode>>&& decls,
-                std::vector<std::unique_ptr<StmtNode>>&& stmts)
+struct CompoundStmtNode : public StmtNode {
+  CompoundStmtNode(std::vector<std::unique_ptr<DeclNode>>&& decls,
+                   std::vector<std::unique_ptr<StmtNode>>&& stmts)
       : decls{std::move(decls)}, stmts{std::move(stmts)} {}
 
   void Accept(NonModifyingVisitor&) const override;
@@ -103,12 +102,12 @@ struct BlockStmtNode : public StmtNode {
 /// @brief Root of the entire program.
 struct ProgramNode : public AstNode {
   /// @note vector of move-only elements are move-only
-  ProgramNode(std::unique_ptr<BlockStmtNode> block) : block{std::move(block)} {}
+  ProgramNode(std::unique_ptr<CompoundStmtNode> body) : body{std::move(body)} {}
 
   void Accept(NonModifyingVisitor&) const override;
   void Accept(ModifyingVisitor&) override;
 
-  std::unique_ptr<BlockStmtNode> block;
+  std::unique_ptr<CompoundStmtNode> body;
 };
 
 struct IfStmtNode : public StmtNode {

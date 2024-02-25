@@ -31,19 +31,19 @@ void TypeChecker::Visit(LoopInitNode& loop_init) {
   }
 }
 
-void TypeChecker::Visit(BlockStmtNode& block) {
+void TypeChecker::Visit(CompoundStmtNode& compound_stmt) {
   env_.PushScope();
-  for (auto& decl : block.decls) {
+  for (auto& decl : compound_stmt.decls) {
     decl->Accept(*this);
   }
-  for (auto& stmt : block.stmts) {
+  for (auto& stmt : compound_stmt.stmts) {
     stmt->Accept(*this);
   }
   env_.PopScope();
 }
 
 void TypeChecker::Visit(ProgramNode& program) {
-  program.block->Accept(*this);
+  program.body->Accept(*this);
 }
 
 void TypeChecker::Visit(IfStmtNode& if_stmt) {
