@@ -16,7 +16,7 @@ esac
 wget https://github.com/fmtlib/fmt/archive/refs/tags/10.1.1.tar.gz -O - | tar zxf - &&
   cd fmt-10.1.1/ &&
   mkdir build/ &&
-  cmake -B build/ . &&
+  cmake -DFMT_TEST=false -B build/ . &&
   sudo make -j"${NPROCS}" -C build/ install &&
   cd .. &&
   rm -rf fmt-10.1.1/
