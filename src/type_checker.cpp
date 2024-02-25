@@ -24,11 +24,8 @@ void TypeChecker::Visit(DeclNode& decl) {
 }
 
 void TypeChecker::Visit(LoopInitNode& loop_init) {
-  if (std::holds_alternative<std::unique_ptr<DeclNode>>(loop_init.clause)) {
-    std::get<std::unique_ptr<DeclNode>>(loop_init.clause)->Accept(*this);
-  } else {
-    std::get<std::unique_ptr<ExprNode>>(loop_init.clause)->Accept(*this);
-  }
+  std::visit([this](auto&& clause) { clause->Accept(*this); },
+             loop_init.clause);
 }
 
 void TypeChecker::Visit(CompoundStmtNode& compound_stmt) {
