@@ -23,4 +23,4 @@ command -v bear >/dev/null 2>&1 || (
 make clean
 bear -- make
 git fetch origin "${GITHUB_BASE_REF}:refs/remotes/origin/${GITHUB_BASE_REF}"
-git diff -U0 "origin/${GITHUB_BASE_REF}" -- ':test/' | ${CLANG_TIDY_DIFF} -p1
+git diff -U0 "origin/${GITHUB_BASE_REF}" -- ':!test/' | ${CLANG_TIDY_DIFF} -p1
