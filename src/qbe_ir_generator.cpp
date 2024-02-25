@@ -131,15 +131,15 @@ void QbeIrGenerator::Visit(const LoopInitNode& loop_init) {
   }
 }
 
-void QbeIrGenerator::Visit(const BlockStmtNode& block) {
-  // Note: BlockStmtNode cannot output the correct label to its own block
+void QbeIrGenerator::Visit(const CompoundStmtNode& compound_stmt) {
+  // Note: CompoundStmtNode cannot output the correct label to its own block
   // because it doesn't know whether it is a if statement body or a function.
   // Thus, by moving label creation to an upper level, each block can have its
   // correct starting label.
-  for (const auto& decl : block.decls) {
+  for (const auto& decl : compound_stmt.decls) {
     decl->Accept(*this);
   }
-  for (const auto& stmt : block.stmts) {
+  for (const auto& stmt : compound_stmt.stmts) {
     stmt->Accept(*this);
   }
 }
@@ -148,7 +148,7 @@ void QbeIrGenerator::Visit(const ProgramNode& program) {
   WriteOut_(
       "export function w $main() {{\n"
       "@start\n");
-  program.block->Accept(*this);
+  program.body->Accept(*this);
   WriteOut_("}}");
 }
 

@@ -72,8 +72,8 @@
 %nterm <std::vector<std::unique_ptr<DeclNode>>> decls
 %nterm <std::unique_ptr<StmtNode>> stmt
 %nterm <std::vector<std::unique_ptr<StmtNode>>> stmts
-%nterm <std::unique_ptr<BlockStmtNode>> block
-%nterm <std::unique_ptr<BlockStmtNode>> main_func
+%nterm <std::unique_ptr<CompoundStmtNode>> compound_stmt
+%nterm <std::unique_ptr<CompoundStmtNode>> main_func
 
 %left '='
 %left EQ NE
@@ -107,14 +107,14 @@ entry: main_func {
   }
   ;
 
-main_func: INT MAIN '(' ')' block {
+main_func: INT MAIN '(' ')' compound_stmt {
     $$ = $5;
   }
   ;
-
+  /* 6.8.2 Compound statement */
   /* TODO: mix declarations and statements in compound statement */
-block: '{' decls stmts '}' {
-    $$ = std::make_unique<BlockStmtNode>($2, $3);
+compound_stmt: '{' decls stmts '}' {
+    $$ = std::make_unique<CompoundStmtNode>($2, $3);
   }
   ;
 
@@ -141,7 +141,7 @@ stmts: stmts stmt {
 
 stmt: expr_opt ';' { $$ = std::make_unique<ExprStmtNode>($1); }
     | RETURN expr ';' { $$ = std::make_unique<ReturnStmtNode>($2); }
-    | block { $$ = $1; }
+    | compound_stmt { $$ = $1; }
     | IF '(' expr ')' stmt %prec IF_WITHOUT_ELSE { $$ = std::make_unique<IfStmtNode>($3, $5); }
     | IF '(' expr ')' stmt ELSE stmt { $$ = std::make_unique<IfStmtNode>($3, $5, $7); }
     | WHILE '(' expr ')' stmt { $$ = std::make_unique<WhileStmtNode>($3, $5); }

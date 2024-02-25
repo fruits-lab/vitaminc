@@ -82,17 +82,17 @@ void AstDumper::Visit(const LoopInitNode& loop_init) {
   }
 }
 
-void AstDumper::Visit(const BlockStmtNode& block) {
-  for (const auto& decl : block.decls) {
+void AstDumper::Visit(const CompoundStmtNode& compound_stmt) {
+  for (const auto& decl : compound_stmt.decls) {
     decl->Accept(*this);
   }
-  for (const auto& stmt : block.stmts) {
+  for (const auto& stmt : compound_stmt.stmts) {
     stmt->Accept(*this);
   }
 }
 
 void AstDumper::Visit(const ProgramNode& program) {
-  program.block->Accept(*this);
+  program.body->Accept(*this);
 }
 
 void AstDumper::Visit(const IfStmtNode& if_stmt) {

@@ -48,11 +48,11 @@ void LoopInitNode::Accept(ModifyingVisitor& v) {
   v.Visit(*this);
 }
 
-void BlockStmtNode::Accept(NonModifyingVisitor& v) const {
+void CompoundStmtNode::Accept(NonModifyingVisitor& v) const {
   v.Visit(*this);
 }
 
-void BlockStmtNode::Accept(ModifyingVisitor& v) {
+void CompoundStmtNode::Accept(ModifyingVisitor& v) {
   v.Visit(*this);
 }
 
