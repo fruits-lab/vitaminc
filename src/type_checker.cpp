@@ -33,11 +33,8 @@ void TypeChecker::Visit(LoopInitNode& loop_init) {
 
 void TypeChecker::Visit(CompoundStmtNode& compound_stmt) {
   env_.PushScope();
-  for (auto& decl : compound_stmt.decls) {
-    decl->Accept(*this);
-  }
-  for (auto& stmt : compound_stmt.stmts) {
-    stmt->Accept(*this);
+  for (auto& item : compound_stmt.items) {
+    std::visit([this](auto&& item) { item->Accept(*this); }, item);
   }
   env_.PopScope();
 }

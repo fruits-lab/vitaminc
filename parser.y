@@ -69,10 +69,10 @@
 %nterm <std::unique_ptr<ExprNode>> primary_expr
 %nterm <std::unique_ptr<DeclNode>> decl
 %nterm <std::unique_ptr<LoopInitNode>> loop_init
-%nterm <std::vector<std::unique_ptr<DeclNode>>> decls
 %nterm <std::unique_ptr<StmtNode>> stmt
-%nterm <std::vector<std::unique_ptr<StmtNode>>> stmts
 %nterm <std::unique_ptr<CompoundStmtNode>> compound_stmt
+%nterm <std::vector<CompoundStmtNode::Item>> block_item_list block_item_list_opt
+%nterm <CompoundStmtNode::Item> block_item
 %nterm <std::unique_ptr<CompoundStmtNode>> main_func
 
 %left '='
@@ -111,33 +111,38 @@ main_func: INT MAIN '(' ')' compound_stmt {
     $$ = $5;
   }
   ;
+
   /* 6.8.2 Compound statement */
-  /* TODO: mix declarations and statements in compound statement */
-compound_stmt: '{' decls stmts '}' {
-    $$ = std::make_unique<CompoundStmtNode>($2, $3);
+compound_stmt: '{' block_item_list_opt '}' {
+    $$ = std::make_unique<CompoundStmtNode>($2);
   }
   ;
 
-decls: decls decl {
-    auto decls = $1;
-    decls.push_back($2);
-    $$ = std::move(decls);
+block_item_list_opt: block_item_list { $$ = $1; }
+  | epsilon {
+    $$ = std::vector<CompoundStmtNode::Item>{};
   }
-  | epsilon { $$ = std::vector<std::unique_ptr<DeclNode>>{}; }
+  ;
+
+block_item_list: block_item {
+    $$ = std::vector<CompoundStmtNode::Item>{};
+    $$.push_back($1);
+  }
+  | block_item_list block_item {
+    auto block_item_list = $1;
+    block_item_list.push_back($2);
+    $$ = std::move(block_item_list);
+  }
+  ;
+
+block_item: decl { $$ = $1; }
+  | stmt { $$ = $1; }
   ;
 
   /* TODO: parse multiple data types and id list */
 decl: INT ID ';' { $$ = std::make_unique<DeclNode>($2, ExprType::kInt); }
     | INT ID '=' expr ';' { $$ = std::make_unique<DeclNode>($2, ExprType::kInt, $4); }
     ;
-
-stmts: stmts stmt {
-    auto stmts = $1;
-    stmts.push_back($2);
-    $$ = std::move(stmts);
-  }
-  | epsilon { $$ = std::vector<std::unique_ptr<StmtNode>>{}; }
-  ;
 
 stmt: expr_opt ';' { $$ = std::make_unique<ExprStmtNode>($1); }
     | RETURN expr ';' { $$ = std::make_unique<ReturnStmtNode>($2); }

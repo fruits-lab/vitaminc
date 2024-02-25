@@ -88,15 +88,14 @@ struct LoopInitNode : public AstNode {
 };
 
 struct CompoundStmtNode : public StmtNode {
-  CompoundStmtNode(std::vector<std::unique_ptr<DeclNode>>&& decls,
-                   std::vector<std::unique_ptr<StmtNode>>&& stmts)
-      : decls{std::move(decls)}, stmts{std::move(stmts)} {}
+  using Item =
+      std::variant<std::unique_ptr<DeclNode>, std::unique_ptr<StmtNode>>;
+  CompoundStmtNode(std::vector<Item> items) : items{std::move(items)} {}
 
   void Accept(NonModifyingVisitor&) const override;
   void Accept(ModifyingVisitor&) override;
 
-  std::vector<std::unique_ptr<DeclNode>> decls;
-  std::vector<std::unique_ptr<StmtNode>> stmts;
+  std::vector<Item> items;
 };
 
 /// @brief Root of the entire program.

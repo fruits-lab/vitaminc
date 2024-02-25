@@ -3,6 +3,7 @@
 #include <iostream>
 #include <memory>
 #include <string>
+#include <variant>
 
 #include "ast.hpp"
 #include "type.hpp"
@@ -83,11 +84,8 @@ void AstDumper::Visit(const LoopInitNode& loop_init) {
 }
 
 void AstDumper::Visit(const CompoundStmtNode& compound_stmt) {
-  for (const auto& decl : compound_stmt.decls) {
-    decl->Accept(*this);
-  }
-  for (const auto& stmt : compound_stmt.stmts) {
-    stmt->Accept(*this);
+  for (const auto& item : compound_stmt.items) {
+    std::visit([this](auto&& item) { item->Accept(*this); }, item);
   }
 }
 
