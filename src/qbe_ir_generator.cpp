@@ -58,20 +58,6 @@ std::string GetBinaryOperator(BinaryOperator op) {
   }
 }
 
-std::string GetUnaryOperator(UnaryOperator op) {
-  switch (op) {
-    case UnaryOperator::kIncr:
-    case UnaryOperator::kDecr:
-    case UnaryOperator::kNeg:
-    case UnaryOperator::kNot:
-    case UnaryOperator::kAddr:
-    case UnaryOperator::kDeref:
-    case UnaryOperator::kBitComp:
-    default:
-      return "Unknown";
-  }
-}
-
 auto id_to_num  // NOLINT(cppcoreguidelines-avoid-non-const-global-variables):
                 // Accessible only within this translation unit; declaring as a
                 // data member introduces unnecessary dependency.
@@ -280,11 +266,27 @@ void QbeIrGenerator::Visit(const IntConstExprNode& int_expr) {
 
 void QbeIrGenerator::Visit(const UnaryExprNode& unary_expr) {
   unary_expr.operand->Accept(*this);
-  // TODO: The evaluation of certain unary expressions are the same as simple
-  // assignment. For instance, ++i is equivalent to i += 1. We need to handle
-  // this case by case.
-  // @note: Temporary fix for unused 'GetUnaryOperator' function error.
-  GetUnaryOperator(unary_expr.op);
+  switch (unary_expr.op) {
+    case UnaryOperator::kIncr:
+    case UnaryOperator::kDecr: {
+      // Equivalent to i += 1 or i -= 1.
+      const int expr_num = num_recorder.NumOfPrevExpr();
+      const int res_num = NextLocalNum();
+      const auto arith_op = unary_expr.op == UnaryOperator::kIncr
+                                ? BinaryOperator::kAdd
+                                : BinaryOperator::kSub;
+      WriteOut_("{} =w {} {}, 1\n", FuncScopeTemp{res_num},
+                GetBinaryOperator(arith_op), FuncScopeTemp{expr_num});
+      const auto* id_expr =
+          dynamic_cast<IdExprNode*>((unary_expr.operand).get());
+      assert(id_expr);
+      WriteOut_("storew {}, {}\n", FuncScopeTemp{res_num},
+                FuncScopeTemp{id_to_num.at(id_expr->id)});
+      num_recorder.Record(res_num);
+    } break;
+    default:
+      break;
+  }
 }
 
 void QbeIrGenerator::Visit(const BinaryExprNode& bin_expr) {
