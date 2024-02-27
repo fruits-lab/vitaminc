@@ -75,6 +75,15 @@ void AstDumper::Visit(const DeclNode& decl) {
   std::cout << indenter_.Indent() << ')' << '\n';
 }
 
+void AstDumper::Visit(const FuncDefNode& func_def) {
+  std::cout << indenter_.Indent() << "(func " << func_def.id << ": "
+            << ExprTypeToString(func_def.return_type) << "\n";
+  indenter_.IncreaseLevel();
+  func_def.body->Accept(*this);
+  indenter_.DecreaseLevel();
+  std::cout << indenter_.Indent() << ')' << '\n';
+}
+
 void AstDumper::Visit(const LoopInitNode& loop_init) {
   if (std::holds_alternative<std::unique_ptr<DeclNode>>(loop_init.clause)) {
     std::get<std::unique_ptr<DeclNode>>(loop_init.clause)->Accept(*this);
@@ -90,6 +99,9 @@ void AstDumper::Visit(const CompoundStmtNode& compound_stmt) {
 }
 
 void AstDumper::Visit(const ProgramNode& program) {
+  for (const auto& func_def : program.func_def_list) {
+    func_def->Accept(*this);
+  }
   program.body->Accept(*this);
 }
 

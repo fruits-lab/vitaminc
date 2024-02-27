@@ -75,6 +75,19 @@ struct DeclNode : public AstNode {
   std::unique_ptr<ExprNode> init;
 };
 
+struct FuncDefNode : public AstNode {
+  FuncDefNode(std::string id, std::unique_ptr<CompoundStmtNode> body,
+              ExprType return_type)
+      : id{std::move(id)}, body{std::move(body)}, return_type{return_type} {}
+
+  void Accept(NonModifyingVisitor&) const override;
+  void Accept(ModifyingVisitor&) override;
+
+  std::string id;
+  std::unique_ptr<CompoundStmtNode> body;
+  ExprType return_type;
+};
+
 /// @brief A loop initialization can be either a declaration or an expression.
 struct LoopInitNode : public AstNode {
   LoopInitNode(
@@ -101,11 +114,14 @@ struct CompoundStmtNode : public StmtNode {
 /// @brief Root of the entire program.
 struct ProgramNode : public AstNode {
   /// @note vector of move-only elements are move-only
-  ProgramNode(std::unique_ptr<CompoundStmtNode> body) : body{std::move(body)} {}
+  ProgramNode(std::vector<std::unique_ptr<FuncDefNode>> func_def_list,
+              std::unique_ptr<CompoundStmtNode> body)
+      : func_def_list{std::move(func_def_list)}, body{std::move(body)} {}
 
   void Accept(NonModifyingVisitor&) const override;
   void Accept(ModifyingVisitor&) override;
 
+  std::vector<std::unique_ptr<FuncDefNode>> func_def_list;
   std::unique_ptr<CompoundStmtNode> body;
 };
 

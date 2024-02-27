@@ -1,0 +1,8 @@
+(func five: int
+  (ret
+    5: int
+  )
+)
+(ret
+  0: int
+)

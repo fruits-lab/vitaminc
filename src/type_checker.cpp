@@ -23,6 +23,19 @@ void TypeChecker::Visit(DeclNode& decl) {
   }
 }
 
+void TypeChecker::Visit(FuncDefNode& func_def) {
+  if (env_.Probe(func_def.id)) {
+    // TODO: redefinition of function id
+  } else {
+    auto symbol = std::make_unique<SymbolEntry>(func_def.id);
+    symbol->expr_type = func_def.return_type;
+    env_.Add(std::move(symbol));
+  }
+
+  func_def.body->Accept(*this);
+  //  TODO: check body return type and function return type
+}
+
 void TypeChecker::Visit(LoopInitNode& loop_init) {
   std::visit([this](auto&& clause) { clause->Accept(*this); },
              loop_init.clause);
@@ -37,6 +50,12 @@ void TypeChecker::Visit(CompoundStmtNode& compound_stmt) {
 }
 
 void TypeChecker::Visit(ProgramNode& program) {
+  env_.PushScope();
+  for (auto& func_def : program.func_def_list) {
+    func_def->Accept(*this);
+  }
+  env_.PopScope();
+
   program.body->Accept(*this);
 }
 

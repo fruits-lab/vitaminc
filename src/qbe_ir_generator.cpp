@@ -123,6 +123,8 @@ void QbeIrGenerator::Visit(const DeclNode& decl) {
   id_to_num[decl.id] = id_num;
 }
 
+void QbeIrGenerator::Visit(const FuncDefNode& func_def) {}
+
 void QbeIrGenerator::Visit(const LoopInitNode& loop_init) {
   if (std::holds_alternative<std::unique_ptr<DeclNode>>(loop_init.clause)) {
     std::get<std::unique_ptr<DeclNode>>(loop_init.clause)->Accept(*this);

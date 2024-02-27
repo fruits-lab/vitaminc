@@ -40,6 +40,14 @@ void DeclNode::Accept(ModifyingVisitor& v) {
   v.Visit(*this);
 }
 
+void FuncDefNode::Accept(NonModifyingVisitor& v) const {
+  v.Visit(*this);
+}
+
+void FuncDefNode::Accept(ModifyingVisitor& v) {
+  v.Visit(*this);
+}
+
 void LoopInitNode::Accept(NonModifyingVisitor& v) const {
   v.Visit(*this);
 }

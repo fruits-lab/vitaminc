@@ -12,6 +12,7 @@ class TypeChecker : public ModifyingVisitor {
 
   void Visit(LoopInitNode&) override;
   void Visit(DeclNode&) override;
+  void Visit(FuncDefNode&) override;
   void Visit(CompoundStmtNode&) override;
   void Visit(ProgramNode&) override;
   void Visit(IfStmtNode&) override;
