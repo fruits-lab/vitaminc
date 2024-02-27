@@ -5,6 +5,7 @@ int main() {
   i = +i;
   i = -i;
   i = !i;
+  i = ~i;
 
   return 0;
 }
