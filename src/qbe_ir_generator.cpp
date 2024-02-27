@@ -284,6 +284,16 @@ void QbeIrGenerator::Visit(const UnaryExprNode& unary_expr) {
                 FuncScopeTemp{id_to_num.at(id_expr->id)});
       num_recorder.Record(res_num);
     } break;
+    case UnaryOperator::kPos:
+      // Do nothing.
+      break;
+    case UnaryOperator::kNeg: {
+      const int expr_num = num_recorder.NumOfPrevExpr();
+      const int res_num = NextLocalNum();
+      WriteOut_("{} =w neg {}\n", FuncScopeTemp{res_num},
+                FuncScopeTemp{expr_num});
+      num_recorder.Record(res_num);
+    } break;
     default:
       break;
   }
