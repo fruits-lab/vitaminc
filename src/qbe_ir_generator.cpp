@@ -305,6 +305,14 @@ void QbeIrGenerator::Visit(const UnaryExprNode& unary_expr) {
                 FuncScopeTemp{expr_num});
       num_recorder.Record(res_num);
     } break;
+    case UnaryOperator::kBitComp: {
+      const int expr_num = num_recorder.NumOfPrevExpr();
+      const int res_num = NextLocalNum();
+      // Exclusive or with all ones to flip the bits.
+      WriteOut_("{} =w xor {}, -1\n", FuncScopeTemp{res_num},
+                FuncScopeTemp{expr_num});
+      num_recorder.Record(res_num);
+    } break;
     default:
       break;
   }

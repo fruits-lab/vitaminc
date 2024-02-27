@@ -210,7 +210,6 @@ unary_expr: postfix_expr { $$ = $1; }
   /* TODO: implement pointer type */
   | '&' unary_expr { $$ = std::make_unique<UnaryExprNode>(UnaryOperator::kAddr, $2); }
   | '*' unary_expr { $$ = std::make_unique<UnaryExprNode>(UnaryOperator::kDeref, $2); }
-  /* TODO: implement bitwise operations */
   | '~' unary_expr { $$ = std::make_unique<UnaryExprNode>(UnaryOperator::kBitComp, $2); }
   /* TODO: sizeof */
   ;
