@@ -184,9 +184,11 @@ expr: unary_expr { $$ = $1; }
   | ID '=' expr { $$ = std::make_unique<SimpleAssignmentExprNode>($1, $3); }
   ;
 
+/* 6.5.3 Unary operators */
 unary_expr: postfix_expr { $$ = $1; }
   | INCR unary_expr { $$ = std::make_unique<UnaryExprNode>(UnaryOperator::kIncr, $2); }
   | DECR unary_expr { $$ = std::make_unique<UnaryExprNode>(UnaryOperator::kDecr, $2); }
+  | '+' unary_expr { $$ = std::make_unique<UnaryExprNode>(UnaryOperator::kPos, $2); }
   | '-' unary_expr { $$ = std::make_unique<UnaryExprNode>(UnaryOperator::kNeg, $2); }
   | '!' unary_expr { $$ = std::make_unique<UnaryExprNode>(UnaryOperator::kNot, $2); }
   /* TODO: implement pointer type */

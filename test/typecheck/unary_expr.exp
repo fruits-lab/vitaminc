@@ -9,6 +9,12 @@
 ): int
 (=
   i: int
+  (+
+    i: int
+  ): int
+): int
+(=
+  i: int
   (-
     i: int
   ): int

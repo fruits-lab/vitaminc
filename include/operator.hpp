@@ -20,6 +20,7 @@ enum class BinaryOperator : std::uint8_t {
 enum class UnaryOperator : std::uint8_t {
   kIncr,
   kDecr,
+  kPos,
   kNeg,
   kAddr,
   kDeref,
