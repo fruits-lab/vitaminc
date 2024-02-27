@@ -46,6 +46,8 @@ std::string GetUnaryOperator(UnaryOperator op) {
       return "++";
     case UnaryOperator::kDecr:
       return "--";
+    case UnaryOperator::kPos:
+      return "+";
     case UnaryOperator::kNeg:
       return "-";
     case UnaryOperator::kNot:
