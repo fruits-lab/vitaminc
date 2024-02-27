@@ -68,6 +68,8 @@
 %nterm <std::unique_ptr<ExprNode>> postfix_expr
 %nterm <std::unique_ptr<ExprNode>> primary_expr
 %nterm <std::unique_ptr<DeclNode>> decl
+%nterm <std::unique_ptr<FuncDefNode>> func_def
+%nterm <std::vector<std::unique_ptr<FuncDefNode>>> func_def_list_opt
 %nterm <std::unique_ptr<LoopInitNode>> loop_init
 %nterm <std::unique_ptr<StmtNode>> stmt
 %nterm <std::unique_ptr<CompoundStmtNode>> compound_stmt
@@ -102,8 +104,22 @@
 %start entry
 
 %%
-entry: main_func {
-    program = std::make_unique<ProgramNode>($1);
+// TODO: support global variables
+entry: func_def_list_opt main_func {
+    program = std::make_unique<ProgramNode>($1, $2);
+  }
+  ;
+
+func_def_list_opt: func_def_list_opt func_def {
+    auto func_def_list_opt = $1;
+    func_def_list_opt.push_back($2);
+    $$ = std::move(func_def_list_opt);
+  }
+  | epsilon { $$ = std::vector<std::unique_ptr<FuncDefNode>>{}; }
+  ;
+
+func_def: INT ID '(' ')' compound_stmt {
+    $$ = std::make_unique<FuncDefNode>($2, $5, ExprType::kInt);
   }
   ;
 
