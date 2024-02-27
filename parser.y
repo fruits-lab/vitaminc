@@ -196,6 +196,7 @@ unary_expr: postfix_expr { $$ = $1; }
   | '*' unary_expr { $$ = std::make_unique<UnaryExprNode>(UnaryOperator::kDeref, $2); }
   /* TODO: implement bitwise operations */
   | '~' unary_expr { $$ = std::make_unique<UnaryExprNode>(UnaryOperator::kBitComp, $2); }
+  /* TODO: sizeof */
   ;
 
 postfix_expr: primary_expr {
