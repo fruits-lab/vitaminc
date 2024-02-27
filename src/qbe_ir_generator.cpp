@@ -294,6 +294,17 @@ void QbeIrGenerator::Visit(const UnaryExprNode& unary_expr) {
                 FuncScopeTemp{expr_num});
       num_recorder.Record(res_num);
     } break;
+    case UnaryOperator::kNot: {
+      // Is 0 if the value of its operand compares unequal to 0, 1 if the value
+      // of its operand compares equal to 0.
+      // The expression !E is equivalent to (0 == E).
+      const int expr_num = num_recorder.NumOfPrevExpr();
+      const int res_num = NextLocalNum();
+      WriteOut_("{} =w {} {}, 0\n", FuncScopeTemp{res_num},
+                GetBinaryOperator(BinaryOperator::kEq),
+                FuncScopeTemp{expr_num});
+      num_recorder.Record(res_num);
+    } break;
     default:
       break;
   }
