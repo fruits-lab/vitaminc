@@ -1,9 +1,35 @@
 #include "type_checker.hpp"
 
+#include <algorithm>
+#include <cassert>
+#include <cstdint>
 #include <memory>
 #include <variant>
+#include <vector>
 
 #include "ast.hpp"
+
+namespace {
+
+/// @brief Some statements can only appear in body of certain constructs, namely
+/// the return, break, and continue statements.
+enum class BodyType : std::uint8_t {
+  /// @brief No special semantics.
+  kNone = 0,
+  kLoop,
+};
+
+/// @note Constructs that enters a body (compound statement) should add their
+/// body type to this list.
+auto body_types  // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
+    = std::vector<BodyType>{};
+
+bool IsInBodyOf(BodyType type) {
+  return std::any_of(body_types.cbegin(), body_types.cend(),
+                     [type](auto&& ctx) { return ctx == type; });
+}
+
+}  // namespace
 
 void TypeChecker::Visit(DeclNode& decl) {
   if (decl.init) {
@@ -87,7 +113,11 @@ void TypeChecker::Visit(ReturnStmtNode& ret_stmt) {
 }
 
 void TypeChecker::Visit(BreakStmtNode& break_stmt) {
-  // TODO: check if it is in a loop body or a switch body
+  // TODO: or a switch body
+  if (!IsInBodyOf(BodyType::kLoop)) {
+    assert(false);
+    // TODO: 'break' statement not in loop or switch statement
+  }
 }
 
 void TypeChecker::Visit(ContinueStmtNode& continue_stmt) {
