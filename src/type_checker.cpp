@@ -26,7 +26,7 @@ auto body_types  // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
 
 bool IsInBodyOf(BodyType type) {
   return std::any_of(body_types.cbegin(), body_types.cend(),
-                     [type](auto&& ctx) { return ctx == type; });
+                     [type](auto&& t) { return t == type; });
 }
 
 }  // namespace
@@ -95,14 +95,18 @@ void TypeChecker::Visit(IfStmtNode& if_stmt) {
 
 void TypeChecker::Visit(WhileStmtNode& while_stmt) {
   while_stmt.predicate->Accept(*this);
+  body_types.push_back(BodyType::kLoop);
   while_stmt.loop_body->Accept(*this);
+  body_types.pop_back();
 }
 
 void TypeChecker::Visit(ForStmtNode& for_stmt) {
   for_stmt.loop_init->Accept(*this);
   for_stmt.predicate->Accept(*this);
   for_stmt.step->Accept(*this);
+  body_types.push_back(BodyType::kLoop);
   for_stmt.loop_body->Accept(*this);
+  body_types.pop_back();
 }
 
 void TypeChecker::Visit(ReturnStmtNode& ret_stmt) {
