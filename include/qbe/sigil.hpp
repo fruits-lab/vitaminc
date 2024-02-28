@@ -26,9 +26,9 @@ class Sigil {
   }
 
   /// @param name The name may be a meaningful string or an meaningless integer.
-  Sigil(std::variant<std::string, int> name) noexcept
-      : name_{std::holds_alternative<std::string>(name)
-                  ? std::move(std::get<std::string>(name))
+  Sigil(std::variant<std::string_view, int> name) noexcept
+      : name_{std::holds_alternative<std::string_view>(name)
+                  ? std::get<std::string_view>(name)
                   : std::to_string(std::get<int>(name))} {}
 
   /// @note To make the class abstract.
