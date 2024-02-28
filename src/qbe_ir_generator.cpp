@@ -258,7 +258,10 @@ void QbeIrGenerator::Visit(const ReturnStmtNode& ret_stmt) {
   WriteOut_("ret {}\n", FuncScopeTemp{ret_num});
 }
 
-void QbeIrGenerator::Visit(const BreakStmtNode& break_stmt) {}
+void QbeIrGenerator::Visit(const BreakStmtNode& break_stmt) {
+  assert(!label_views_of_jumpable_blocks.empty());
+  WriteOut_("jmp {}\n", BlockLabel{label_views_of_jumpable_blocks.back().exit});
+}
 
 void QbeIrGenerator::Visit(const ContinueStmtNode& continue_stmt) {}
 
