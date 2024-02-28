@@ -77,7 +77,7 @@
 %nterm <CompoundStmtNode::Item> block_item
 %nterm <std::unique_ptr<CompoundStmtNode>> main_func
 
-%left '='
+%precedence '='
 %left EQ NE
 %left '<' '>' LE GE
 %left '+' '-'
@@ -224,7 +224,7 @@ primary_expr: ID { $$ = std::make_unique<IdExprNode>($1); }
   | '(' expr ')' { $$ = $2; }
   ;
 
-epsilon: /* empty */ ;
+epsilon: %empty;
 %%
 
 void yy::parser::error(const std::string& err) {

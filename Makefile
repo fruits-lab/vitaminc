@@ -9,7 +9,7 @@ LEX = lex
 # C++ features are used, yacc doesn't suffice
 YACC = bison
 # -d: generate header with default name
-YFLAGS = --verbose --debug -d
+YFLAGS = --verbose --debug -d -Wcounterexamples -Wall
 # Check if -j multiple jobs is configured.
 PARALLEL = false
 ifneq (,$(findstring j,$(MAKEFLAGS)))
