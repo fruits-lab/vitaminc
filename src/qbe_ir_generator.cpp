@@ -13,6 +13,8 @@
 #include "qbe/sigil.hpp"
 #include "visitor.hpp"
 
+using namespace qbe;
+
 namespace {
 
 /// @brief Returns the next local number and increment it by 1. The first number
@@ -91,9 +93,22 @@ auto
                   // a data member introduces unnecessary dependency.
     = PrevExprNumRecorder{};
 
-}  // namespace
+/// @note Labels are stored as string_views since `BlockLabel` is not copyable.
+/// The caller is responsible for ensuring that the lifetime of entry and exit
+/// spans the lifetime of this object. Remember to reconstruct a `BlockLabel`
+/// from the string_view before using it.
+struct LabelViewPair {
+  std::string_view entry;
+  std::string_view exit;
+};
 
-using namespace qbe;
+/// @note Blocks that allows jumping within or out of it should add its labels
+/// to this list.
+auto
+    label_views_of_jumpable_blocks  // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
+    = std::vector<LabelViewPair>{};
+
+}  // namespace
 
 void QbeIrGenerator::Visit(const DeclNode& decl) {
   int id_num = NextLocalNum();
@@ -191,7 +206,10 @@ void QbeIrGenerator::Visit(const WhileStmtNode& while_stmt) {
               end_label);
   }
   WriteOut_("{}\n", body_label);
+  label_views_of_jumpable_blocks.push_back(
+      {.entry = body_label.name(), .exit = end_label.name()});
   while_stmt.loop_body->Accept(*this);
+  label_views_of_jumpable_blocks.pop_back();
   if (!while_stmt.is_do_while) {
     WriteOut_("jmp {}\n", pred_label);
   } else {
@@ -223,7 +241,10 @@ void QbeIrGenerator::Visit(const ForStmtNode& for_stmt) {
               end_label);
   }
   WriteOut_("{}\n", body_label);
+  label_views_of_jumpable_blocks.push_back(
+      {.entry = pred_label.name(), .exit = end_label.name()});
   for_stmt.loop_body->Accept(*this);
+  label_views_of_jumpable_blocks.pop_back();
   for_stmt.step->Accept(*this);
   WriteOut_(
       "jmp {}\n"
