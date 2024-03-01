@@ -232,6 +232,17 @@ struct IntConstExprNode : public ExprNode {
   int val;
 };
 
+struct PostfixExprNode : public ExprNode {
+  PostfixExprNode(PostfixOperator op, std::unique_ptr<ExprNode> operand)
+      : op{op}, operand{std::move(operand)} {}
+
+  void Accept(NonModifyingVisitor&) const override;
+  void Accept(ModifyingVisitor&) override;
+
+  PostfixOperator op;
+  std::unique_ptr<ExprNode> operand;
+};
+
 struct UnaryExprNode : public ExprNode {
   UnaryExprNode(UnaryOperator op, std::unique_ptr<ExprNode> operand)
       : op{op}, operand{std::move(operand)} {}

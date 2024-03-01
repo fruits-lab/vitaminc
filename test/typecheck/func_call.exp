@@ -4,5 +4,7 @@
   )
 )
 (ret
-  0: int
+  (call
+    five: int
+  ): int
 )

@@ -186,6 +186,23 @@ void AstDumper::Visit(const IntConstExprNode& int_expr) {
             << ExprTypeToString(int_expr.type) << '\n';
 }
 
+void AstDumper::Visit(const PostfixExprNode& postfix_expr) {
+  std::cout << indenter_.Indent() << '(';
+  switch (postfix_expr.op) {
+    case PostfixOperator::kFunCall: {
+      std::cout << "call\n";
+      indenter_.IncreaseLevel();
+      postfix_expr.operand->Accept(*this);
+      // TODO: dump parameters, if there's any
+      indenter_.DecreaseLevel();
+    } break;
+    default:
+      std::cout << "Unknown\n";
+  }
+  std::cout << indenter_.Indent() << ')' << ": "
+            << ExprTypeToString(postfix_expr.type) << '\n';
+}
+
 void AstDumper::Visit(const UnaryExprNode& unary_expr) {
   std::cout << indenter_.Indent() << '(' << GetUnaryOperator(unary_expr.op)
             << '\n';
