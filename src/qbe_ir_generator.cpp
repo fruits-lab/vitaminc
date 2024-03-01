@@ -124,7 +124,14 @@ void QbeIrGenerator::Visit(const DeclNode& decl) {
   id_to_num[decl.id] = id_num;
 }
 
-void QbeIrGenerator::Visit(const FuncDefNode& func_def) {}
+void QbeIrGenerator::Visit(const FuncDefNode& func_def) {
+  WriteOut_(
+      "export function w ${}() {{\n"
+      "@start\n",
+      func_def.id);
+  func_def.body->Accept(*this);
+  WriteOut_("}}\n");
+}
 
 void QbeIrGenerator::Visit(const LoopInitNode& loop_init) {
   if (std::holds_alternative<std::unique_ptr<DeclNode>>(loop_init.clause)) {
@@ -145,6 +152,10 @@ void QbeIrGenerator::Visit(const CompoundStmtNode& compound_stmt) {
 }
 
 void QbeIrGenerator::Visit(const ProgramNode& program) {
+  for (const auto& func_def : program.func_def_list) {
+    func_def->Accept(*this);
+  }
+
   WriteOut_(
       "export function w $main() {{\n"
       "@start\n");
@@ -286,6 +297,21 @@ void QbeIrGenerator::Visit(const IntConstExprNode& int_expr) {
   int num = NextLocalNum();
   WriteOut_("{} =w copy {}\n", FuncScopeTemp{num}, int_expr.val);
   num_recorder.Record(num);
+}
+
+void QbeIrGenerator::Visit(const PostfixExprNode& postfix_expr) {
+  switch (postfix_expr.op) {
+    case PostfixOperator::kFunCall: {
+      const auto* id_expr =
+          dynamic_cast<IdExprNode*>((postfix_expr.operand).get());
+      assert(id_expr);
+      const int res_num = NextLocalNum();
+      WriteOut_("{} =w call ${}()\n", FuncScopeTemp{res_num}, id_expr->id);
+      num_recorder.Record(res_num);
+    } break;
+    default:
+      break;
+  }
 }
 
 void QbeIrGenerator::Visit(const UnaryExprNode& unary_expr) {
