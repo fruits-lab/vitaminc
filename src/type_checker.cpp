@@ -80,9 +80,9 @@ void TypeChecker::Visit(ProgramNode& program) {
   for (auto& func_def : program.func_def_list) {
     func_def->Accept(*this);
   }
-  env_.PopScope();
 
   program.body->Accept(*this);
+  env_.PopScope();
 }
 
 void TypeChecker::Visit(IfStmtNode& if_stmt) {
