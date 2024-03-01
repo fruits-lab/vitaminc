@@ -28,8 +28,4 @@ enum class UnaryOperator : std::uint8_t {
   kBitComp,
 };
 
-enum class PostfixOperator : std::uint8_t {
-  kFunCall,
-};
-
 #endif

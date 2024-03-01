@@ -299,19 +299,12 @@ void QbeIrGenerator::Visit(const IntConstExprNode& int_expr) {
   num_recorder.Record(num);
 }
 
-void QbeIrGenerator::Visit(const PostfixExprNode& postfix_expr) {
-  switch (postfix_expr.op) {
-    case PostfixOperator::kFunCall: {
-      const auto* id_expr =
-          dynamic_cast<IdExprNode*>((postfix_expr.operand).get());
-      assert(id_expr);
-      const int res_num = NextLocalNum();
-      WriteOut_("{} =w call ${}()\n", FuncScopeTemp{res_num}, id_expr->id);
-      num_recorder.Record(res_num);
-    } break;
-    default:
-      break;
-  }
+void QbeIrGenerator::Visit(const FunCallExprNode& call_expr) {
+  const auto* id_expr = dynamic_cast<IdExprNode*>((call_expr.func_expr).get());
+  assert(id_expr);
+  const int res_num = NextLocalNum();
+  WriteOut_("{} =w call ${}()\n", FuncScopeTemp{res_num}, id_expr->id);
+  num_recorder.Record(res_num);
 }
 
 void QbeIrGenerator::Visit(const UnaryExprNode& unary_expr) {

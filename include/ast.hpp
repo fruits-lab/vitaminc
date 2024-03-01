@@ -232,15 +232,14 @@ struct IntConstExprNode : public ExprNode {
   int val;
 };
 
-struct PostfixExprNode : public ExprNode {
-  PostfixExprNode(PostfixOperator op, std::unique_ptr<ExprNode> operand)
-      : op{op}, operand{std::move(operand)} {}
+struct FunCallExprNode : public ExprNode {
+  FunCallExprNode(std::unique_ptr<ExprNode> func_expr)
+      : func_expr{std::move(func_expr)} {}
 
   void Accept(NonModifyingVisitor&) const override;
   void Accept(ModifyingVisitor&) override;
 
-  PostfixOperator op;
-  std::unique_ptr<ExprNode> operand;
+  std::unique_ptr<ExprNode> func_expr;
 };
 
 struct UnaryExprNode : public ExprNode {

@@ -22,7 +22,7 @@ class AstDumper : public NonModifyingVisitor {
   void Visit(const NullExprNode&) override;
   void Visit(const IdExprNode&) override;
   void Visit(const IntConstExprNode&) override;
-  void Visit(const PostfixExprNode&) override;
+  void Visit(const FunCallExprNode&) override;
   void Visit(const UnaryExprNode&) override;
   void Visit(const BinaryExprNode&) override;
   void Visit(const SimpleAssignmentExprNode&) override;

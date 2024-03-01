@@ -148,15 +148,9 @@ void TypeChecker::Visit(IntConstExprNode& int_expr) {
   int_expr.type = ExprType::kInt;
 }
 
-void TypeChecker::Visit(PostfixExprNode& postfix_expr) {
-  switch (postfix_expr.op) {
-    case PostfixOperator::kFunCall: {
-      postfix_expr.operand->Accept(*this);
-      postfix_expr.type = postfix_expr.operand->type;
-    } break;
-    default:
-      break;
-  }
+void TypeChecker::Visit(FunCallExprNode& call_expr) {
+  call_expr.func_expr->Accept(*this);
+  call_expr.type = call_expr.func_expr->type;
 }
 
 void TypeChecker::Visit(UnaryExprNode& unary_expr) {
