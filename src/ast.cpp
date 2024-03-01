@@ -152,11 +152,11 @@ void IntConstExprNode::Accept(ModifyingVisitor& v) {
   v.Visit(*this);
 }
 
-void PostfixExprNode::Accept(NonModifyingVisitor& v) const {
+void FunCallExprNode::Accept(NonModifyingVisitor& v) const {
   v.Visit(*this);
 }
 
-void PostfixExprNode::Accept(ModifyingVisitor& v) {
+void FunCallExprNode::Accept(ModifyingVisitor& v) {
   v.Visit(*this);
 }
 

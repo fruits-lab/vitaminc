@@ -222,7 +222,7 @@ unary_expr: postfix_expr { $$ = $1; }
 /* 6.5.2 Postfix operators */
 postfix_expr: primary_expr { $$ = $1; }
   /* TODO: support arguments */
-  | postfix_expr '(' ')' { $$ = std::make_unique<PostfixExprNode>(PostfixOperator::kFunCall, $1); }
+  | postfix_expr '(' ')' { $$ = std::make_unique<FunCallExprNode>($1); }
   ;
 
 primary_expr: ID { $$ = std::make_unique<IdExprNode>($1); }
