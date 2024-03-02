@@ -6,8 +6,8 @@
 #include <variant>
 
 #include "ast.hpp"
+#include "operator.hpp"
 #include "type.hpp"
-#include "visitor.hpp"
 
 namespace {
 
