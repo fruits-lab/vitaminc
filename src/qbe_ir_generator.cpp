@@ -167,9 +167,9 @@ void QbeIrGenerator::Visit(const IfStmtNode& if_stmt) {
   if_stmt.predicate->Accept(*this);
   int predicate_num = num_recorder.NumOfPrevExpr();
   int label_num = NextLabelNum();
-  auto then_label = BlockLabel{"then", label_num};
-  auto else_label = BlockLabel{"else", label_num};
-  auto end_label = BlockLabel{"end", label_num};
+  auto then_label = BlockLabel{"if_then", label_num};
+  auto else_label = BlockLabel{"if_else", label_num};
+  auto end_label = BlockLabel{"if_end", label_num};
 
   // Jumps to "then" if the predicate is true (non-zero), else jumps to "else".
   // If no "else" exists, falls through to "end".
@@ -200,9 +200,11 @@ void QbeIrGenerator::Visit(const IfStmtNode& if_stmt) {
 
 void QbeIrGenerator::Visit(const WhileStmtNode& while_stmt) {
   int label_num = NextLabelNum();
-  auto body_label = BlockLabel{"loop_body", label_num};
-  auto pred_label = BlockLabel{"pred", label_num};
-  auto end_label = BlockLabel{"end", label_num};
+  const auto label_prefix =
+      std::string{while_stmt.is_do_while ? "do_" : "while_"};
+  auto body_label = BlockLabel{label_prefix + "body", label_num};
+  auto pred_label = BlockLabel{label_prefix + "pred", label_num};
+  auto end_label = BlockLabel{label_prefix + "end", label_num};
 
   // A while statement's predicate is evaluated "before" the body statement,
   // whereas a do-while statement's predicate is evaluated "after" the body
@@ -239,10 +241,10 @@ void QbeIrGenerator::Visit(const ForStmtNode& for_stmt) {
   // A for loop consists of three clauses: loop initialization, predicate, and a
   // step: for (init; pred; step) { body; }
 
-  auto pred_label = BlockLabel{"pred", label_num};
-  auto body_label = BlockLabel{"loop_body", label_num};
-  auto step_label = BlockLabel{"step", label_num};
-  auto end_label = BlockLabel{"end", label_num};
+  auto pred_label = BlockLabel{"for_pred", label_num};
+  auto body_label = BlockLabel{"for_body", label_num};
+  auto step_label = BlockLabel{"for_step", label_num};
+  auto end_label = BlockLabel{"for_end", label_num};
 
   // A for statement's loop initialization is the first clause to execute,
   // whereas a for statement's predicate specifies evaluation made before each
