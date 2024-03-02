@@ -4,8 +4,10 @@
 #include <fmt/core.h>
 
 #include <iosfwd>
+#include <utility>
 
 #include "ast.hpp"
+#include "qbe/sigil.hpp"
 #include "visitor.hpp"
 
 class QbeIrGenerator : public NonModifyingVisitor {
@@ -35,7 +37,33 @@ class QbeIrGenerator : public NonModifyingVisitor {
  private:
   std::ostream& output_;
 
-  /// @brief Writes out the formatted string to `output`.
+  static constexpr auto kIndentStr = "\t";
+
+  /// @brief Writes a single instruction with newline.
+  /// @note The instruction is indented.
+  template <typename... T>
+  void WriteInstr_(fmt::format_string<T...> format, T&&... args) {
+    Write_(kIndentStr);
+    Write_(format, std::forward<T>(args)...);
+    Write_("\n");
+  }
+
+  /// @brief Writes the definition of a label with newline.
+  void WriteLabel_(const qbe::BlockLabel& label) {
+    Write_("{}\n", label);
+  }
+
+  /// @brief Writes the `# ` comment with newline.
+  template <typename... T>
+  void WriteComment_(fmt::format_string<T...> format, T&&... args) {
+    Write_("# ");
+    Write_(format, std::forward<T>(args)...);
+    Write_("\n");
+  }
+
+  /// @brief Writes the formatted string to `output`; can be used to write
+  /// multiple instructions and labels at once. The format is fully specified by
+  /// the user.
   /// @note This is a convenience function to avoid having to pass `output`
   /// everywhere.
   template <typename... T>
