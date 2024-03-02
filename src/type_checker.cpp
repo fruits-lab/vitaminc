@@ -125,7 +125,10 @@ void TypeChecker::Visit(BreakStmtNode& break_stmt) {
 }
 
 void TypeChecker::Visit(ContinueStmtNode& continue_stmt) {
-  // TODO: check if it is in a loop body
+  if (!IsInBodyOf(BodyType::kLoop)) {
+    assert(false);
+    // TODO: 'continue' statement not in loop statement
+  }
 }
 
 void TypeChecker::Visit(ExprStmtNode& expr_stmt) {
