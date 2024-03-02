@@ -1,31 +1,27 @@
-(j: int =
-  0: int
-)
-(i: int)
-(for
-  (=
-    i: int
-    0: int
-  ): int
-  (<
-    i: int
-    5: int
-  ): int
-  (=
-    i: int
-    (+
-      i: int
-      1: int
-    ): int
-  ): int
-  (=
-    j: int
-    (+
-      j: int
-      1: int
-    ): int
-  ): int
-)
-(ret
-  0: int
-)
+ProgramNode
+  CompoundStmtNode
+    DeclNode j: int
+      IntConstExprNode 0: int
+    DeclNode i: int
+    ForStmtNode
+      LoopInitNode
+        SimpleAssignmentExprNode int
+          i: int
+          IntConstExprNode 0: int
+      BinaryExprNode int <
+        IdExprNode i: int
+        IntConstExprNode 5: int
+      SimpleAssignmentExprNode int
+        i: int
+        BinaryExprNode int +
+          IdExprNode i: int
+          IntConstExprNode 1: int
+      CompoundStmtNode
+        ExprStmtNode
+          SimpleAssignmentExprNode int
+            j: int
+            BinaryExprNode int +
+              IdExprNode j: int
+              IntConstExprNode 1: int
+    ReturnStmtNode
+      IntConstExprNode 0: int

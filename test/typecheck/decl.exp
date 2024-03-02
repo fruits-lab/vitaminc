@@ -1,4 +1,5 @@
-(i: int =
-  0: int
-)
-(j: int)
+ProgramNode
+  CompoundStmtNode
+    DeclNode i: int
+      IntConstExprNode 0: int
+    DeclNode j: int

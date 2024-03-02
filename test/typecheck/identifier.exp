@@ -1,9 +1,11 @@
-(_: int)
-(__: int)
-(i: int)
-(_1: int)
-(_i: int)
-(_i1: int)
-(_i1_: int)
-(_I: int)
-(_I1: int)
+ProgramNode
+  CompoundStmtNode
+    DeclNode _: int
+    DeclNode __: int
+    DeclNode i: int
+    DeclNode _1: int
+    DeclNode _i: int
+    DeclNode _i1: int
+    DeclNode _i1_: int
+    DeclNode _I: int
+    DeclNode _I1: int

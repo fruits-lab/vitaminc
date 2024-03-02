@@ -1,10 +1,9 @@
-(func five: int
-  (ret
-    5: int
-  )
-)
-(ret
-  (call
-    five: int
-  ): int
-)
+ProgramNode
+  FuncDefNode five: int
+    CompoundStmtNode
+      ReturnStmtNode
+        IntConstExprNode 5: int
+  CompoundStmtNode
+    ReturnStmtNode
+      FunCallExprNode int
+        IdExprNode five: int

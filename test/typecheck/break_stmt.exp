@@ -1,9 +1,10 @@
-(for
-  ()
-  ()
-  ()
-  (break)
-)
-(ret
-  0: int
-)
+ProgramNode
+  CompoundStmtNode
+    ForStmtNode
+      LoopInitNode
+        NullStmtNode
+      NullStmtNode
+      NullStmtNode
+      BreakStmtNode
+    ReturnStmtNode
+      IntConstExprNode 0: int

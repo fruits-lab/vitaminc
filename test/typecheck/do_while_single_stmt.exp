@@ -1,21 +1,18 @@
-(i: int =
-  5: int
-)
-(do
-  (=
-    i: int
-    (-
-      i: int
-      1: int
-    ): int
-  ): int
-)
-(while
-  (>
-    i: int
-    0: int
-  ): int
-)
-(ret
-  i: int
-)
+ProgramNode
+  CompoundStmtNode
+    DeclNode i: int
+      IntConstExprNode 5: int
+    WhileStmtNode
+      // Do
+      ExprStmtNode
+        SimpleAssignmentExprNode int
+          i: int
+          BinaryExprNode int -
+            IdExprNode i: int
+            IntConstExprNode 1: int
+      // While
+      BinaryExprNode int >
+        IdExprNode i: int
+        IntConstExprNode 0: int
+    ReturnStmtNode
+      IdExprNode i: int
