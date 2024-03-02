@@ -1,1 +1,4 @@
-1: int
+ProgramNode
+  CompoundStmtNode
+    ExprStmtNode
+      IntConstExprNode 1: int

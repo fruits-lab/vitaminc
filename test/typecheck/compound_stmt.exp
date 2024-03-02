@@ -1,19 +1,16 @@
-(i: int =
-  1: int
-)
-(=
-  i: int
-  (+
-    i: int
-    1: int
-  ): int
-): int
-(j: int =
-  2: int
-)
-(ret
-  (+
-    i: int
-    j: int
-  ): int
-)
+ProgramNode
+  CompoundStmtNode
+    DeclNode i: int
+      IntConstExprNode 1: int
+    ExprStmtNode
+      SimpleAssignmentExprNode int
+        i: int
+        BinaryExprNode int +
+          IdExprNode i: int
+          IntConstExprNode 1: int
+    DeclNode j: int
+      IntConstExprNode 2: int
+    ReturnStmtNode
+      BinaryExprNode int +
+        IdExprNode i: int
+        IdExprNode j: int

@@ -1,1 +1,4 @@
-()
+ProgramNode
+  CompoundStmtNode
+    ExprStmtNode
+      NullStmtNode

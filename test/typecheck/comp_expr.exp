@@ -1,24 +1,26 @@
-(>
-  1: int
-  2: int
-): int
-(<
-  1: int
-  2: int
-): int
-(>=
-  1: int
-  2: int
-): int
-(<=
-  1: int
-  2: int
-): int
-(==
-  1: int
-  2: int
-): int
-(!=
-  1: int
-  2: int
-): int
+ProgramNode
+  CompoundStmtNode
+    ExprStmtNode
+      BinaryExprNode int >
+        IntConstExprNode 1: int
+        IntConstExprNode 2: int
+    ExprStmtNode
+      BinaryExprNode int <
+        IntConstExprNode 1: int
+        IntConstExprNode 2: int
+    ExprStmtNode
+      BinaryExprNode int >=
+        IntConstExprNode 1: int
+        IntConstExprNode 2: int
+    ExprStmtNode
+      BinaryExprNode int <=
+        IntConstExprNode 1: int
+        IntConstExprNode 2: int
+    ExprStmtNode
+      BinaryExprNode int ==
+        IntConstExprNode 1: int
+        IntConstExprNode 2: int
+    ExprStmtNode
+      BinaryExprNode int !=
+        IntConstExprNode 1: int
+        IntConstExprNode 2: int

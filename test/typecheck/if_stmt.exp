@@ -1,15 +1,14 @@
-(i: int =
-  2: int
-)
-(if
-  (>
-    i: int
-    0: int
-  ): int
-  (ret
-    i: int
-  )
-)
-(ret
-  0: int
-)
+ProgramNode
+  CompoundStmtNode
+    DeclNode i: int
+      IntConstExprNode 2: int
+    IfStmtNode
+      BinaryExprNode int >
+        IdExprNode i: int
+        IntConstExprNode 0: int
+      // Then
+      CompoundStmtNode
+        ReturnStmtNode
+          IdExprNode i: int
+    ReturnStmtNode
+      IntConstExprNode 0: int

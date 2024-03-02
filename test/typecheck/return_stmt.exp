@@ -1,3 +1,4 @@
-(ret
-  0: int
-)
+ProgramNode
+  CompoundStmtNode
+    ReturnStmtNode
+      IntConstExprNode 0: int

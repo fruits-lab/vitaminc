@@ -1,34 +1,30 @@
-(i: int =
-  5: int
-)
-(if
-  (<
-    i: int
-    10: int
-  ): int
-  (if
-    (<
-      i: int
-      5: int
-    ): int
-    (=
-      i: int
-      2: int
-    ): int
-  )
-  (else
-    (=
-      i: int
-      7: int
-    ): int
-  )
-)
-(else
-  (=
-    i: int
-    15: int
-  ): int
-)
-(ret
-  i: int
-)
+ProgramNode
+  CompoundStmtNode
+    DeclNode i: int
+      IntConstExprNode 5: int
+    IfStmtNode
+      BinaryExprNode int <
+        IdExprNode i: int
+        IntConstExprNode 10: int
+      // Then
+      IfStmtNode
+        BinaryExprNode int <
+          IdExprNode i: int
+          IntConstExprNode 5: int
+        // Then
+        ExprStmtNode
+          SimpleAssignmentExprNode int
+            i: int
+            IntConstExprNode 2: int
+        // Else
+        ExprStmtNode
+          SimpleAssignmentExprNode int
+            i: int
+            IntConstExprNode 7: int
+      // Else
+      ExprStmtNode
+        SimpleAssignmentExprNode int
+          i: int
+          IntConstExprNode 15: int
+    ReturnStmtNode
+      IdExprNode i: int

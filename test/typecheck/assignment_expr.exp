@@ -1,8 +1,9 @@
-(a: int)
-(=
-  a: int
-  (+
-    3: int
-    2: int
-  ): int
-): int
+ProgramNode
+  CompoundStmtNode
+    DeclNode a: int
+    ExprStmtNode
+      SimpleAssignmentExprNode int
+        a: int
+        BinaryExprNode int +
+          IntConstExprNode 3: int
+          IntConstExprNode 2: int
