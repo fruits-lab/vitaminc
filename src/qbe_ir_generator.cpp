@@ -218,7 +218,7 @@ void QbeIrGenerator::Visit(const WhileStmtNode& while_stmt) {
   }
   WriteOut_("{}\n", body_label);
   label_views_of_jumpable_blocks.push_back(
-      {.entry = body_label.name(), .exit = end_label.name()});
+      {.entry = pred_label.name(), .exit = end_label.name()});
   while_stmt.loop_body->Accept(*this);
   label_views_of_jumpable_blocks.pop_back();
   if (!while_stmt.is_do_while) {
@@ -235,8 +235,13 @@ void QbeIrGenerator::Visit(const WhileStmtNode& while_stmt) {
 
 void QbeIrGenerator::Visit(const ForStmtNode& for_stmt) {
   int label_num = NextLabelNum();
+
+  // A for loop consists of three clauses: loop initialization, predicate, and a
+  // step: for (init; pred; step) { body; }
+
   auto pred_label = BlockLabel{"pred", label_num};
   auto body_label = BlockLabel{"loop_body", label_num};
+  auto step_label = BlockLabel{"step", label_num};
   auto end_label = BlockLabel{"end", label_num};
 
   // A for statement's loop initialization is the first clause to execute,
@@ -254,9 +259,10 @@ void QbeIrGenerator::Visit(const ForStmtNode& for_stmt) {
   }
   WriteOut_("{}\n", body_label);
   label_views_of_jumpable_blocks.push_back(
-      {.entry = pred_label.name(), .exit = end_label.name()});
+      {.entry = step_label.name(), .exit = end_label.name()});
   for_stmt.loop_body->Accept(*this);
   label_views_of_jumpable_blocks.pop_back();
+  WriteOut_("{}\n", step_label);
   for_stmt.step->Accept(*this);
   WriteOut_(
       "jmp {}\n"
@@ -275,7 +281,11 @@ void QbeIrGenerator::Visit(const BreakStmtNode& break_stmt) {
   WriteOut_("jmp {}\n", BlockLabel{label_views_of_jumpable_blocks.back().exit});
 }
 
-void QbeIrGenerator::Visit(const ContinueStmtNode& continue_stmt) {}
+void QbeIrGenerator::Visit(const ContinueStmtNode& continue_stmt) {
+  assert(!label_views_of_jumpable_blocks.empty());
+  WriteOut_("jmp {}\n",
+            BlockLabel{label_views_of_jumpable_blocks.back().entry});
+}
 
 void QbeIrGenerator::Visit(const ExprStmtNode& expr_stmt) {
   expr_stmt.expr->Accept(*this);
