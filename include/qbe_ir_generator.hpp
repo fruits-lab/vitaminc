@@ -39,15 +39,14 @@ class QbeIrGenerator : public NonModifyingVisitor {
   /// @note This is a convenience function to avoid having to pass `output`
   /// everywhere.
   template <typename... T>
-  void WriteOut_(
-      fmt::format_string<T...> format,
-      T&&... args) {  // NOLINT(cppcoreguidelines-missing-std-forward):
-                      // `make_format_args` takes rvalue references.
-    VWriteOut_(format, fmt::make_format_args(args...));
+  void Write_(fmt::format_string<T...> format,
+              T&&... args) {  // NOLINT(cppcoreguidelines-missing-std-forward):
+                              // `make_format_args` takes rvalue references.
+    VWrite_(format, fmt::make_format_args(args...));
   }
 
   /// @note This function is not meant to be used directly.
-  void VWriteOut_(fmt::string_view format, fmt::format_args args);
+  void VWrite_(fmt::string_view format, fmt::format_args args);
 };
 
 #endif  // QBE_IR_GENERATOR_HPP_
