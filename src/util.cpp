@@ -1,6 +1,5 @@
 #include "util.hpp"
 
-#include <cstddef>
 #include <string>
 
 std::string Indenter::Indent() const {

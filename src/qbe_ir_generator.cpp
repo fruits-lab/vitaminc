@@ -1,17 +1,19 @@
 #include "qbe_ir_generator.hpp"
 
+#include <fmt/core.h>
 #include <fmt/ostream.h>
 
 #include <cassert>
 #include <map>
 #include <memory>
 #include <string>
+#include <string_view>
 #include <variant>
+#include <vector>
 
 #include "ast.hpp"
 #include "operator.hpp"
 #include "qbe/sigil.hpp"
-#include "visitor.hpp"
 
 using namespace qbe;
 

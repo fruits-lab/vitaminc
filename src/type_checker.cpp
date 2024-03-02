@@ -4,10 +4,13 @@
 #include <cassert>
 #include <cstdint>
 #include <memory>
+#include <utility>
 #include <variant>
 #include <vector>
 
 #include "ast.hpp"
+#include "symbol.hpp"
+#include "type.hpp"
 
 namespace {
 
