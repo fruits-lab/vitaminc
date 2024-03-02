@@ -224,6 +224,7 @@ void QbeIrGenerator::Visit(const WhileStmtNode& while_stmt) {
   if (!while_stmt.is_do_while) {
     WriteOut_("jmp {}\n", pred_label);
   } else {
+    WriteOut_("{}\n", pred_label);
     while_stmt.predicate->Accept(*this);
     int predicate_num = num_recorder.NumOfPrevExpr();
     WriteOut_("jnz {}, {}, {}\n", FuncScopeTemp{predicate_num}, body_label,
