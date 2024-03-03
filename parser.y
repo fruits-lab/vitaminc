@@ -55,6 +55,7 @@
 %token <std::string> ID
 %token INT
 %token IF ELSE
+%token SWITCH
 %token EQ NE LE GE
 %token DO WHILE FOR
 %token CONTINUE BREAK RETURN
@@ -72,7 +73,7 @@
 %nterm <std::unique_ptr<FuncDefNode>> func_def
 %nterm <std::vector<std::unique_ptr<FuncDefNode>>> func_def_list_opt
 %nterm <std::unique_ptr<LoopInitNode>> loop_init
-%nterm <std::unique_ptr<StmtNode>> stmt jump_stmt
+%nterm <std::unique_ptr<StmtNode>> stmt jump_stmt selection_stmt
 %nterm <std::unique_ptr<CompoundStmtNode>> compound_stmt
 %nterm <std::vector<CompoundStmtNode::Item>> block_item_list block_item_list_opt
 %nterm <CompoundStmtNode::Item> block_item
@@ -156,12 +157,17 @@ decl: type_specifier ID ';' { $$ = std::make_unique<DeclNode>($2, $1); }
 
 stmt: expr_opt ';' { $$ = std::make_unique<ExprStmtNode>($1); }
     | compound_stmt { $$ = $1; }
-    | IF '(' expr ')' stmt %prec IF_WITHOUT_ELSE { $$ = std::make_unique<IfStmtNode>($3, $5); }
-    | IF '(' expr ')' stmt ELSE stmt { $$ = std::make_unique<IfStmtNode>($3, $5, $7); }
+    | selection_stmt { $$ = $1; }
     | WHILE '(' expr ')' stmt { $$ = std::make_unique<WhileStmtNode>($3, $5); }
     | DO stmt WHILE '(' expr ')' ';' { $$ = std::make_unique<WhileStmtNode>($5, $2, true); }
     | FOR '(' loop_init expr_opt ';' expr_opt ')' stmt { $$ = std::make_unique<ForStmtNode>($3, $4, $6, $8); }
     | jump_stmt { $$ = $1; }
+    ;
+
+/* 6.8.4 Selection statements */
+selection_stmt: IF '(' expr ')' stmt %prec IF_WITHOUT_ELSE { $$ = std::make_unique<IfStmtNode>($3, $5); }
+    | IF '(' expr ')' stmt ELSE stmt { $$ = std::make_unique<IfStmtNode>($3, $5, $7); }
+    | SWITCH '(' expr ')' stmt { $$ = nullptr; }
     ;
 
 /* 6.8.6 Jump statements */
