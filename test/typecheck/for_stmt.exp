@@ -1,27 +1,28 @@
 ProgramNode
-  CompoundStmtNode
-    DeclNode j: int
-      IntConstExprNode 0: int
-    DeclNode i: int
-    ForStmtNode
-      LoopInitNode
+  FuncDefNode main: int
+    CompoundStmtNode
+      DeclNode j: int
+        IntConstExprNode 0: int
+      DeclNode i: int
+      ForStmtNode
+        LoopInitNode
+          SimpleAssignmentExprNode int
+            i: int
+            IntConstExprNode 0: int
+        BinaryExprNode int <
+          IdExprNode i: int
+          IntConstExprNode 5: int
         SimpleAssignmentExprNode int
           i: int
-          IntConstExprNode 0: int
-      BinaryExprNode int <
-        IdExprNode i: int
-        IntConstExprNode 5: int
-      SimpleAssignmentExprNode int
-        i: int
-        BinaryExprNode int +
-          IdExprNode i: int
-          IntConstExprNode 1: int
-      CompoundStmtNode
-        ExprStmtNode
-          SimpleAssignmentExprNode int
-            j: int
-            BinaryExprNode int +
-              IdExprNode j: int
-              IntConstExprNode 1: int
-    ReturnStmtNode
-      IntConstExprNode 0: int
+          BinaryExprNode int +
+            IdExprNode i: int
+            IntConstExprNode 1: int
+        CompoundStmtNode
+          ExprStmtNode
+            SimpleAssignmentExprNode int
+              j: int
+              BinaryExprNode int +
+                IdExprNode j: int
+                IntConstExprNode 1: int
+      ReturnStmtNode
+        IntConstExprNode 0: int

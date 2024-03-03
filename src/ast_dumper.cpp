@@ -106,7 +106,6 @@ void AstDumper::Visit(const ProgramNode& program) {
   for (const auto& func_def : program.func_def_list) {
     func_def->Accept(*this);
   }
-  program.body->Accept(*this);
   indenter_.DecreaseLevel();
 }
 

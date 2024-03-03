@@ -114,15 +114,13 @@ struct CompoundStmtNode : public StmtNode {
 /// @brief Root of the entire program.
 struct ProgramNode : public AstNode {
   /// @note vector of move-only elements are move-only
-  ProgramNode(std::vector<std::unique_ptr<FuncDefNode>> func_def_list,
-              std::unique_ptr<CompoundStmtNode> body)
-      : func_def_list{std::move(func_def_list)}, body{std::move(body)} {}
+  ProgramNode(std::vector<std::unique_ptr<FuncDefNode>> func_def_list)
+      : func_def_list{std::move(func_def_list)} {}
 
   void Accept(NonModifyingVisitor&) const override;
   void Accept(ModifyingVisitor&) override;
 
   std::vector<std::unique_ptr<FuncDefNode>> func_def_list;
-  std::unique_ptr<CompoundStmtNode> body;
 };
 
 struct IfStmtNode : public StmtNode {

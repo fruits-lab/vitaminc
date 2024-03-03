@@ -1,11 +1,12 @@
 ProgramNode
-  CompoundStmtNode
-    DeclNode _: int
-    DeclNode __: int
-    DeclNode i: int
-    DeclNode _1: int
-    DeclNode _i: int
-    DeclNode _i1: int
-    DeclNode _i1_: int
-    DeclNode _I: int
-    DeclNode _I1: int
+  FuncDefNode main: int
+    CompoundStmtNode
+      DeclNode _: int
+      DeclNode __: int
+      DeclNode i: int
+      DeclNode _1: int
+      DeclNode _i: int
+      DeclNode _i1: int
+      DeclNode _i1_: int
+      DeclNode _I: int
+      DeclNode _I1: int

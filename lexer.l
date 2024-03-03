@@ -57,7 +57,6 @@ for { return yy::parser::make_FOR(); }
 do { return yy::parser::make_DO(); }
 if { return yy::parser::make_IF(); }
 int { return yy::parser::make_INT(); }
-main { return yy::parser::make_MAIN(); }
 return { return yy::parser::make_RETURN(); }
 while { return yy::parser::make_WHILE(); }
 

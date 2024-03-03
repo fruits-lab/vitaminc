@@ -127,10 +127,10 @@ void QbeIrGenerator::Visit(const DeclNode& decl) {
 }
 
 void QbeIrGenerator::Visit(const FuncDefNode& func_def) {
-  Write_(
-      "export function w ${}() {{\n"
-      "@start\n",
-      func_def.id);
+  int label_num = NextLabelNum();
+  auto start_label = BlockLabel{"start", label_num};
+  Write_("export function w ${}() {{\n", func_def.id);
+  WriteLabel_(start_label);
   func_def.body->Accept(*this);
   Write_("}}\n");
 }
@@ -154,12 +154,6 @@ void QbeIrGenerator::Visit(const ProgramNode& program) {
   for (const auto& func_def : program.func_def_list) {
     func_def->Accept(*this);
   }
-
-  Write_(
-      "export function w $main() {{\n"
-      "@start\n");
-  program.body->Accept(*this);
-  Write_("}}");
 }
 
 void QbeIrGenerator::Visit(const IfStmtNode& if_stmt) {

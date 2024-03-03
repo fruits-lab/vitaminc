@@ -1,18 +1,19 @@
 ProgramNode
-  CompoundStmtNode
-    ExprStmtNode
-      BinaryExprNode int *
-        IntConstExprNode 4: int
-        BinaryExprNode int -
-          IntConstExprNode 5: int
-          IntConstExprNode 2: int
-    ExprStmtNode
-      BinaryExprNode int /
-        IntConstExprNode 10: int
+  FuncDefNode main: int
+    CompoundStmtNode
+      ExprStmtNode
         BinaryExprNode int *
-          BinaryExprNode int +
+          IntConstExprNode 4: int
+          BinaryExprNode int -
             IntConstExprNode 5: int
-            IntConstExprNode 1: int
-          IntConstExprNode 3: int
-    ReturnStmtNode
-      IntConstExprNode 0: int
+            IntConstExprNode 2: int
+      ExprStmtNode
+        BinaryExprNode int /
+          IntConstExprNode 10: int
+          BinaryExprNode int *
+            BinaryExprNode int +
+              IntConstExprNode 5: int
+              IntConstExprNode 1: int
+            IntConstExprNode 3: int
+      ReturnStmtNode
+        IntConstExprNode 0: int

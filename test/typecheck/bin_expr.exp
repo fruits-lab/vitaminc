@@ -1,36 +1,37 @@
 ProgramNode
-  CompoundStmtNode
-    ExprStmtNode
-      BinaryExprNode int +
-        IntConstExprNode 1: int
-        IntConstExprNode 2: int
-    ExprStmtNode
-      BinaryExprNode int -
-        IntConstExprNode 1: int
-        IntConstExprNode 2: int
-    ExprStmtNode
-      BinaryExprNode int *
-        IntConstExprNode 1: int
-        IntConstExprNode 2: int
-    ExprStmtNode
-      BinaryExprNode int /
-        IntConstExprNode 1: int
-        IntConstExprNode 2: int
-    ExprStmtNode
-      BinaryExprNode int %
-        IntConstExprNode 1: int
-        IntConstExprNode 2: int
-    ExprStmtNode
-      BinaryExprNode int +
+  FuncDefNode main: int
+    CompoundStmtNode
+      ExprStmtNode
         BinaryExprNode int +
-          BinaryExprNode int -
-            IntConstExprNode 1: int
-            BinaryExprNode int *
-              IntConstExprNode 2: int
-              IntConstExprNode 3: int
-          BinaryExprNode int /
-            IntConstExprNode 4: int
-            IntConstExprNode 5: int
-        BinaryExprNode int %
-          IntConstExprNode 6: int
+          IntConstExprNode 1: int
           IntConstExprNode 2: int
+      ExprStmtNode
+        BinaryExprNode int -
+          IntConstExprNode 1: int
+          IntConstExprNode 2: int
+      ExprStmtNode
+        BinaryExprNode int *
+          IntConstExprNode 1: int
+          IntConstExprNode 2: int
+      ExprStmtNode
+        BinaryExprNode int /
+          IntConstExprNode 1: int
+          IntConstExprNode 2: int
+      ExprStmtNode
+        BinaryExprNode int %
+          IntConstExprNode 1: int
+          IntConstExprNode 2: int
+      ExprStmtNode
+        BinaryExprNode int +
+          BinaryExprNode int +
+            BinaryExprNode int -
+              IntConstExprNode 1: int
+              BinaryExprNode int *
+                IntConstExprNode 2: int
+                IntConstExprNode 3: int
+            BinaryExprNode int /
+              IntConstExprNode 4: int
+              IntConstExprNode 5: int
+          BinaryExprNode int %
+            IntConstExprNode 6: int
+            IntConstExprNode 2: int

@@ -1,4 +1,5 @@
 ProgramNode
-  CompoundStmtNode
-    ReturnStmtNode
-      IntConstExprNode 0: int
+  FuncDefNode main: int
+    CompoundStmtNode
+      ReturnStmtNode
+        IntConstExprNode 0: int

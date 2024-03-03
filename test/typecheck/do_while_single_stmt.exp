@@ -1,18 +1,19 @@
 ProgramNode
-  CompoundStmtNode
-    DeclNode i: int
-      IntConstExprNode 5: int
-    WhileStmtNode
-      // Do
-      ExprStmtNode
-        SimpleAssignmentExprNode int
-          i: int
-          BinaryExprNode int -
-            IdExprNode i: int
-            IntConstExprNode 1: int
-      // While
-      BinaryExprNode int >
+  FuncDefNode main: int
+    CompoundStmtNode
+      DeclNode i: int
+        IntConstExprNode 5: int
+      WhileStmtNode
+        // Do
+        ExprStmtNode
+          SimpleAssignmentExprNode int
+            i: int
+            BinaryExprNode int -
+              IdExprNode i: int
+              IntConstExprNode 1: int
+        // While
+        BinaryExprNode int >
+          IdExprNode i: int
+          IntConstExprNode 0: int
+      ReturnStmtNode
         IdExprNode i: int
-        IntConstExprNode 0: int
-    ReturnStmtNode
-      IdExprNode i: int

@@ -53,7 +53,7 @@
 
 %token <int> NUM
 %token <std::string> ID
-%token INT MAIN
+%token INT
 %token IF ELSE
 %token EQ NE LE GE
 %token DO WHILE FOR
@@ -75,7 +75,6 @@
 %nterm <std::unique_ptr<CompoundStmtNode>> compound_stmt
 %nterm <std::vector<CompoundStmtNode::Item>> block_item_list block_item_list_opt
 %nterm <CompoundStmtNode::Item> block_item
-%nterm <std::unique_ptr<CompoundStmtNode>> main_func
 
 %precedence '='
 %left EQ NE
@@ -105,8 +104,8 @@
 
 %%
 // TODO: support global variables
-entry: func_def_list_opt main_func {
-    program = std::make_unique<ProgramNode>($1, $2);
+entry: func_def_list_opt {
+    program = std::make_unique<ProgramNode>($1);
   }
   ;
 
@@ -120,11 +119,6 @@ func_def_list_opt: func_def_list_opt func_def {
 
 func_def: INT ID '(' ')' compound_stmt {
     $$ = std::make_unique<FuncDefNode>($2, $5, ExprType::kInt);
-  }
-  ;
-
-main_func: INT MAIN '(' ')' compound_stmt {
-    $$ = $5;
   }
   ;
 
