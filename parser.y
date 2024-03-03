@@ -168,14 +168,14 @@ stmt: expr_opt ';' { $$ = std::make_unique<ExprStmtNode>($1); }
 /* 6.8.1 Labeled statements */
 labeled_stmt: /* TODO: identifier label */
     /* TODO: constant expression */
-    CASE expr ':' stmt { $$ = nullptr; }
-    | DEFAULT ':' stmt { $$ = nullptr; }
+    CASE expr ':' stmt { $$ = std::make_unique<CaseStmtNode>($2, $4); }
+    | DEFAULT ':' stmt { $$ = std::make_unique<DefaultStmtNode>($3); }
     ;
 
 /* 6.8.4 Selection statements */
 selection_stmt: IF '(' expr ')' stmt %prec IF_WITHOUT_ELSE { $$ = std::make_unique<IfStmtNode>($3, $5); }
     | IF '(' expr ')' stmt ELSE stmt { $$ = std::make_unique<IfStmtNode>($3, $5, $7); }
-    | SWITCH '(' expr ')' stmt { $$ = nullptr; }
+    | SWITCH '(' expr ')' stmt { $$ = std::make_unique<SwitchStmtNode>($3, $5); }
     ;
 
 /* 6.8.6 Jump statements */

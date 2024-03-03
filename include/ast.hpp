@@ -195,6 +195,49 @@ struct ContinueStmtNode : public StmtNode {
   void Accept(ModifyingVisitor&) override;
 };
 
+struct SwitchStmtNode : public StmtNode {
+  SwitchStmtNode(std::unique_ptr<ExprNode> ctrl, std::unique_ptr<StmtNode> stmt)
+      : ctrl{std::move(ctrl)}, stmt{std::move(stmt)} {}
+
+  void Accept(NonModifyingVisitor&) const override;
+  void Accept(ModifyingVisitor&) override;
+
+  /// @brief The expression that controls which case to jump to.
+  std::unique_ptr<ExprNode> ctrl;
+  std::unique_ptr<StmtNode> stmt;
+};
+
+struct LabeledStmtNode  // NOLINT(cppcoreguidelines-special-member-functions)
+    : public StmtNode {
+  void Accept(NonModifyingVisitor&) const override;
+  void Accept(ModifyingVisitor&) override;
+
+  /// @note To make the class abstract.
+  ~LabeledStmtNode() override = 0;
+};
+
+/// @brief A specialized labeled statement with label `case`.
+struct CaseStmtNode : public LabeledStmtNode {
+  CaseStmtNode(std::unique_ptr<ExprNode> expr, std::unique_ptr<StmtNode> stmt)
+      : expr{std::move(expr)}, stmt{std::move(stmt)} {}
+
+  void Accept(NonModifyingVisitor&) const override;
+  void Accept(ModifyingVisitor&) override;
+
+  std::unique_ptr<ExprNode> expr;
+  std::unique_ptr<StmtNode> stmt;
+};
+
+/// @brief A specialized labeled statement with label `default`.
+struct DefaultStmtNode : public LabeledStmtNode {
+  DefaultStmtNode(std::unique_ptr<StmtNode> stmt) : stmt{std::move(stmt)} {}
+
+  void Accept(NonModifyingVisitor&) const override;
+  void Accept(ModifyingVisitor&) override;
+
+  std::unique_ptr<StmtNode> stmt;
+};
+
 /// @note Any expression can be turned into a statement by adding a semicolon
 /// to the end of the expression.
 struct ExprStmtNode : public StmtNode {
