@@ -39,6 +39,7 @@ bracket [\(\)\{\}\[\]]
 
   /* delimiters */
 ";" { return yytext[0]; }
+":" { return yytext[0]; }
 
   /* operators */
 {operator} { return yytext[0]; }
@@ -53,6 +54,8 @@ bracket [\(\)\{\}\[\]]
 break { return yy::parser::make_BREAK(); }
 continue { return yy::parser::make_CONTINUE(); }
 switch { return yy::parser::make_SWITCH(); }
+case { return yy::parser::make_CASE(); }
+default { return yy::parser::make_DEFAULT(); }
 else { return yy::parser::make_ELSE(); }
 for { return yy::parser::make_FOR(); }
 do { return yy::parser::make_DO(); }
