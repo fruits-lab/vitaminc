@@ -1,38 +1,39 @@
 ProgramNode
-  CompoundStmtNode
-    DeclNode k: int
-      IntConstExprNode 0: int
-    ForStmtNode
-      LoopInitNode
-        DeclNode i: int
-          IntConstExprNode 0: int
-      BinaryExprNode int <
-        IdExprNode i: int
-        IntConstExprNode 5: int
-      SimpleAssignmentExprNode int
-        i: int
-        BinaryExprNode int +
+  FuncDefNode main: int
+    CompoundStmtNode
+      DeclNode k: int
+        IntConstExprNode 0: int
+      ForStmtNode
+        LoopInitNode
+          DeclNode i: int
+            IntConstExprNode 0: int
+        BinaryExprNode int <
           IdExprNode i: int
-          IntConstExprNode 1: int
-      CompoundStmtNode
-        ForStmtNode
-          LoopInitNode
-            DeclNode j: int
-              IntConstExprNode 0: int
-          BinaryExprNode int <
-            IdExprNode j: int
-            IntConstExprNode 5: int
-          SimpleAssignmentExprNode int
-            j: int
-            BinaryExprNode int +
+          IntConstExprNode 5: int
+        SimpleAssignmentExprNode int
+          i: int
+          BinaryExprNode int +
+            IdExprNode i: int
+            IntConstExprNode 1: int
+        CompoundStmtNode
+          ForStmtNode
+            LoopInitNode
+              DeclNode j: int
+                IntConstExprNode 0: int
+            BinaryExprNode int <
               IdExprNode j: int
-              IntConstExprNode 1: int
-          CompoundStmtNode
-            ExprStmtNode
-              SimpleAssignmentExprNode int
-                k: int
-                BinaryExprNode int +
-                  IdExprNode k: int
-                  IntConstExprNode 1: int
-    ReturnStmtNode
-      IntConstExprNode 0: int
+              IntConstExprNode 5: int
+            SimpleAssignmentExprNode int
+              j: int
+              BinaryExprNode int +
+                IdExprNode j: int
+                IntConstExprNode 1: int
+            CompoundStmtNode
+              ExprStmtNode
+                SimpleAssignmentExprNode int
+                  k: int
+                  BinaryExprNode int +
+                    IdExprNode k: int
+                    IntConstExprNode 1: int
+      ReturnStmtNode
+        IntConstExprNode 0: int

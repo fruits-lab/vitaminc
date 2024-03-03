@@ -80,11 +80,17 @@ void TypeChecker::Visit(CompoundStmtNode& compound_stmt) {
 
 void TypeChecker::Visit(ProgramNode& program) {
   env_.PushScope();
+  bool has_main_func = false;
   for (auto& func_def : program.func_def_list) {
+    if (func_def->id == "main") {
+      has_main_func = true;
+    }
     func_def->Accept(*this);
   }
 
-  program.body->Accept(*this);
+  if (!has_main_func) {
+    // TODO: no main function
+  }
   env_.PopScope();
 }
 

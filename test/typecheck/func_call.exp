@@ -3,7 +3,8 @@ ProgramNode
     CompoundStmtNode
       ReturnStmtNode
         IntConstExprNode 5: int
-  CompoundStmtNode
-    ReturnStmtNode
-      FunCallExprNode int
-        IdExprNode five: int
+  FuncDefNode main: int
+    CompoundStmtNode
+      ReturnStmtNode
+        FunCallExprNode int
+          IdExprNode five: int

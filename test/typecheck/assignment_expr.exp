@@ -1,9 +1,10 @@
 ProgramNode
-  CompoundStmtNode
-    DeclNode a: int
-    ExprStmtNode
-      SimpleAssignmentExprNode int
-        a: int
-        BinaryExprNode int +
-          IntConstExprNode 3: int
-          IntConstExprNode 2: int
+  FuncDefNode main: int
+    CompoundStmtNode
+      DeclNode a: int
+      ExprStmtNode
+        SimpleAssignmentExprNode int
+          a: int
+          BinaryExprNode int +
+            IntConstExprNode 3: int
+            IntConstExprNode 2: int

@@ -1,14 +1,15 @@
 ProgramNode
-  CompoundStmtNode
-    DeclNode i: int
-      IntConstExprNode 2: int
-    IfStmtNode
-      BinaryExprNode int >
-        IdExprNode i: int
-        IntConstExprNode 0: int
-      // Then
-      CompoundStmtNode
-        ReturnStmtNode
+  FuncDefNode main: int
+    CompoundStmtNode
+      DeclNode i: int
+        IntConstExprNode 2: int
+      IfStmtNode
+        BinaryExprNode int >
           IdExprNode i: int
-    ReturnStmtNode
-      IntConstExprNode 0: int
+          IntConstExprNode 0: int
+        // Then
+        CompoundStmtNode
+          ReturnStmtNode
+            IdExprNode i: int
+      ReturnStmtNode
+        IntConstExprNode 0: int

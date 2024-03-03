@@ -1,5 +1,6 @@
 ProgramNode
-  CompoundStmtNode
-    DeclNode i: int
-      IntConstExprNode 0: int
-    DeclNode j: int
+  FuncDefNode main: int
+    CompoundStmtNode
+      DeclNode i: int
+        IntConstExprNode 0: int
+      DeclNode j: int

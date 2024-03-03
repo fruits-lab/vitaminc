@@ -1,26 +1,27 @@
 ProgramNode
-  CompoundStmtNode
-    ExprStmtNode
-      BinaryExprNode int >
-        IntConstExprNode 1: int
-        IntConstExprNode 2: int
-    ExprStmtNode
-      BinaryExprNode int <
-        IntConstExprNode 1: int
-        IntConstExprNode 2: int
-    ExprStmtNode
-      BinaryExprNode int >=
-        IntConstExprNode 1: int
-        IntConstExprNode 2: int
-    ExprStmtNode
-      BinaryExprNode int <=
-        IntConstExprNode 1: int
-        IntConstExprNode 2: int
-    ExprStmtNode
-      BinaryExprNode int ==
-        IntConstExprNode 1: int
-        IntConstExprNode 2: int
-    ExprStmtNode
-      BinaryExprNode int !=
-        IntConstExprNode 1: int
-        IntConstExprNode 2: int
+  FuncDefNode main: int
+    CompoundStmtNode
+      ExprStmtNode
+        BinaryExprNode int >
+          IntConstExprNode 1: int
+          IntConstExprNode 2: int
+      ExprStmtNode
+        BinaryExprNode int <
+          IntConstExprNode 1: int
+          IntConstExprNode 2: int
+      ExprStmtNode
+        BinaryExprNode int >=
+          IntConstExprNode 1: int
+          IntConstExprNode 2: int
+      ExprStmtNode
+        BinaryExprNode int <=
+          IntConstExprNode 1: int
+          IntConstExprNode 2: int
+      ExprStmtNode
+        BinaryExprNode int ==
+          IntConstExprNode 1: int
+          IntConstExprNode 2: int
+      ExprStmtNode
+        BinaryExprNode int !=
+          IntConstExprNode 1: int
+          IntConstExprNode 2: int

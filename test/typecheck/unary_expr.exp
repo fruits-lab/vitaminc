@@ -1,32 +1,33 @@
 ProgramNode
-  CompoundStmtNode
-    DeclNode i: int
-      IntConstExprNode 1: int
-    ExprStmtNode
-      UnaryExprNode int --
-        IdExprNode i: int
-    ExprStmtNode
-      UnaryExprNode int ++
-        IdExprNode i: int
-    ExprStmtNode
-      SimpleAssignmentExprNode int
-        i: int
-        UnaryExprNode int +
+  FuncDefNode main: int
+    CompoundStmtNode
+      DeclNode i: int
+        IntConstExprNode 1: int
+      ExprStmtNode
+        UnaryExprNode int --
           IdExprNode i: int
-    ExprStmtNode
-      SimpleAssignmentExprNode int
-        i: int
-        UnaryExprNode int -
+      ExprStmtNode
+        UnaryExprNode int ++
           IdExprNode i: int
-    ExprStmtNode
-      SimpleAssignmentExprNode int
-        i: int
-        UnaryExprNode int !
-          IdExprNode i: int
-    ExprStmtNode
-      SimpleAssignmentExprNode int
-        i: int
-        UnaryExprNode int ~
-          IdExprNode i: int
-    ReturnStmtNode
-      IntConstExprNode 0: int
+      ExprStmtNode
+        SimpleAssignmentExprNode int
+          i: int
+          UnaryExprNode int +
+            IdExprNode i: int
+      ExprStmtNode
+        SimpleAssignmentExprNode int
+          i: int
+          UnaryExprNode int -
+            IdExprNode i: int
+      ExprStmtNode
+        SimpleAssignmentExprNode int
+          i: int
+          UnaryExprNode int !
+            IdExprNode i: int
+      ExprStmtNode
+        SimpleAssignmentExprNode int
+          i: int
+          UnaryExprNode int ~
+            IdExprNode i: int
+      ReturnStmtNode
+        IntConstExprNode 0: int
