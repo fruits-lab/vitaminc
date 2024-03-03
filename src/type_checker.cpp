@@ -20,6 +20,7 @@ enum class BodyType : std::uint8_t {
   /// @brief No special semantics.
   kNone = 0,
   kLoop,
+  kSwitch,
 };
 
 /// @note Constructs that enters a body (compound statement) should add their
@@ -138,6 +139,37 @@ void TypeChecker::Visit(ContinueStmtNode& continue_stmt) {
     assert(false);
     // TODO: 'continue' statement not in loop statement
   }
+}
+
+void TypeChecker::Visit(SwitchStmtNode& switch_stmt) {
+  switch_stmt.ctrl->Accept(*this);
+  if (switch_stmt.ctrl->type != ExprType::kInt) {
+    // TODO: statement requires expression of integer type
+  }
+  body_types.push_back(BodyType::kSwitch);
+  switch_stmt.stmt->Accept(*this);
+  body_types.pop_back();
+  // TODO: No two of the case constant expressions in the same switch statement
+  // shall have the same value (we need constant expression support on this).
+  // TODO: At most one default label in a switch statement.
+}
+
+void TypeChecker::Visit(CaseStmtNode& case_stmt) {
+  if (!IsInBodyOf(BodyType::kSwitch)) {
+    // TODO: 'case' statement not in switch statement
+  }
+  case_stmt.expr->Accept(*this);
+  if (case_stmt.expr->type != ExprType::kInt) {
+    // TODO: expression is not an integer constant expression
+  }
+  case_stmt.stmt->Accept(*this);
+}
+
+void TypeChecker::Visit(DefaultStmtNode& default_stmt) {
+  if (!IsInBodyOf(BodyType::kSwitch)) {
+    // TODO: 'default' statement not in switch statement
+  }
+  default_stmt.stmt->Accept(*this);
 }
 
 void TypeChecker::Visit(ExprStmtNode& expr_stmt) {
