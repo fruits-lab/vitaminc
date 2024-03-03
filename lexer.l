@@ -52,6 +52,7 @@ bracket [\(\)\{\}\[\]]
   /* keywords */
 break { return yy::parser::make_BREAK(); }
 continue { return yy::parser::make_CONTINUE(); }
+switch { return yy::parser::make_SWITCH(); }
 else { return yy::parser::make_ELSE(); }
 for { return yy::parser::make_FOR(); }
 do { return yy::parser::make_DO(); }
