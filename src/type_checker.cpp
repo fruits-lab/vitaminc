@@ -127,8 +127,7 @@ void TypeChecker::Visit(ReturnStmtNode& ret_stmt) {
 }
 
 void TypeChecker::Visit(BreakStmtNode& break_stmt) {
-  // TODO: or a switch body
-  if (!IsInBodyOf(BodyType::kLoop)) {
+  if (!IsInBodyOf(BodyType::kLoop) && !IsInBodyOf(BodyType::kSwitch)) {
     assert(false);
     // TODO: 'break' statement not in loop or switch statement
   }
