@@ -120,6 +120,40 @@ void ContinueStmtNode::Accept(ModifyingVisitor& v) {
   v.Visit(*this);
 }
 
+void SwitchStmtNode::Accept(NonModifyingVisitor& v) const {
+  v.Visit(*this);
+}
+
+void SwitchStmtNode::Accept(ModifyingVisitor& v) {
+  v.Visit(*this);
+}
+
+void LabeledStmtNode::Accept(NonModifyingVisitor& v) const {
+  v.Visit(*this);
+}
+
+void LabeledStmtNode::Accept(ModifyingVisitor& v) {
+  v.Visit(*this);
+}
+
+LabeledStmtNode::~LabeledStmtNode() = default;
+
+void CaseStmtNode::Accept(NonModifyingVisitor& v) const {
+  v.Visit(*this);
+}
+
+void CaseStmtNode::Accept(ModifyingVisitor& v) {
+  v.Visit(*this);
+}
+
+void DefaultStmtNode::Accept(NonModifyingVisitor& v) const {
+  v.Visit(*this);
+}
+
+void DefaultStmtNode::Accept(ModifyingVisitor& v) {
+  v.Visit(*this);
+}
+
 void ExprStmtNode::Accept(NonModifyingVisitor& v) const {
   v.Visit(*this);
 }
