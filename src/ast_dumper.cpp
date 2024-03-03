@@ -86,11 +86,8 @@ void AstDumper::Visit(const FuncDefNode& func_def) {
 void AstDumper::Visit(const LoopInitNode& loop_init) {
   std::cout << indenter_.Indent() << "LoopInitNode\n";
   indenter_.IncreaseLevel();
-  if (std::holds_alternative<std::unique_ptr<DeclNode>>(loop_init.clause)) {
-    std::get<std::unique_ptr<DeclNode>>(loop_init.clause)->Accept(*this);
-  } else {
-    std::get<std::unique_ptr<ExprNode>>(loop_init.clause)->Accept(*this);
-  }
+  std::visit([this](auto&& clause) { clause->Accept(*this); },
+             loop_init.clause);
   indenter_.DecreaseLevel();
 }
 
