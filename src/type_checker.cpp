@@ -140,17 +140,27 @@ void TypeChecker::Visit(ContinueStmtNode& continue_stmt) {
   }
 }
 
+namespace {
+/// @brief A shared state to convey the presence of a default label in a switch
+/// statement.
+/// @note To allow nested switch statements, the state is stacked.
+auto
+    switch_already_has_default  // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
+    = std::vector<bool>{};
+}  // namespace
+
 void TypeChecker::Visit(SwitchStmtNode& switch_stmt) {
   switch_stmt.ctrl->Accept(*this);
   if (switch_stmt.ctrl->type != ExprType::kInt) {
     // TODO: statement requires expression of integer type
   }
   body_types.push_back(BodyType::kSwitch);
+  switch_already_has_default.push_back(false);
   switch_stmt.stmt->Accept(*this);
+  switch_already_has_default.pop_back();
   body_types.pop_back();
   // TODO: No two of the case constant expressions in the same switch statement
   // shall have the same value (we need constant expression support on this).
-  // TODO: At most one default label in a switch statement.
 }
 
 void TypeChecker::Visit(CaseStmtNode& case_stmt) {
@@ -168,6 +178,11 @@ void TypeChecker::Visit(DefaultStmtNode& default_stmt) {
   if (!IsInBodyOf(BodyType::kSwitch)) {
     // TODO: 'default' statement not in switch statement
   }
+  assert(!switch_already_has_default.empty());
+  if (switch_already_has_default.back()) {
+    // TODO: multiple default labels in one switch
+  }
+  switch_already_has_default.back() = true;
   default_stmt.stmt->Accept(*this);
 }
 
