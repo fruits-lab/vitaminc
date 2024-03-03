@@ -21,6 +21,9 @@ class TypeChecker : public ModifyingVisitor {
   void Visit(ReturnStmtNode&) override;
   void Visit(BreakStmtNode&) override;
   void Visit(ContinueStmtNode&) override;
+  void Visit(SwitchStmtNode&) override;
+  void Visit(CaseStmtNode&) override;
+  void Visit(DefaultStmtNode&) override;
   void Visit(ExprStmtNode&) override;
   void Visit(NullExprNode&) override;
   void Visit(IdExprNode&) override;
