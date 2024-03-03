@@ -1,0 +1,29 @@
+ProgramNode
+  FuncDefNode main: int
+    CompoundStmtNode
+      DeclNode a: int
+        IntConstExprNode 1: int
+      SwitchStmtNode
+        IdExprNode a: int
+        CompoundStmtNode
+          CaseStmtNode
+            IntConstExprNode 1: int
+            ExprStmtNode
+              SimpleAssignmentExprNode int
+                a: int
+                IntConstExprNode 2: int
+          BreakStmtNode
+          CaseStmtNode
+            IntConstExprNode 2: int
+            ExprStmtNode
+              SimpleAssignmentExprNode int
+                a: int
+                IntConstExprNode 3: int
+          BreakStmtNode
+          DefaultStmtNode
+            ExprStmtNode
+              SimpleAssignmentExprNode int
+                a: int
+                IntConstExprNode 4: int
+      ReturnStmtNode
+        IdExprNode a: int
