@@ -167,6 +167,29 @@ void AstDumper::Visit(const ContinueStmtNode& continue_stmt) {
   std::cout << indenter_.Indent() << "ContinueStmtNode\n";
 }
 
+void AstDumper::Visit(const SwitchStmtNode& switch_stmt) {
+  std::cout << indenter_.Indent() << "SwitchStmtNode\n";
+  indenter_.IncreaseLevel();
+  switch_stmt.ctrl->Accept(*this);
+  switch_stmt.stmt->Accept(*this);
+  indenter_.DecreaseLevel();
+}
+
+void AstDumper::Visit(const CaseStmtNode& case_stmt) {
+  std::cout << indenter_.Indent() << "CaseStmtNode\n";
+  indenter_.IncreaseLevel();
+  case_stmt.expr->Accept(*this);
+  case_stmt.stmt->Accept(*this);
+  indenter_.DecreaseLevel();
+}
+
+void AstDumper::Visit(const DefaultStmtNode& default_stmt) {
+  std::cout << indenter_.Indent() << "DefaultStmtNode\n";
+  indenter_.IncreaseLevel();
+  default_stmt.stmt->Accept(*this);
+  indenter_.DecreaseLevel();
+}
+
 void AstDumper::Visit(const ExprStmtNode& expr_stmt) {
   std::cout << indenter_.Indent() << "ExprStmtNode\n";
   indenter_.IncreaseLevel();
