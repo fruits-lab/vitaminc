@@ -41,6 +41,9 @@ bracket [\(\)\{\}\[\]]
 ";" { return yytext[0]; }
 ":" { return yytext[0]; }
 
+  /* commas */
+"," { return yytext[0]; }
+
   /* operators */
 {operator} { return yytext[0]; }
 "--" { return yy::parser::make_DECR(); }

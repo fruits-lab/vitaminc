@@ -53,6 +53,16 @@ void TypeChecker::Visit(DeclNode& decl) {
   }
 }
 
+void TypeChecker::Visit(ParamNode& parameter) {
+  if (env_.Probe(parameter.id)) {
+    // TODO: redefinition of 'id'
+  } else {
+    auto symbol = std::make_unique<SymbolEntry>(parameter.id);
+    symbol->expr_type = parameter.type;
+    env_.Add(std::move(symbol));
+  }
+}
+
 void TypeChecker::Visit(FuncDefNode& func_def) {
   if (env_.Probe(func_def.id)) {
     // TODO: redefinition of function id
@@ -60,6 +70,10 @@ void TypeChecker::Visit(FuncDefNode& func_def) {
     auto symbol = std::make_unique<SymbolEntry>(func_def.id);
     symbol->expr_type = func_def.return_type;
     env_.Add(std::move(symbol));
+  }
+
+  for (auto& parameter : func_def.parameters) {
+    parameter->Accept(*this);
   }
 
   func_def.body->Accept(*this);

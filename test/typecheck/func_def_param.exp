@@ -1,0 +1,23 @@
+ProgramNode
+  FuncDefNode add: int
+    ParamNode a: int
+    ParamNode b: int
+    ParamNode c: int
+    CompoundStmtNode
+      ReturnStmtNode
+        BinaryExprNode int +
+          BinaryExprNode int +
+            IdExprNode a: int
+            IdExprNode b: int
+          IdExprNode c: int
+  FuncDefNode five: int
+    ParamNode d: int
+    CompoundStmtNode
+      ReturnStmtNode
+        BinaryExprNode int +
+          IdExprNode d: int
+          IntConstExprNode 5: int
+  FuncDefNode main: int
+    CompoundStmtNode
+      ReturnStmtNode
+        IntConstExprNode 0: int

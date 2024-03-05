@@ -126,11 +126,21 @@ void QbeIrGenerator::Visit(const DeclNode& decl) {
   id_to_num[decl.id] = id_num;
 }
 
+void QbeIrGenerator::Visit(const ParamNode& parameter) {
+  int id_num = NextLocalNum();
+  id_to_num[parameter.id] = id_num;
+  int reg_num = NextLocalNum();
+  num_recorder.Record(reg_num);
+}
+
 void QbeIrGenerator::Visit(const FuncDefNode& func_def) {
   int label_num = NextLabelNum();
   auto start_label = BlockLabel{"start", label_num};
   Write_("export function w ${}() {{\n", func_def.id);
   WriteLabel_(start_label);
+  for (const auto& parameter : func_def.parameters) {
+    parameter->Accept(*this);
+  }
   func_def.body->Accept(*this);
   Write_("}}\n");
 }
@@ -288,6 +298,7 @@ void QbeIrGenerator::Visit(const NullExprNode& null_expr) {
 void QbeIrGenerator::Visit(const IdExprNode& id_expr) {
   /// @brief Plays the role of a "pointer". Its value has to be loaded to
   /// the register before use.
+  assert(id_to_num.count(id_expr.id) != 0);
   int id_num = id_to_num.at(id_expr.id);
   int reg_num = NextLocalNum();
   WriteInstr_("{} =w loadw {}", FuncScopeTemp{reg_num}, FuncScopeTemp{id_num});

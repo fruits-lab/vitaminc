@@ -71,6 +71,8 @@
 %nterm <std::unique_ptr<ExprNode>> primary_expr
 %nterm <std::unique_ptr<DeclNode>> decl
 %nterm <std::unique_ptr<FuncDefNode>> func_def
+%nterm <std::unique_ptr<ParamNode>> parameter
+%nterm <std::vector<std::unique_ptr<ParamNode>>> parameter_list_opt parameter_list
 %nterm <std::vector<std::unique_ptr<FuncDefNode>>> func_def_list_opt
 %nterm <std::unique_ptr<LoopInitNode>> loop_init
 %nterm <std::unique_ptr<StmtNode>> stmt jump_stmt selection_stmt labeled_stmt
@@ -119,8 +121,28 @@ func_def_list_opt: func_def_list_opt func_def {
   | epsilon { $$ = std::vector<std::unique_ptr<FuncDefNode>>{}; }
   ;
 
-func_def: type_specifier ID '(' ')' compound_stmt {
-    $$ = std::make_unique<FuncDefNode>($2, $5, $1);
+func_def: type_specifier ID '(' parameter_list_opt ')' compound_stmt {
+    $$ = std::make_unique<FuncDefNode>($2, $4, $6, $1);
+  }
+  ;
+
+parameter_list_opt: parameter_list { $$ = $1; }
+  | epsilon { $$ = std::vector<std::unique_ptr<ParamNode>>{}; }
+  ;
+
+parameter_list: parameter_list ',' parameter {
+    auto parameter_list = $1;
+    parameter_list.push_back($3);
+    $$ = std::move(parameter_list);
+  }
+  | parameter {
+    $$ = std::vector<std::unique_ptr<ParamNode>>{};
+    $$.push_back($1);
+  }
+  ;
+
+parameter: type_specifier ID {
+    $$ = std::make_unique<ParamNode>($2, $1);
   }
   ;
 
