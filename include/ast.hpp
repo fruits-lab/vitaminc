@@ -75,15 +75,30 @@ struct DeclNode : public AstNode {
   std::unique_ptr<ExprNode> init;
 };
 
-struct FuncDefNode : public AstNode {
-  FuncDefNode(std::string id, std::unique_ptr<CompoundStmtNode> body,
-              ExprType return_type)
-      : id{std::move(id)}, body{std::move(body)}, return_type{return_type} {}
+struct ParamNode : public AstNode {
+  ParamNode(std::string id, ExprType type) : id{std::move(id)}, type{type} {}
 
   void Accept(NonModifyingVisitor&) const override;
   void Accept(ModifyingVisitor&) override;
 
   std::string id;
+  ExprType type;
+};
+
+struct FuncDefNode : public AstNode {
+  FuncDefNode(std::string id,
+              std::vector<std::unique_ptr<ParamNode>> parameters,
+              std::unique_ptr<CompoundStmtNode> body, ExprType return_type)
+      : id{std::move(id)},
+        parameters{std::move(parameters)},
+        body{std::move(body)},
+        return_type{return_type} {}
+
+  void Accept(NonModifyingVisitor&) const override;
+  void Accept(ModifyingVisitor&) override;
+
+  std::string id;
+  std::vector<std::unique_ptr<ParamNode>> parameters;
   std::unique_ptr<CompoundStmtNode> body;
   ExprType return_type;
 };

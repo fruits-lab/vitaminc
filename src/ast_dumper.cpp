@@ -75,10 +75,18 @@ void AstDumper::Visit(const DeclNode& decl) {
   }
 }
 
+void AstDumper::Visit(const ParamNode& parameter) {
+  std::cout << indenter_.Indent() << "ParamNode " << parameter.id << ": "
+            << ExprTypeToString(parameter.type) << '\n';
+}
+
 void AstDumper::Visit(const FuncDefNode& func_def) {
   std::cout << indenter_.Indent() << "FuncDefNode " << func_def.id << ": "
             << ExprTypeToString(func_def.return_type) << '\n';
   indenter_.IncreaseLevel();
+  for (const auto& parameter : func_def.parameters) {
+    parameter->Accept(*this);
+  }
   func_def.body->Accept(*this);
   indenter_.DecreaseLevel();
 }
