@@ -128,44 +128,40 @@ void QbeIrGenerator::Visit(const DeclNode& decl) {
 
 void QbeIrGenerator::Visit(const ParamNode& parameter) {
   int id_num = NextLocalNum();
+  // TODO: support different data types
+  Write_("w %.{}", id_num);
   id_to_num[parameter.id] = id_num;
+}
+
+void QbeIrGenerator::AllocMemForParams_(
+    const std::vector<std::unique_ptr<ParamNode>>& parameters) {
+  for (const auto& parameter : parameters) {
+    int id_num = id_to_num.at(parameter->id);
+    int reg_num = NextLocalNum();
+    WriteInstr_("{} =l alloc4 4", FuncScopeTemp{reg_num});
+    WriteInstr_("storew {}, {}", FuncScopeTemp{id_num}, FuncScopeTemp{reg_num});
+    // Update to store the new number.
+    id_to_num[parameter->id] = reg_num;
+  }
 }
 
 void QbeIrGenerator::Visit(const FuncDefNode& func_def) {
   int label_num = NextLabelNum();
-  // parameters initialization before going into the body
+  // Parameter allocations go after the start label and before the body.
   auto start_label = BlockLabel{"start", label_num};
   auto body_label = BlockLabel{"body", label_num};
 
   Write_("export\n");
-  if (func_def.parameters.empty()) {
-    Write_("function w ${}() {{\n", func_def.id);
-    WriteLabel_(start_label);
-  } else {
-    std::string func_params{};
-    for (const auto& parameter : func_def.parameters) {
-      parameter->Accept(*this);
-      // TODO: support different data types
-      func_params.append(fmt::format("w %.{}", id_to_num.at(parameter->id)));
-
-      if (parameter != func_def.parameters.back()) {
-        func_params.append(", ");
-      }
-    }
-
-    Write_("function w ${}({}) {{\n", func_def.id, func_params);
-    WriteLabel_(start_label);
-    // allocate memory for parameters
-    for (const auto& parameter : func_def.parameters) {
-      int reg_num = NextLocalNum();
-      int id_num = id_to_num.at(parameter->id);
-      WriteInstr_("{} =l alloc4 4", FuncScopeTemp{reg_num});
-      WriteInstr_("storew {}, {}", FuncScopeTemp{id_num},
-                  FuncScopeTemp{reg_num});
-      id_to_num[parameter->id] = reg_num;
+  Write_("function w ${}(", func_def.id);
+  for (const auto& parameter : func_def.parameters) {
+    parameter->Accept(*this);
+    if (parameter != func_def.parameters.back()) {
+      Write_(", ");
     }
   }
-
+  Write_(") {{\n");
+  WriteLabel_(start_label);
+  AllocMemForParams_(func_def.parameters);
   WriteLabel_(body_label);
   func_def.body->Accept(*this);
   Write_("}}\n");
