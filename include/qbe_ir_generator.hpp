@@ -76,6 +76,11 @@ class QbeIrGenerator : public NonModifyingVisitor {
 
   /// @note This function is not meant to be used directly.
   void VWrite_(fmt::string_view format, fmt::format_args args);
+
+  /// @brief Called by the code generation of `FuncDefNode` to allocate memory
+  /// for the parameters. The value of the parameters are stored in their
+  /// corresponding memory locations.
+  void AllocMemForParams_(const std::vector<std::unique_ptr<ParamNode>>&);
 };
 
 #endif  // QBE_IR_GENERATOR_HPP_
