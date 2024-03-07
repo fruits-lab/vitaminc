@@ -4,7 +4,9 @@
 #include <fmt/core.h>
 
 #include <iosfwd>
+#include <memory>
 #include <utility>
+#include <vector>
 
 #include "ast.hpp"
 #include "qbe/sigil.hpp"
