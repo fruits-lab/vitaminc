@@ -70,6 +70,8 @@
 %nterm <std::unique_ptr<ExprNode>> postfix_expr
 %nterm <std::unique_ptr<ExprNode>> primary_expr
 %nterm <std::unique_ptr<DeclNode>> decl
+%nterm <std::unique_ptr<ArgExprNode>> arg
+%nterm <std::vector<std::unique_ptr<ArgExprNode>>> arg_list_opt arg_list
 %nterm <std::unique_ptr<FuncDefNode>> func_def
 %nterm <std::unique_ptr<ParamNode>> parameter
 %nterm <std::vector<std::unique_ptr<ParamNode>>> parameter_list_opt parameter_list
@@ -252,7 +254,27 @@ unary_expr: postfix_expr { $$ = $1; }
 /* 6.5.2 Postfix operators */
 postfix_expr: primary_expr { $$ = $1; }
   /* TODO: support arguments */
-  | postfix_expr '(' ')' { $$ = std::make_unique<FunCallExprNode>($1); }
+  | postfix_expr '(' arg_list_opt ')' { $$ = std::make_unique<FunCallExprNode>($1, $3); }
+  ;
+
+arg_list_opt: arg_list { $$ = $1; }
+  | epsilon { $$ = std::vector<std::unique_ptr<ArgExprNode>>{}; }
+  ;
+
+arg_list: arg_list ',' arg {
+    auto arg_list = $1;
+    arg_list.push_back($3);
+    $$ = std::move(arg_list);
+  }
+  | arg {
+    $$ = std::vector<std::unique_ptr<ArgExprNode>>{};
+    $$.push_back($1);
+  }
+  ;
+
+arg: expr {
+    $$ = std::make_unique<ArgExprNode>($1);
+  }
   ;
 
 primary_expr: ID { $$ = std::make_unique<IdExprNode>($1); }

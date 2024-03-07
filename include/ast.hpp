@@ -288,14 +288,25 @@ struct IntConstExprNode : public ExprNode {
   int val;
 };
 
+struct ArgExprNode : public ExprNode {
+  ArgExprNode(std::unique_ptr<ExprNode> arg) : arg{std::move(arg)} {}
+
+  void Accept(NonModifyingVisitor&) const override;
+  void Accept(ModifyingVisitor&) override;
+
+  std::unique_ptr<ExprNode> arg;
+};
+
 struct FunCallExprNode : public ExprNode {
-  FunCallExprNode(std::unique_ptr<ExprNode> func_expr)
-      : func_expr{std::move(func_expr)} {}
+  FunCallExprNode(std::unique_ptr<ExprNode> func_expr,
+                  std::vector<std::unique_ptr<ArgExprNode>> args)
+      : func_expr{std::move(func_expr)}, args{std::move(args)} {}
 
   void Accept(NonModifyingVisitor&) const override;
   void Accept(ModifyingVisitor&) override;
 
   std::unique_ptr<ExprNode> func_expr;
+  std::vector<std::unique_ptr<ArgExprNode>> args;
 };
 
 struct UnaryExprNode : public ExprNode {

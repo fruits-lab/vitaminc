@@ -1,0 +1,39 @@
+ProgramNode
+  FuncDefNode sum: int
+    ParamNode a: int
+    ParamNode b: int
+    ParamNode c: int
+    CompoundStmtNode
+      ReturnStmtNode
+        BinaryExprNode int +
+          BinaryExprNode int +
+            IdExprNode a: int
+            IdExprNode b: int
+          IdExprNode c: int
+  FuncDefNode add_five: int
+    ParamNode d: int
+    CompoundStmtNode
+      ReturnStmtNode
+        BinaryExprNode int +
+          IdExprNode d: int
+          IntConstExprNode 5: int
+  FuncDefNode main: int
+    CompoundStmtNode
+      DeclNode a: int
+        FunCallExprNode int
+          IdExprNode sum: int
+          ArgExprNode int
+            IntConstExprNode 1: int
+          ArgExprNode int
+            IntConstExprNode 2: int
+          ArgExprNode int
+            IntConstExprNode 3: int
+      DeclNode b: int
+        BinaryExprNode int +
+          IdExprNode a: int
+          IntConstExprNode 4: int
+      ReturnStmtNode
+        FunCallExprNode int
+          IdExprNode add_five: int
+          ArgExprNode int
+            IdExprNode b: int

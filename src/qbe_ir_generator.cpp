@@ -333,11 +333,31 @@ void QbeIrGenerator::Visit(const IntConstExprNode& int_expr) {
   num_recorder.Record(num);
 }
 
+void QbeIrGenerator::Visit(const ArgExprNode& arg_expr) {
+  arg_expr.arg->Accept(*this);
+}
+
 void QbeIrGenerator::Visit(const FunCallExprNode& call_expr) {
   const auto* id_expr = dynamic_cast<IdExprNode*>((call_expr.func_expr).get());
   assert(id_expr);
   const int res_num = NextLocalNum();
-  WriteInstr_("{} =w call ${}()", FuncScopeTemp{res_num}, id_expr->id);
+
+  std::vector<int> arg_nums{};
+  for (const auto& arg : call_expr.args) {
+    arg->Accept(*this);
+    const int arg_num = num_recorder.NumOfPrevExpr();
+    arg_nums.push_back(arg_num);
+  }
+
+  Write_(kIndentStr);
+  Write_("{} =w call ${}(", FuncScopeTemp{res_num}, id_expr->id);
+  for (const auto& arg_num : arg_nums) {
+    Write_("w %.{}", arg_num);
+    if (arg_num != arg_nums.back()) {
+      Write_(", ");
+    }
+  }
+  Write_(")\n");
   num_recorder.Record(res_num);
 }
 

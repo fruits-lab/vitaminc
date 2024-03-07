@@ -220,9 +220,19 @@ void TypeChecker::Visit(IntConstExprNode& int_expr) {
   int_expr.type = ExprType::kInt;
 }
 
+void TypeChecker::Visit(ArgExprNode& arg_expr) {
+  arg_expr.arg->Accept(*this);
+  arg_expr.type = arg_expr.arg->type;
+}
+
 void TypeChecker::Visit(FunCallExprNode& call_expr) {
   call_expr.func_expr->Accept(*this);
   call_expr.type = call_expr.func_expr->type;
+
+  // TODO: check argument type with parameter type
+  for (auto& arg : call_expr.args) {
+    arg->Accept(*this);
+  }
 }
 
 void TypeChecker::Visit(UnaryExprNode& unary_expr) {

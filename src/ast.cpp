@@ -194,6 +194,14 @@ void IntConstExprNode::Accept(ModifyingVisitor& v) {
   v.Visit(*this);
 }
 
+void ArgExprNode::Accept(NonModifyingVisitor& v) const {
+  v.Visit(*this);
+}
+
+void ArgExprNode::Accept(ModifyingVisitor& v) {
+  v.Visit(*this);
+}
+
 void FunCallExprNode::Accept(NonModifyingVisitor& v) const {
   v.Visit(*this);
 }
