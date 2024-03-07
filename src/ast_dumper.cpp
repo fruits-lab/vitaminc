@@ -219,12 +219,22 @@ void AstDumper::Visit(const IntConstExprNode& int_expr) {
             << ExprTypeToString(int_expr.type) << '\n';
 }
 
+void AstDumper::Visit(const ArgExprNode& arg_expr) {
+  std::cout << indenter_.Indent() << "ArgExprNode "
+            << ExprTypeToString(arg_expr.type) << '\n';
+  indenter_.IncreaseLevel();
+  arg_expr.arg->Accept(*this);
+  indenter_.DecreaseLevel();
+}
+
 void AstDumper::Visit(const FunCallExprNode& call_expr) {
   std::cout << indenter_.Indent() << "FunCallExprNode "
             << ExprTypeToString(call_expr.type) << '\n';
   indenter_.IncreaseLevel();
   call_expr.func_expr->Accept(*this);
-  // TODO: dump parameters, if there's any
+  for (const auto& arg : call_expr.args) {
+    arg->Accept(*this);
+  }
   indenter_.DecreaseLevel();
 }
 
