@@ -4,6 +4,7 @@
 #include <fmt/ostream.h>
 
 #include <cassert>
+#include <cstddef>
 #include <map>
 #include <memory>
 #include <string>
@@ -307,6 +308,165 @@ void QbeIrGenerator::Visit(const ContinueStmtNode& continue_stmt) {
   assert(!label_views_of_jumpable_blocks.empty());
   WriteInstr_("jmp {}",
               BlockLabel{label_views_of_jumpable_blocks.back().entry});
+}
+
+namespace {
+
+struct CaseInfo {
+  /// @note This is a non-owning pointer that points to the expression of the
+  /// case.
+  const ExprNode* expr;
+  std::shared_ptr<BlockLabel> label;
+};
+
+struct SwitchInfo {
+  std::vector<CaseInfo> case_infos{};
+  /// @note `nullptr` if no default label exists.
+  std::shared_ptr<BlockLabel> default_label = nullptr;
+  std::shared_ptr<BlockLabel> exit_label;
+};
+
+/// @brief The shared states passed around during the generation of a switch.
+/// @note To allow nested switch statements, the information is stacked.
+auto switch_infos  // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
+    = std::vector<std::shared_ptr<SwitchInfo>>{};
+
+/// @brief The label of the next condition depends on whether we've already
+/// handled the last one and whether there is a default label.
+std::unique_ptr<BlockLabel> GetNextCondLabel(
+    bool is_last_cond, const std::shared_ptr<BlockLabel>& default_label) {
+  if (is_last_cond && default_label) {
+    return std::make_unique<BlockLabel>(default_label->name());
+  }
+  if (is_last_cond) {
+    return std::make_unique<BlockLabel>(
+        switch_infos.back()->exit_label->name());
+  }
+  return std::make_unique<BlockLabel>("switch_cond", NextLabelNum());
+}
+
+}  // namespace
+
+void QbeIrGenerator::Visit(const SwitchStmtNode& switch_stmt) {
+  // The structure of a switch statement, including the labeled statements
+  // inside, is represented in the following pseudo IR:
+  //
+  // %1 = ... ctrl ...
+  //  jmp @cond.1
+  // # { The enclosing curly brace of the switch statement.
+  //  ... unreachable code ...
+  // @case.2:
+  //  ... body ...
+  //  jmp @exit  # break
+  // @case.3:
+  //  ... body ...
+  // @default.4:
+  //  ... body ...
+  // @case.5:
+  //  ... body ...
+  //  jmp @exit  # break
+  // # } The enclosing curly brace of the switch statement.
+  // # The jmp is intentionally placed, so that the conditions are never touch
+  // # twice.
+  // # A label to avoid invalid consecutive jumps.
+  // @switch_bottom.6
+  //  jmp @exit
+  // @cond.1:
+  //  %2 =w ... case expr ...
+  //  %3 =w ceqw %1, %2
+  //  jnz %3, @case.2, @cond.7
+  // @cond.7:
+  //  %4 =w ... case expr ...
+  //  %5 =w ceqw %1, %4
+  //  jnz %5, @case.3, @cond.8
+  // @cond.8:
+  //  %8 =w ... case expr ...
+  //  %9 =w ceqw %1, %8
+  // # If no case matches, jump to the default case.
+  // # If no default case exists, jump to the exit label instead.
+  //  jnz %9, @case.5, @default.4
+  // @exit:
+  // ... statements after the switch statement ...
+  //
+  // The first part contains the case labels and the default label, while the
+  // second part contains the conditions matching the control expression
+  // with the case expressions.
+  // The switch statement first jumps to the second part, which then jumps back
+  // to the first part. This ensures that each part is executed only once.
+  // NOTE:
+  // (1) Case labels are generated first to collect information needed for
+  //     the conditions.
+  // (2) Evaluation of case expressions is done in the condition part.
+
+  WriteComment_("switch");
+  switch_infos.push_back(std::make_shared<SwitchInfo>());
+  switch_stmt.ctrl->Accept(*this);
+  const auto ctrl_num = num_recorder.NumOfPrevExpr();
+  auto cond_label = BlockLabel{"switch_cond", NextLabelNum()};
+  WriteInstr_("jmp {}", cond_label);
+
+  GenerateCases_(switch_stmt);
+  GenerateConditions_(switch_stmt, cond_label, ctrl_num);
+
+  WriteLabel_(*switch_infos.back()->exit_label);
+  switch_infos.pop_back();
+}
+
+void QbeIrGenerator::GenerateCases_(const SwitchStmtNode& switch_stmt) {
+  auto this_switch_info = switch_infos.back();
+  this_switch_info->exit_label =
+      std::make_shared<BlockLabel>("switch_exit", NextLabelNum());
+  label_views_of_jumpable_blocks.push_back(
+      {// The break statement only jumps to the exit label; the entry label is
+       // irrelevant.
+       .entry = "",
+       .exit = this_switch_info->exit_label->name()});
+  switch_stmt.stmt->Accept(*this);
+  label_views_of_jumpable_blocks.pop_back();
+  WriteLabel_(BlockLabel{"switch_bottom", NextLabelNum()});
+  WriteInstr_("jmp {}", *this_switch_info->exit_label);
+}
+
+void QbeIrGenerator::GenerateConditions_(const SwitchStmtNode& switch_stmt,
+                                         const BlockLabel& first_cond_label,
+                                         int ctrl_num) {
+  auto this_switch_info = switch_infos.back();
+  auto cond_label = std::make_unique<BlockLabel>(first_cond_label.name());
+  for (auto i = std::size_t{0}, e = this_switch_info->case_infos.size(); i < e;
+       ++i) {
+    WriteLabel_(*cond_label);
+    const auto& case_info = this_switch_info->case_infos.at(i);
+    case_info.expr->Accept(*this);
+    const auto expr_num = num_recorder.NumOfPrevExpr();
+    const auto match_num = NextLocalNum();
+    WriteInstr_("{} =w ceqw {}, {}", FuncScopeTemp{match_num},
+                FuncScopeTemp{ctrl_num}, FuncScopeTemp{expr_num});
+    const auto is_last_cond = i == e - 1;
+    cond_label =
+        GetNextCondLabel(is_last_cond, this_switch_info->default_label);
+    WriteInstr_("jnz {}, {}, {}", FuncScopeTemp{match_num}, *case_info.label,
+                *cond_label);
+  }
+}
+
+void QbeIrGenerator::Visit(const CaseStmtNode& case_stmt) {
+  assert(!switch_infos.empty());
+  // The evaluation of the case expression is done in the condition part.
+  auto case_label = std::make_shared<BlockLabel>("switch_case", NextLabelNum());
+  switch_infos.back()->case_infos.push_back(
+      CaseInfo{case_stmt.expr.get(), case_label});
+  auto& this_case_info = switch_infos.back()->case_infos.back();
+  WriteLabel_(*this_case_info.label);
+  case_stmt.stmt->Accept(*this);
+}
+
+void QbeIrGenerator::Visit(const DefaultStmtNode& default_stmt) {
+  assert(!switch_infos.empty());
+  auto this_switch_info = switch_infos.back();
+  this_switch_info->default_label =
+      std::make_shared<BlockLabel>("switch_default", NextLabelNum());
+  WriteLabel_(*this_switch_info->default_label);
+  default_stmt.stmt->Accept(*this);
 }
 
 void QbeIrGenerator::Visit(const ExprStmtNode& expr_stmt) {
