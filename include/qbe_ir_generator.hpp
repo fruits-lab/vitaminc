@@ -26,6 +26,9 @@ class QbeIrGenerator : public NonModifyingVisitor {
   void Visit(const ReturnStmtNode&) override;
   void Visit(const BreakStmtNode&) override;
   void Visit(const ContinueStmtNode&) override;
+  void Visit(const SwitchStmtNode&) override;
+  void Visit(const CaseStmtNode&) override;
+  void Visit(const DefaultStmtNode&) override;
   void Visit(const ExprStmtNode&) override;
   void Visit(const NullExprNode&) override;
   void Visit(const IdExprNode&) override;
@@ -84,6 +87,15 @@ class QbeIrGenerator : public NonModifyingVisitor {
   /// for the parameters. The value of the parameters are stored in their
   /// corresponding memory locations.
   void AllocMemForParams_(const std::vector<std::unique_ptr<ParamNode>>&);
+
+  /// @brief Called by the code generation of `SwitchStmtNode` to generate the
+  /// statement of its cases.
+  void GenerateCases_(const SwitchStmtNode&);
+  /// @brief Called by the code generation of `SwitchStmtNode` to generate the
+  /// condition matching of the cases.
+  void GenerateConditions_(const SwitchStmtNode&,
+                           const qbe::BlockLabel& first_cond_label,
+                           int ctrl_num);
 };
 
 #endif  // QBE_IR_GENERATOR_HPP_
