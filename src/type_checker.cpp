@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cassert>
+#include <cstddef>
 #include <cstdint>
 #include <memory>
 #include <utility>
@@ -69,11 +70,12 @@ void TypeChecker::Visit(FuncDefNode& func_def) {
   } else {
     auto symbol = std::make_unique<SymbolEntry>(func_def.id);
     symbol->expr_type = func_def.return_type;
-    env_.Add(std::move(symbol));
-  }
+    for (auto& parameter : func_def.parameters) {
+      parameter->Accept(*this);
+      symbol->param_types.push_back(parameter->type);
+    }
 
-  for (auto& parameter : func_def.parameters) {
-    parameter->Accept(*this);
+    env_.Add(std::move(symbol));
   }
 
   func_def.body->Accept(*this);
@@ -229,9 +231,20 @@ void TypeChecker::Visit(FunCallExprNode& call_expr) {
   call_expr.func_expr->Accept(*this);
   call_expr.type = call_expr.func_expr->type;
 
-  // TODO: check argument type with parameter type
-  for (auto& arg : call_expr.args) {
-    arg->Accept(*this);
+  const auto* id_expr = dynamic_cast<IdExprNode*>((call_expr.func_expr).get());
+  assert(id_expr);
+  auto func_def = env_.LookUp(id_expr->id);
+  auto& param_types = func_def->param_types;
+  auto& args = call_expr.args;
+  if (param_types.size() != args.size()) {
+    // TODO: argument size doesn't match
+  }
+
+  for (auto i = std::size_t{0}; i < args.size(); ++i) {
+    args.at(i)->Accept(*this);
+    if (args.at(i)->type != param_types.at(i)) {
+      // TODO: unmatched argument type
+    }
   }
 }
 

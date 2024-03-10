@@ -5,12 +5,14 @@
 #include <memory>
 #include <string>
 #include <utility>
+#include <vector>
 
 #include "type.hpp"
 
 struct SymbolEntry {
   std::string id;
   ExprType expr_type{ExprType::kUnknown};
+  std::vector<ExprType> param_types{};
 
   SymbolEntry(std::string id) : id{std::move(id)} {}
 };
