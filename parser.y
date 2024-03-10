@@ -254,7 +254,7 @@ unary_expr: postfix_expr { $$ = $1; }
 /* 6.5.2 Postfix operators */
 postfix_expr: primary_expr { $$ = $1; }
   /* TODO: support arguments */
-  | postfix_expr '(' arg_list_opt ')' { $$ = std::make_unique<FunCallExprNode>($1, $3); }
+  | postfix_expr '(' arg_list_opt ')' { $$ = std::make_unique<FuncCallExprNode>($1, $3); }
   ;
 
 arg_list_opt: arg_list { $$ = $1; }

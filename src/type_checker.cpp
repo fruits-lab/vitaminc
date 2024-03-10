@@ -227,7 +227,7 @@ void TypeChecker::Visit(ArgExprNode& arg_expr) {
   arg_expr.type = arg_expr.arg->type;
 }
 
-void TypeChecker::Visit(FunCallExprNode& call_expr) {
+void TypeChecker::Visit(FuncCallExprNode& call_expr) {
   call_expr.func_expr->Accept(*this);
   call_expr.type = call_expr.func_expr->type;
 

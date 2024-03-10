@@ -202,11 +202,11 @@ void ArgExprNode::Accept(ModifyingVisitor& v) {
   v.Visit(*this);
 }
 
-void FunCallExprNode::Accept(NonModifyingVisitor& v) const {
+void FuncCallExprNode::Accept(NonModifyingVisitor& v) const {
   v.Visit(*this);
 }
 
-void FunCallExprNode::Accept(ModifyingVisitor& v) {
+void FuncCallExprNode::Accept(ModifyingVisitor& v) {
   v.Visit(*this);
 }
 
