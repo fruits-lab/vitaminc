@@ -497,7 +497,7 @@ void QbeIrGenerator::Visit(const ArgExprNode& arg_expr) {
   arg_expr.arg->Accept(*this);
 }
 
-void QbeIrGenerator::Visit(const FunCallExprNode& call_expr) {
+void QbeIrGenerator::Visit(const FuncCallExprNode& call_expr) {
   const auto* id_expr = dynamic_cast<IdExprNode*>((call_expr.func_expr).get());
   assert(id_expr);
   const int res_num = NextLocalNum();

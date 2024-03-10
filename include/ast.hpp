@@ -297,9 +297,9 @@ struct ArgExprNode : public ExprNode {
   std::unique_ptr<ExprNode> arg;
 };
 
-struct FunCallExprNode : public ExprNode {
-  FunCallExprNode(std::unique_ptr<ExprNode> func_expr,
-                  std::vector<std::unique_ptr<ArgExprNode>> args)
+struct FuncCallExprNode : public ExprNode {
+  FuncCallExprNode(std::unique_ptr<ExprNode> func_expr,
+                   std::vector<std::unique_ptr<ArgExprNode>> args)
       : func_expr{std::move(func_expr)}, args{std::move(args)} {}
 
   void Accept(NonModifyingVisitor&) const override;

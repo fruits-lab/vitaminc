@@ -6,5 +6,5 @@ ProgramNode
   FuncDefNode main: int
     CompoundStmtNode
       ReturnStmtNode
-        FunCallExprNode int
+        FuncCallExprNode int
           IdExprNode five: int

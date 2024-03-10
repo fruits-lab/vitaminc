@@ -227,8 +227,8 @@ void AstDumper::Visit(const ArgExprNode& arg_expr) {
   indenter_.DecreaseLevel();
 }
 
-void AstDumper::Visit(const FunCallExprNode& call_expr) {
-  std::cout << indenter_.Indent() << "FunCallExprNode "
+void AstDumper::Visit(const FuncCallExprNode& call_expr) {
+  std::cout << indenter_.Indent() << "FuncCallExprNode "
             << ExprTypeToString(call_expr.type) << '\n';
   indenter_.IncreaseLevel();
   call_expr.func_expr->Accept(*this);
