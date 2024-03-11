@@ -184,6 +184,10 @@ void QbeIrGenerator::Visit(const CompoundStmtNode& compound_stmt) {
 }
 
 void QbeIrGenerator::Visit(const ProgramNode& program) {
+  // Generate the data of builtin functions.
+  Write_("data {} = align 1 {{ b \"%d\\012\\000\", }}\n",
+         GlobalPointer{"builtin_print_format"});
+
   for (const auto& func_def : program.func_def_list) {
     func_def->Accept(*this);
   }
@@ -510,7 +514,12 @@ void QbeIrGenerator::Visit(const FuncCallExprNode& call_expr) {
   }
 
   Write_(kIndentStr);
-  Write_("{} =w call ${}(", FuncScopeTemp{res_num}, id_expr->id);
+  if (id_expr->id == "__builtin_print") {
+    Write_("{} =w call $printf(", FuncScopeTemp{res_num});
+    Write_("l {}, ", GlobalPointer{"builtin_print_format"});
+  } else {
+    Write_("{} =w call ${}(", FuncScopeTemp{res_num}, id_expr->id);
+  }
   for (const auto& arg_num : arg_nums) {
     Write_("w %.{}", arg_num);
     if (arg_num != arg_nums.back()) {
