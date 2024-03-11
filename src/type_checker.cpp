@@ -95,8 +95,19 @@ void TypeChecker::Visit(CompoundStmtNode& compound_stmt) {
   env_.PopScope();
 }
 
+void TypeChecker::InstallBuiltins_(ScopeStack& env) {
+  // The supported builtins are:
+  // - int __builtin_print(int)
+
+  auto symbol = std::make_unique<SymbolEntry>("__builtin_print");
+  symbol->expr_type = ExprType::kInt;
+  symbol->param_types.push_back(ExprType::kInt);
+  env.Add(std::move(symbol));
+}
+
 void TypeChecker::Visit(ProgramNode& program) {
   env_.PushScope();
+  InstallBuiltins_(env_);
   bool has_main_func = false;
   for (auto& func_def : program.func_def_list) {
     if (func_def->id == "main") {
