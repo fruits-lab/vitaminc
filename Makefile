@@ -10,13 +10,6 @@ LEX = lex
 YACC = bison
 # -d: generate header with default name
 YFLAGS = --verbose --debug -d -Wcounterexamples -Wall
-# Check if -j multiple jobs is configured.
-PARALLEL = false
-ifneq (,$(findstring j,$(MAKEFLAGS)))
-	PARALLEL := true
-endif
-# Export variable to be visible for test/Makefile.
-export PARALLEL
 
 # The Flex or Bison-generated files are not included.
 SRC := $(shell find src/ -name "*.cpp") main.cpp
@@ -31,9 +24,7 @@ DEPS = $(OBJS:.o=.d)
 all: $(TARGET)
 
 test: $(TARGET)
-	# Flags are omitted to prevent passing the -j option since Turnt, our testing tool,
-	# has its own mechanism for parallel builds.
-	cd test/ && $(MAKE) test MAKEFLAGS=
+	$(MAKE) -C test/ test
 
 $(TARGET): $(OBJS)
 	$(CXX) $(CXXFLAGS) $(OBJS) -o $@ $(LDLIBS)
