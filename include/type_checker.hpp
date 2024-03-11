@@ -37,6 +37,9 @@ class TypeChecker : public ModifyingVisitor {
 
  private:
   ScopeStack& env_;
+
+  /// @brief Installs the built-in functions into the environment.
+  void InstallBuiltins_(ScopeStack&);
 };
 
 #endif  // TYPE_CHECKER_HPP_
