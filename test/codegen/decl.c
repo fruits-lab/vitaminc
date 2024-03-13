@@ -6,5 +6,6 @@
 int main() {
   int i;
   int j = 2;
-  return j;
+  __builtin_print(j);
+  return 0;
 }
