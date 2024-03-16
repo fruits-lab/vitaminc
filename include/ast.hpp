@@ -54,53 +54,45 @@ struct StmtNode : public AstNode {
 /// @note This is an abstract class.
 struct ExprNode  // NOLINT(cppcoreguidelines-special-member-functions)
     : public AstNode {
-  ExprType type = ExprType::kUnknown;
-  bool is_pointer = false;
-
   void Accept(NonModifyingVisitor&) const override;
   void Accept(ModifyingVisitor&) override;
 
   /// @note To make the class abstract.
   ~ExprNode() override = 0;
+
+  Type type = Type{};
 };
 
 struct DeclNode : public AstNode {
-  DeclNode(std::string id, ExprType decl_type, bool is_pointer = false,
-           std::unique_ptr<ExprNode> init = {})
-      : id{std::move(id)},
-        type{decl_type},
-        is_pointer{is_pointer},
-        init{std::move(init)} {}
+  DeclNode(std::string id, Type type, std::unique_ptr<ExprNode> init = {})
+      : id{std::move(id)}, type{type}, init{std::move(init)} {}
 
   void Accept(NonModifyingVisitor&) const override;
   void Accept(ModifyingVisitor&) override;
 
   std::string id;
-  ExprType type;
-  bool is_pointer;
+  Type type;
   std::unique_ptr<ExprNode> init;
 };
 
 struct ParamNode : public AstNode {
-  ParamNode(std::string id, ExprType type, bool is_pointer = false)
-      : id{std::move(id)}, type{type}, is_pointer{is_pointer} {}
+  ParamNode(std::string id, Type type) : id{std::move(id)}, type{type} {}
 
   void Accept(NonModifyingVisitor&) const override;
   void Accept(ModifyingVisitor&) override;
 
   std::string id;
-  ExprType type;
-  bool is_pointer;
+  Type type;
 };
 
 struct FuncDefNode : public AstNode {
   FuncDefNode(std::string id,
               std::vector<std::unique_ptr<ParamNode>> parameters,
-              std::unique_ptr<CompoundStmtNode> body, ExprType return_type)
+              std::unique_ptr<CompoundStmtNode> body, Type type)
       : id{std::move(id)},
         parameters{std::move(parameters)},
         body{std::move(body)},
-        return_type{return_type} {}
+        type{type} {}
 
   void Accept(NonModifyingVisitor&) const override;
   void Accept(ModifyingVisitor&) override;
@@ -108,7 +100,7 @@ struct FuncDefNode : public AstNode {
   std::string id;
   std::vector<std::unique_ptr<ParamNode>> parameters;
   std::unique_ptr<CompoundStmtNode> body;
-  ExprType return_type;
+  Type type;
 };
 
 /// @brief A loop initialization can be either a declaration or an expression.

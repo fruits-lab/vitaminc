@@ -9,22 +9,13 @@
 
 #include "type.hpp"
 
-struct ParamType {
-  ExprType type;
-  bool is_pointer = false;
-
-  ParamType(ExprType type, bool is_pointer = false)
-      : type{type}, is_pointer{is_pointer} {}
-};
-
 struct SymbolEntry {
   std::string id;
-  ExprType expr_type{ExprType::kUnknown};
-  bool is_pointer = false;
-  std::vector<std::unique_ptr<ParamType>> param_types{};
+  Type expr_type;
+  std::vector<Type> param_types{};
 
-  SymbolEntry(std::string id, bool is_pointer = false)
-      : id{std::move(id)}, is_pointer{is_pointer} {}
+  SymbolEntry(std::string id, Type expr_type)
+      : id{std::move(id)}, expr_type{expr_type} {}
 };
 
 class SymbolTable {

@@ -3,10 +3,14 @@ ProgramNode
     CompoundStmtNode
       DeclNode a: int
         IntConstExprNode 10: int
-      DeclNode b: int *
-      DeclNode c: int *
-        UnaryExprNode int &
+      DeclNode b: int*
+      DeclNode c: int*
+        UnaryExprNode int* &
           IdExprNode a: int
+      ExprStmtNode
+        SimpleAssignmentExprNode int*
+          b: int*
+          IdExprNode c: int*
       ReturnStmtNode
         UnaryExprNode int *
-          IdExprNode c: int *
+          IdExprNode c: int*

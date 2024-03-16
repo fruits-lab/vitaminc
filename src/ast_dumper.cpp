@@ -67,12 +67,8 @@ std::string GetUnaryOperator(UnaryOperator op) {
 
 void AstDumper::Visit(const DeclNode& decl) {
   std::cout << indenter_.Indent() << "DeclNode " << decl.id << ": "
-            << ExprTypeToString(decl.type);
-  if (decl.is_pointer) {
-    std::cout << " *";
-  }
+            << TypeToString(decl.type) << '\n';
 
-  std::cout << '\n';
   if (decl.init) {
     indenter_.IncreaseLevel();
     decl.init->Accept(*this);
@@ -82,16 +78,13 @@ void AstDumper::Visit(const DeclNode& decl) {
 
 void AstDumper::Visit(const ParamNode& parameter) {
   std::cout << indenter_.Indent() << "ParamNode " << parameter.id << ": "
-            << ExprTypeToString(parameter.type);
-  if (parameter.is_pointer) {
-    std::cout << " *";
-  }
-  std::cout << '\n';
+            << TypeToString(parameter.type) << '\n';
 }
 
 void AstDumper::Visit(const FuncDefNode& func_def) {
   std::cout << indenter_.Indent() << "FuncDefNode " << func_def.id << ": "
-            << ExprTypeToString(func_def.return_type) << '\n';
+            << TypeToString(func_def.type) << '\n';
+
   indenter_.IncreaseLevel();
   for (const auto& parameter : func_def.parameters) {
     parameter->Accept(*this);
@@ -232,25 +225,17 @@ void AstDumper::Visit(const NullExprNode& null_expr) {
 
 void AstDumper::Visit(const IdExprNode& id_expr) {
   std::cout << indenter_.Indent() << "IdExprNode " << id_expr.id << ": "
-            << ExprTypeToString(id_expr.type);
-  if (id_expr.is_pointer) {
-    std::cout << " *";
-  }
-  std::cout << '\n';
+            << TypeToString(id_expr.type) << '\n';
 }
 
 void AstDumper::Visit(const IntConstExprNode& int_expr) {
   std::cout << indenter_.Indent() << "IntConstExprNode " << int_expr.val << ": "
-            << ExprTypeToString(int_expr.type) << '\n';
+            << TypeToString(int_expr.type) << '\n';
 }
 
 void AstDumper::Visit(const ArgExprNode& arg_expr) {
   std::cout << indenter_.Indent() << "ArgExprNode "
-            << ExprTypeToString(arg_expr.type);
-  if (arg_expr.is_pointer) {
-    std::cout << " *";
-  }
-  std::cout << '\n';
+            << TypeToString(arg_expr.type) << '\n';
   indenter_.IncreaseLevel();
   arg_expr.arg->Accept(*this);
   indenter_.DecreaseLevel();
@@ -258,7 +243,7 @@ void AstDumper::Visit(const ArgExprNode& arg_expr) {
 
 void AstDumper::Visit(const FuncCallExprNode& call_expr) {
   std::cout << indenter_.Indent() << "FuncCallExprNode "
-            << ExprTypeToString(call_expr.type) << '\n';
+            << TypeToString(call_expr.type) << '\n';
   indenter_.IncreaseLevel();
   call_expr.func_expr->Accept(*this);
   for (const auto& arg : call_expr.args) {
@@ -269,7 +254,7 @@ void AstDumper::Visit(const FuncCallExprNode& call_expr) {
 
 void AstDumper::Visit(const UnaryExprNode& unary_expr) {
   std::cout << indenter_.Indent() << "UnaryExprNode "
-            << ExprTypeToString(unary_expr.type) << " "
+            << TypeToString(unary_expr.type) << " "
             << GetUnaryOperator(unary_expr.op) << '\n';
   indenter_.IncreaseLevel();
   unary_expr.operand->Accept(*this);
@@ -278,7 +263,7 @@ void AstDumper::Visit(const UnaryExprNode& unary_expr) {
 
 void AstDumper::Visit(const BinaryExprNode& bin_expr) {
   std::cout << indenter_.Indent() << "BinaryExprNode "
-            << ExprTypeToString(bin_expr.type) << " "
+            << TypeToString(bin_expr.type) << " "
             << GetBinaryOperator(bin_expr.op) << '\n';
   indenter_.IncreaseLevel();
   bin_expr.lhs->Accept(*this);
@@ -288,10 +273,10 @@ void AstDumper::Visit(const BinaryExprNode& bin_expr) {
 
 void AstDumper::Visit(const SimpleAssignmentExprNode& assign_expr) {
   std::cout << indenter_.Indent() << "SimpleAssignmentExprNode "
-            << ExprTypeToString(assign_expr.expr->type) << '\n';
+            << TypeToString(assign_expr.expr->type) << '\n';
   indenter_.IncreaseLevel();
   std::cout << indenter_.Indent() << assign_expr.id << ": "
-            << ExprTypeToString(assign_expr.type) << '\n';
+            << TypeToString(assign_expr.type) << '\n';
   assign_expr.expr->Accept(*this);
   indenter_.DecreaseLevel();
 }

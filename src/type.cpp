@@ -2,12 +2,20 @@
 
 #include <string>
 
-std::string ExprTypeToString(ExprType type) {
-  switch (type) {
-    case ExprType::kInt:
-      return "int";
-    case ExprType::kUnknown:
+std::string TypeToString(Type type) {
+  std::string out = "";
+  switch (type.prim_type) {
+    case PrimitiveType::kInt:
+      out.append("int");
+      break;
+    case PrimitiveType::kUnknown:
     default:
-      return "unknown";
+      out.append("unknown");
   }
+
+  if (type.is_ptr) {
+    out.append("*");
+  }
+
+  return out;
 }
