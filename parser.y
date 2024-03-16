@@ -124,6 +124,7 @@ func_def_list_opt: func_def_list_opt func_def {
   | epsilon { $$ = std::vector<std::unique_ptr<FuncDefNode>>{}; }
   ;
 
+// TODO: support function pointer
 func_def: type_specifier ID '(' parameter_list_opt ')' compound_stmt {
     $$ = std::make_unique<FuncDefNode>($2, $4, $6, $1);
   }
@@ -144,9 +145,8 @@ parameter_list: parameter_list ',' parameter {
   }
   ;
 
-parameter: type_specifier ID {
-    $$ = std::make_unique<ParamNode>($2, $1);
-  }
+parameter: type_specifier ID { $$ = std::make_unique<ParamNode>($2, $1); }
+  | type_specifier '*' ID { $$ = std::make_unique<ParamNode>($3, $1, true); }
   ;
 
   /* 6.8.2 Compound statement */
@@ -177,7 +177,9 @@ block_item: decl { $$ = $1; }
   ;
 
 decl: type_specifier ID ';' { $$ = std::make_unique<DeclNode>($2, $1); }
-    | type_specifier ID '=' expr ';' { $$ = std::make_unique<DeclNode>($2, $1, $4); }
+    | type_specifier ID '=' expr ';' { $$ = std::make_unique<DeclNode>($2, $1, false, $4); }
+    | type_specifier '*' ID ';' { $$ = std::make_unique<DeclNode>($3, $1, true); }
+    | type_specifier '*' ID '=' expr ';' { $$ = std::make_unique<DeclNode>($3, $1, true, $5); }
     ;
 
 stmt: expr_opt ';' { $$ = std::make_unique<ExprStmtNode>($1); }

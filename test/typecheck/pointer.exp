@@ -1,0 +1,12 @@
+ProgramNode
+  FuncDefNode main: int
+    CompoundStmtNode
+      DeclNode a: int
+        IntConstExprNode 10: int
+      DeclNode b: int *
+      DeclNode c: int *
+        UnaryExprNode int &
+          IdExprNode a: int
+      ReturnStmtNode
+        UnaryExprNode int *
+          IdExprNode c: int *

@@ -10,6 +10,7 @@
 #include <vector>
 
 #include "ast.hpp"
+#include "operator.hpp"
 #include "symbol.hpp"
 #include "type.hpp"
 
@@ -39,6 +40,10 @@ bool IsInBodyOf(BodyType type) {
 void TypeChecker::Visit(DeclNode& decl) {
   if (decl.init) {
     decl.init->Accept(*this);
+    if (decl.is_pointer != decl.init->is_pointer) {
+      // TODO: incompatible pointer types
+    }
+
     if (decl.init->type != decl.type) {
       // TODO: incompatible types when initializing type 'type' using type
       // 'init->type'
@@ -48,7 +53,7 @@ void TypeChecker::Visit(DeclNode& decl) {
   if (env_.Probe(decl.id)) {
     // TODO: redefinition of 'id'
   } else {
-    auto symbol = std::make_unique<SymbolEntry>(decl.id);
+    auto symbol = std::make_unique<SymbolEntry>(decl.id, decl.is_pointer);
     symbol->expr_type = decl.type;
     env_.Add(std::move(symbol));
   }
@@ -58,7 +63,8 @@ void TypeChecker::Visit(ParamNode& parameter) {
   if (env_.Probe(parameter.id)) {
     // TODO: redefinition of 'id'
   } else {
-    auto symbol = std::make_unique<SymbolEntry>(parameter.id);
+    auto symbol =
+        std::make_unique<SymbolEntry>(parameter.id, parameter.is_pointer);
     symbol->expr_type = parameter.type;
     env_.Add(std::move(symbol));
   }
@@ -72,7 +78,9 @@ void TypeChecker::Visit(FuncDefNode& func_def) {
     symbol->expr_type = func_def.return_type;
     for (auto& parameter : func_def.parameters) {
       parameter->Accept(*this);
-      symbol->param_types.push_back(parameter->type);
+      auto param_type =
+          std::make_unique<ParamType>(parameter->type, parameter->is_pointer);
+      symbol->param_types.push_back(std::move(param_type));
     }
 
     env_.Add(std::move(symbol));
@@ -101,7 +109,8 @@ void TypeChecker::InstallBuiltins_(ScopeStack& env) {
 
   auto symbol = std::make_unique<SymbolEntry>("__builtin_print");
   symbol->expr_type = ExprType::kInt;
-  symbol->param_types.push_back(ExprType::kInt);
+  auto param_type = std::make_unique<ParamType>(ExprType::kInt);
+  symbol->param_types.push_back(std::move(param_type));
   env.Add(std::move(symbol));
 }
 
@@ -236,6 +245,7 @@ void TypeChecker::Visit(NullExprNode&) {
 void TypeChecker::Visit(IdExprNode& id_expr) {
   if (auto symbol = env_.LookUp(id_expr.id)) {
     id_expr.type = symbol->expr_type;
+    id_expr.is_pointer = symbol->is_pointer;
   } else {
     // TODO: 'id' undeclared
   }
@@ -248,6 +258,7 @@ void TypeChecker::Visit(IntConstExprNode& int_expr) {
 void TypeChecker::Visit(ArgExprNode& arg_expr) {
   arg_expr.arg->Accept(*this);
   arg_expr.type = arg_expr.arg->type;
+  arg_expr.is_pointer = arg_expr.arg->is_pointer;
 }
 
 void TypeChecker::Visit(FuncCallExprNode& call_expr) {
@@ -265,8 +276,12 @@ void TypeChecker::Visit(FuncCallExprNode& call_expr) {
 
   for (auto i = std::size_t{0}; i < args.size(); ++i) {
     args.at(i)->Accept(*this);
-    if (args.at(i)->type != param_types.at(i)) {
+    if (args.at(i)->type != param_types.at(i)->type) {
       // TODO: unmatched argument type
+    }
+
+    if (args.at(i)->is_pointer != param_types.at(i)->is_pointer) {
+      // TODO: unmatched argument pointer type
     }
   }
 }
@@ -274,6 +289,15 @@ void TypeChecker::Visit(FuncCallExprNode& call_expr) {
 void TypeChecker::Visit(UnaryExprNode& unary_expr) {
   unary_expr.operand->Accept(*this);
   unary_expr.type = unary_expr.operand->type;
+  if (unary_expr.op == UnaryOperator::kAddr) {
+    const auto* id_expr = dynamic_cast<IdExprNode*>((unary_expr.operand).get());
+    assert(id_expr);
+    auto operand = env_.LookUp(id_expr->id);
+    if (operand == nullptr) {
+      // TODO: lvalue required as unary ‘&’ operand
+    }
+    unary_expr.is_pointer = true;
+  }
   // TODO: check operands type
 }
 
