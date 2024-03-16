@@ -59,6 +59,7 @@
 %token EQ NE LE GE
 %token DO WHILE FOR
 %token CONTINUE BREAK RETURN
+%token GOTO
 // increment (INCR: ++) and decrement (DECR: --)
 %token INCR DECR
 %token EOF 0
@@ -206,7 +207,7 @@ selection_stmt: IF '(' expr ')' stmt %prec IF_WITHOUT_ELSE { $$ = std::make_uniq
 jump_stmt: RETURN expr ';' { $$ = std::make_unique<ReturnStmtNode>($2); }
     | BREAK ';' { $$ = std::make_unique<BreakStmtNode>(); }
     | CONTINUE ';' { $$ = std::make_unique<ContinueStmtNode>(); }
-    /* TODO: goto */
+    | GOTO ID ';' { $$ = std::make_unique<GotoStmtNode>($2); }
     ;
 
 loop_init: decl { $$ = std::make_unique<LoopInitNode>($1); }

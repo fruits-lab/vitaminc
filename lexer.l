@@ -66,6 +66,7 @@ if { return yy::parser::make_IF(); }
 int { return yy::parser::make_INT(); }
 return { return yy::parser::make_RETURN(); }
 while { return yy::parser::make_WHILE(); }
+goto { return yy::parser::make_GOTO(); }
 
   /* brackets */
 {bracket} { return yytext[0]; }
