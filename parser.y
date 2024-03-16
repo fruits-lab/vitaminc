@@ -64,7 +64,7 @@
 %token INCR DECR
 %token EOF 0
 
-%nterm <ExprType> type_specifier
+%nterm <Type> type_specifier
 %nterm <std::unique_ptr<ExprNode>> expr
 %nterm <std::unique_ptr<ExprNode>> expr_opt
 %nterm <std::unique_ptr<ExprNode>> unary_expr
@@ -124,7 +124,6 @@ func_def_list_opt: func_def_list_opt func_def {
   | epsilon { $$ = std::vector<std::unique_ptr<FuncDefNode>>{}; }
   ;
 
-// TODO: support function pointer
 func_def: type_specifier ID '(' parameter_list_opt ')' compound_stmt {
     $$ = std::make_unique<FuncDefNode>($2, $4, $6, $1);
   }
@@ -145,8 +144,9 @@ parameter_list: parameter_list ',' parameter {
   }
   ;
 
-parameter: type_specifier ID { $$ = std::make_unique<ParamNode>($2, $1); }
-  | type_specifier '*' ID { $$ = std::make_unique<ParamNode>($3, $1, true); }
+parameter: type_specifier ID {
+    $$ = std::make_unique<ParamNode>($2, $1);
+  }
   ;
 
   /* 6.8.2 Compound statement */
@@ -177,9 +177,7 @@ block_item: decl { $$ = $1; }
   ;
 
 decl: type_specifier ID ';' { $$ = std::make_unique<DeclNode>($2, $1); }
-    | type_specifier ID '=' expr ';' { $$ = std::make_unique<DeclNode>($2, $1, false, $4); }
-    | type_specifier '*' ID ';' { $$ = std::make_unique<DeclNode>($3, $1, true); }
-    | type_specifier '*' ID '=' expr ';' { $$ = std::make_unique<DeclNode>($3, $1, true, $5); }
+    | type_specifier ID '=' expr ';' { $$ = std::make_unique<DeclNode>($2, $1, $4); }
     ;
 
 stmt: expr_opt ';' { $$ = std::make_unique<ExprStmtNode>($1); }
@@ -287,9 +285,9 @@ primary_expr: ID { $$ = std::make_unique<IdExprNode>($1); }
 
 /* 6.7.2 Type specifiers */
 /* TODO: support multiple data types */
-type_specifier: INT {
-    $$ = ExprType::kInt;
-  }
+/* TODO: support pointer to pointer */
+type_specifier: INT { $$ = Type{PrimitiveType::kInt}; }
+  | INT '*' { $$ = Type{PrimitiveType::kInt, true}; }
   ;
 
 epsilon: %empty;

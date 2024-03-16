@@ -1,28 +1,28 @@
 ProgramNode
   FuncDefNode add: int
-    ParamNode x: int *
-    ParamNode y: int *
+    ParamNode x: int*
+    ParamNode y: int*
     CompoundStmtNode
       ReturnStmtNode
         BinaryExprNode int +
           UnaryExprNode int *
-            IdExprNode x: int *
+            IdExprNode x: int*
           UnaryExprNode int *
-            IdExprNode y: int *
+            IdExprNode y: int*
   FuncDefNode main: int
     CompoundStmtNode
       DeclNode a: int
         IntConstExprNode 3: int
       DeclNode b: int
         IntConstExprNode 5: int
-      DeclNode c: int *
-        UnaryExprNode int &
+      DeclNode c: int*
+        UnaryExprNode int* &
           IdExprNode b: int
       ReturnStmtNode
         FuncCallExprNode int
           IdExprNode add: int
-          ArgExprNode int *
-            UnaryExprNode int &
+          ArgExprNode int*
+            UnaryExprNode int* &
               IdExprNode a: int
-          ArgExprNode int *
-            IdExprNode c: int *
+          ArgExprNode int*
+            IdExprNode c: int*

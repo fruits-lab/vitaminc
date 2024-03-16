@@ -40,10 +40,6 @@ bool IsInBodyOf(BodyType type) {
 void TypeChecker::Visit(DeclNode& decl) {
   if (decl.init) {
     decl.init->Accept(*this);
-    if (decl.is_pointer != decl.init->is_pointer) {
-      // TODO: incompatible pointer types
-    }
-
     if (decl.init->type != decl.type) {
       // TODO: incompatible types when initializing type 'type' using type
       // 'init->type'
@@ -53,8 +49,7 @@ void TypeChecker::Visit(DeclNode& decl) {
   if (env_.Probe(decl.id)) {
     // TODO: redefinition of 'id'
   } else {
-    auto symbol = std::make_unique<SymbolEntry>(decl.id, decl.is_pointer);
-    symbol->expr_type = decl.type;
+    auto symbol = std::make_unique<SymbolEntry>(decl.id, decl.type);
     env_.Add(std::move(symbol));
   }
 }
@@ -63,9 +58,7 @@ void TypeChecker::Visit(ParamNode& parameter) {
   if (env_.Probe(parameter.id)) {
     // TODO: redefinition of 'id'
   } else {
-    auto symbol =
-        std::make_unique<SymbolEntry>(parameter.id, parameter.is_pointer);
-    symbol->expr_type = parameter.type;
+    auto symbol = std::make_unique<SymbolEntry>(parameter.id, parameter.type);
     env_.Add(std::move(symbol));
   }
 }
@@ -74,13 +67,10 @@ void TypeChecker::Visit(FuncDefNode& func_def) {
   if (env_.Probe(func_def.id)) {
     // TODO: redefinition of function id
   } else {
-    auto symbol = std::make_unique<SymbolEntry>(func_def.id);
-    symbol->expr_type = func_def.return_type;
+    auto symbol = std::make_unique<SymbolEntry>(func_def.id, func_def.type);
     for (auto& parameter : func_def.parameters) {
       parameter->Accept(*this);
-      auto param_type =
-          std::make_unique<ParamType>(parameter->type, parameter->is_pointer);
-      symbol->param_types.push_back(std::move(param_type));
+      symbol->param_types.push_back(parameter->type);
     }
 
     env_.Add(std::move(symbol));
@@ -107,10 +97,9 @@ void TypeChecker::InstallBuiltins_(ScopeStack& env) {
   // The supported builtins are:
   // - int __builtin_print(int)
 
-  auto symbol = std::make_unique<SymbolEntry>("__builtin_print");
-  symbol->expr_type = ExprType::kInt;
-  auto param_type = std::make_unique<ParamType>(ExprType::kInt);
-  symbol->param_types.push_back(std::move(param_type));
+  auto symbol =
+      std::make_unique<SymbolEntry>("__builtin_print", PrimitiveType::kInt);
+  symbol->param_types.emplace_back(PrimitiveType::kInt);
   env.Add(std::move(symbol));
 }
 
@@ -157,7 +146,7 @@ void TypeChecker::Visit(ForStmtNode& for_stmt) {
 
 void TypeChecker::Visit(ReturnStmtNode& ret_stmt) {
   ret_stmt.expr->Accept(*this);
-  if (ret_stmt.expr->type != ExprType::kInt) {
+  if (ret_stmt.expr->type != PrimitiveType::kInt) {
     // TODO: return value type does not match the function type
   }
 }
@@ -191,7 +180,7 @@ auto
 
 void TypeChecker::Visit(SwitchStmtNode& switch_stmt) {
   switch_stmt.ctrl->Accept(*this);
-  if (switch_stmt.ctrl->type != ExprType::kInt) {
+  if (switch_stmt.ctrl->type != PrimitiveType::kInt) {
     // TODO: statement requires expression of integer type
   }
   body_types.push_back(BodyType::kSwitch);
@@ -207,7 +196,9 @@ void TypeChecker::Visit(IdLabeledStmtNode& id_labeled_stmt) {
   // TODO: To allow forward reference, the label has to be added in some other
   // way.
   // TODO: The label has function scope.
-  env_.Add(std::make_unique<SymbolEntry>(id_labeled_stmt.label));
+  // FIXME: Labels have error type.
+  env_.Add(std::make_unique<SymbolEntry>(id_labeled_stmt.label,
+                                         PrimitiveType::kUnknown));
   id_labeled_stmt.stmt->Accept(*this);
 }
 
@@ -216,7 +207,7 @@ void TypeChecker::Visit(CaseStmtNode& case_stmt) {
     // TODO: 'case' statement not in switch statement
   }
   case_stmt.expr->Accept(*this);
-  if (case_stmt.expr->type != ExprType::kInt) {
+  if (case_stmt.expr->type != PrimitiveType::kInt) {
     // TODO: expression is not an integer constant expression
   }
   case_stmt.stmt->Accept(*this);
@@ -245,20 +236,18 @@ void TypeChecker::Visit(NullExprNode&) {
 void TypeChecker::Visit(IdExprNode& id_expr) {
   if (auto symbol = env_.LookUp(id_expr.id)) {
     id_expr.type = symbol->expr_type;
-    id_expr.is_pointer = symbol->is_pointer;
   } else {
     // TODO: 'id' undeclared
   }
 }
 
 void TypeChecker::Visit(IntConstExprNode& int_expr) {
-  int_expr.type = ExprType::kInt;
+  int_expr.type = Type{PrimitiveType::kInt};
 }
 
 void TypeChecker::Visit(ArgExprNode& arg_expr) {
   arg_expr.arg->Accept(*this);
   arg_expr.type = arg_expr.arg->type;
-  arg_expr.is_pointer = arg_expr.arg->is_pointer;
 }
 
 void TypeChecker::Visit(FuncCallExprNode& call_expr) {
@@ -276,12 +265,8 @@ void TypeChecker::Visit(FuncCallExprNode& call_expr) {
 
   for (auto i = std::size_t{0}; i < args.size(); ++i) {
     args.at(i)->Accept(*this);
-    if (args.at(i)->type != param_types.at(i)->type) {
+    if (args.at(i)->type != param_types.at(i)) {
       // TODO: unmatched argument type
-    }
-
-    if (args.at(i)->is_pointer != param_types.at(i)->is_pointer) {
-      // TODO: unmatched argument pointer type
     }
   }
 }
@@ -289,14 +274,18 @@ void TypeChecker::Visit(FuncCallExprNode& call_expr) {
 void TypeChecker::Visit(UnaryExprNode& unary_expr) {
   unary_expr.operand->Accept(*this);
   unary_expr.type = unary_expr.operand->type;
-  if (unary_expr.op == UnaryOperator::kAddr) {
+  if (unary_expr.op == UnaryOperator::kAddr ||
+      unary_expr.op == UnaryOperator::kDeref) {
     const auto* id_expr = dynamic_cast<IdExprNode*>((unary_expr.operand).get());
     assert(id_expr);
     auto operand = env_.LookUp(id_expr->id);
     if (operand == nullptr) {
-      // TODO: lvalue required as unary ‘&’ operand
+      // TODO: lvalue required as unary '&' or '*' operand
     }
-    unary_expr.is_pointer = true;
+
+    // Return pointer type for reference, or return primitive type for
+    // dereference.
+    unary_expr.type.is_ptr = (unary_expr.op == UnaryOperator::kAddr);
   }
   // TODO: check operands type
 }
