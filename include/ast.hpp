@@ -55,6 +55,8 @@ struct StmtNode : public AstNode {
 struct ExprNode  // NOLINT(cppcoreguidelines-special-member-functions)
     : public AstNode {
   ExprType type = ExprType::kUnknown;
+  bool is_pointer = false;
+
   void Accept(NonModifyingVisitor&) const override;
   void Accept(ModifyingVisitor&) override;
 
@@ -63,26 +65,32 @@ struct ExprNode  // NOLINT(cppcoreguidelines-special-member-functions)
 };
 
 struct DeclNode : public AstNode {
-  DeclNode(std::string id, ExprType decl_type,
+  DeclNode(std::string id, ExprType decl_type, bool is_pointer = false,
            std::unique_ptr<ExprNode> init = {})
-      : id{std::move(id)}, type{decl_type}, init{std::move(init)} {}
+      : id{std::move(id)},
+        type{decl_type},
+        is_pointer{is_pointer},
+        init{std::move(init)} {}
 
   void Accept(NonModifyingVisitor&) const override;
   void Accept(ModifyingVisitor&) override;
 
   std::string id;
   ExprType type;
+  bool is_pointer;
   std::unique_ptr<ExprNode> init;
 };
 
 struct ParamNode : public AstNode {
-  ParamNode(std::string id, ExprType type) : id{std::move(id)}, type{type} {}
+  ParamNode(std::string id, ExprType type, bool is_pointer = false)
+      : id{std::move(id)}, type{type}, is_pointer{is_pointer} {}
 
   void Accept(NonModifyingVisitor&) const override;
   void Accept(ModifyingVisitor&) override;
 
   std::string id;
   ExprType type;
+  bool is_pointer;
 };
 
 struct FuncDefNode : public AstNode {

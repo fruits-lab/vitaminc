@@ -67,7 +67,12 @@ std::string GetUnaryOperator(UnaryOperator op) {
 
 void AstDumper::Visit(const DeclNode& decl) {
   std::cout << indenter_.Indent() << "DeclNode " << decl.id << ": "
-            << ExprTypeToString(decl.type) << '\n';
+            << ExprTypeToString(decl.type);
+  if (decl.is_pointer) {
+    std::cout << " *";
+  }
+
+  std::cout << '\n';
   if (decl.init) {
     indenter_.IncreaseLevel();
     decl.init->Accept(*this);
@@ -77,7 +82,11 @@ void AstDumper::Visit(const DeclNode& decl) {
 
 void AstDumper::Visit(const ParamNode& parameter) {
   std::cout << indenter_.Indent() << "ParamNode " << parameter.id << ": "
-            << ExprTypeToString(parameter.type) << '\n';
+            << ExprTypeToString(parameter.type);
+  if (parameter.is_pointer) {
+    std::cout << " *";
+  }
+  std::cout << '\n';
 }
 
 void AstDumper::Visit(const FuncDefNode& func_def) {
@@ -223,7 +232,11 @@ void AstDumper::Visit(const NullExprNode& null_expr) {
 
 void AstDumper::Visit(const IdExprNode& id_expr) {
   std::cout << indenter_.Indent() << "IdExprNode " << id_expr.id << ": "
-            << ExprTypeToString(id_expr.type) << '\n';
+            << ExprTypeToString(id_expr.type);
+  if (id_expr.is_pointer) {
+    std::cout << " *";
+  }
+  std::cout << '\n';
 }
 
 void AstDumper::Visit(const IntConstExprNode& int_expr) {
@@ -233,7 +246,11 @@ void AstDumper::Visit(const IntConstExprNode& int_expr) {
 
 void AstDumper::Visit(const ArgExprNode& arg_expr) {
   std::cout << indenter_.Indent() << "ArgExprNode "
-            << ExprTypeToString(arg_expr.type) << '\n';
+            << ExprTypeToString(arg_expr.type);
+  if (arg_expr.is_pointer) {
+    std::cout << " *";
+  }
+  std::cout << '\n';
   indenter_.IncreaseLevel();
   arg_expr.arg->Accept(*this);
   indenter_.DecreaseLevel();
