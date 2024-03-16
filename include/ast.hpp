@@ -196,6 +196,15 @@ struct ReturnStmtNode : public StmtNode {
   std::unique_ptr<ExprNode> expr;
 };
 
+struct GotoStmtNode : public StmtNode {
+  GotoStmtNode(std::string label) : label{std::move(label)} {}
+
+  void Accept(NonModifyingVisitor&) const override;
+  void Accept(ModifyingVisitor&) override;
+
+  std::string label;
+};
+
 struct BreakStmtNode : public StmtNode {
   BreakStmtNode() = default;
 
