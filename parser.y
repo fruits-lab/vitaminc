@@ -190,9 +190,9 @@ stmt: expr_opt ';' { $$ = std::make_unique<ExprStmtNode>($1); }
     ;
 
 /* 6.8.1 Labeled statements */
-labeled_stmt: /* TODO: identifier label */
+labeled_stmt: ID ':' stmt { $$ = std::make_unique<IdLabeledStmtNode>($1, $3); }
     /* TODO: constant expression */
-    CASE expr ':' stmt { $$ = std::make_unique<CaseStmtNode>($2, $4); }
+    | CASE expr ':' stmt { $$ = std::make_unique<CaseStmtNode>($2, $4); }
     | DEFAULT ':' stmt { $$ = std::make_unique<DefaultStmtNode>($3); }
     ;
 

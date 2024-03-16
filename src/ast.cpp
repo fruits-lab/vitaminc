@@ -146,6 +146,14 @@ void LabeledStmtNode::Accept(ModifyingVisitor& v) {
 
 LabeledStmtNode::~LabeledStmtNode() = default;
 
+void IdLabeledStmtNode::Accept(NonModifyingVisitor& v) const {
+  v.Visit(*this);
+}
+
+void IdLabeledStmtNode::Accept(ModifyingVisitor& v) {
+  v.Visit(*this);
+}
+
 void CaseStmtNode::Accept(NonModifyingVisitor& v) const {
   v.Visit(*this);
 }
