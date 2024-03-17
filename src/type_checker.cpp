@@ -153,6 +153,10 @@ void TypeChecker::Visit(ReturnStmtNode& ret_stmt) {
   }
 }
 
+void TypeChecker::Visit(GotoStmtNode& goto_stmt) {
+  // FIXME: To allow forward reference, we assume the label is declared.
+}
+
 void TypeChecker::Visit(BreakStmtNode& break_stmt) {
   if (!IsInBodyOf(BodyType::kLoop) && !IsInBodyOf(BodyType::kSwitch)) {
     assert(false);
@@ -188,6 +192,14 @@ void TypeChecker::Visit(SwitchStmtNode& switch_stmt) {
   body_types.pop_back();
   // TODO: No two of the case constant expressions in the same switch statement
   // shall have the same value (we need constant expression support on this).
+}
+
+void TypeChecker::Visit(IdLabeledStmtNode& id_labeled_stmt) {
+  // TODO: To allow forward reference, the label has to be added in some other
+  // way.
+  // TODO: The label has function scope.
+  env_.Add(std::make_unique<SymbolEntry>(id_labeled_stmt.label));
+  id_labeled_stmt.stmt->Accept(*this);
 }
 
 void TypeChecker::Visit(CaseStmtNode& case_stmt) {
