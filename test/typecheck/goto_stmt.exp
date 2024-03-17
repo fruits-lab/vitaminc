@@ -1,0 +1,15 @@
+ProgramNode
+  FuncDefNode main: int
+    CompoundStmtNode
+      DeclNode i: int
+        IntConstExprNode 0: int
+      IdLabeledStmtNode begin
+        ExprStmtNode
+          SimpleAssignmentExprNode int
+            i: int
+            BinaryExprNode int +
+              IdExprNode i: int
+              IntConstExprNode 1: int
+      GotoStmtNode begin
+      ReturnStmtNode
+        IntConstExprNode 0: int
