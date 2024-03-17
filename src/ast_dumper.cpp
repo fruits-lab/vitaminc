@@ -167,6 +167,10 @@ void AstDumper::Visit(const ReturnStmtNode& ret_stmt) {
   indenter_.DecreaseLevel();
 }
 
+void AstDumper::Visit(const GotoStmtNode& goto_stmt) {
+  std::cout << indenter_.Indent() << "GotoStmtNode " << goto_stmt.label << '\n';
+}
+
 void AstDumper::Visit(const BreakStmtNode& break_stmt) {
   std::cout << indenter_.Indent() << "BreakStmtNode\n";
 }
@@ -180,6 +184,14 @@ void AstDumper::Visit(const SwitchStmtNode& switch_stmt) {
   indenter_.IncreaseLevel();
   switch_stmt.ctrl->Accept(*this);
   switch_stmt.stmt->Accept(*this);
+  indenter_.DecreaseLevel();
+}
+
+void AstDumper::Visit(const IdLabeledStmtNode& id_labeled_stmt) {
+  std::cout << indenter_.Indent() << "IdLabeledStmtNode "
+            << id_labeled_stmt.label << '\n';
+  indenter_.IncreaseLevel();
+  id_labeled_stmt.stmt->Accept(*this);
   indenter_.DecreaseLevel();
 }
 
