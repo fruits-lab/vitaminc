@@ -303,6 +303,10 @@ void QbeIrGenerator::Visit(const ReturnStmtNode& ret_stmt) {
   WriteInstr_("ret {}", FuncScopeTemp{ret_num});
 }
 
+void QbeIrGenerator::Visit(const GotoStmtNode& goto_stmt) {
+  WriteInstr_("jmp @{}", goto_stmt.label);
+}
+
 void QbeIrGenerator::Visit(const BreakStmtNode& break_stmt) {
   assert(!label_views_of_jumpable_blocks.empty());
   WriteInstr_("jmp {}", BlockLabel{label_views_of_jumpable_blocks.back().exit});
@@ -451,6 +455,11 @@ void QbeIrGenerator::GenerateConditions_(const SwitchStmtNode& switch_stmt,
     WriteInstr_("jnz {}, {}, {}", FuncScopeTemp{match_num}, *case_info.label,
                 *cond_label);
   }
+}
+
+void QbeIrGenerator::Visit(const IdLabeledStmtNode& id_labeled_stmt) {
+  Write_("@{}\n", id_labeled_stmt.label);
+  id_labeled_stmt.stmt->Accept(*this);
 }
 
 void QbeIrGenerator::Visit(const CaseStmtNode& case_stmt) {

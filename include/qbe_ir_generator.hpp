@@ -24,9 +24,11 @@ class QbeIrGenerator : public NonModifyingVisitor {
   void Visit(const WhileStmtNode&) override;
   void Visit(const ForStmtNode&) override;
   void Visit(const ReturnStmtNode&) override;
+  void Visit(const GotoStmtNode&) override;
   void Visit(const BreakStmtNode&) override;
   void Visit(const ContinueStmtNode&) override;
   void Visit(const SwitchStmtNode&) override;
+  void Visit(const IdLabeledStmtNode&) override;
   void Visit(const CaseStmtNode&) override;
   void Visit(const DefaultStmtNode&) override;
   void Visit(const ExprStmtNode&) override;
