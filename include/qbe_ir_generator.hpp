@@ -58,7 +58,11 @@ class QbeIrGenerator : public NonModifyingVisitor {
   }
 
   /// @brief Writes the definition of a label with newline.
-  void WriteLabel_(const qbe::BlockLabel& label) {
+  void WriteLabel_(const qbe::user_defined::BlockLabel& label) {
+    Write_("{}\n", label);
+  }
+  /// @brief Writes the definition of a label with newline.
+  void WriteLabel_(const qbe::compiler_generated::BlockLabel& label) {
     Write_("{}\n", label);
   }
 
@@ -95,9 +99,10 @@ class QbeIrGenerator : public NonModifyingVisitor {
   void GenerateCases_(const SwitchStmtNode&);
   /// @brief Called by the code generation of `SwitchStmtNode` to generate the
   /// condition matching of the cases.
-  void GenerateConditions_(const SwitchStmtNode&,
-                           const qbe::BlockLabel& first_cond_label,
-                           int ctrl_num);
+  void GenerateConditions_(
+      const SwitchStmtNode&,
+      const qbe::compiler_generated::BlockLabel& first_cond_label,
+      int ctrl_num);
 };
 
 #endif  // QBE_IR_GENERATOR_HPP_

@@ -7,8 +7,10 @@
 #include <cstddef>
 #include <map>
 #include <memory>
+#include <optional>
 #include <string>
 #include <string_view>
+#include <utility>
 #include <variant>
 #include <vector>
 
@@ -16,7 +18,10 @@
 #include "operator.hpp"
 #include "qbe/sigil.hpp"
 
-using namespace qbe;
+// Since compiler-generated sigils are used more frequently, we include them
+// directly.
+using namespace qbe::compiler_generated;
+namespace user_defined = qbe::user_defined;
 
 namespace {
 
@@ -96,13 +101,9 @@ auto
                   // a data member introduces unnecessary dependency.
     = PrevExprNumRecorder{};
 
-/// @note Labels are stored as string_views since `BlockLabel` is not copyable.
-/// The caller is responsible for ensuring that the lifetime of entry and exit
-/// spans the lifetime of this object. Remember to reconstruct a `BlockLabel`
-/// from the string_view before using it.
 struct LabelViewPair {
-  std::string_view entry;
-  std::string_view exit;
+  BlockLabel entry;
+  BlockLabel exit;
 };
 
 /// @note Blocks that allows jumping within or out of it should add its labels
@@ -185,8 +186,10 @@ void QbeIrGenerator::Visit(const CompoundStmtNode& compound_stmt) {
 
 void QbeIrGenerator::Visit(const ProgramNode& program) {
   // Generate the data of builtin functions.
+  // FIXME: The format is not of a user-defined sigil, nor a compiler-generated
+  // one.
   Write_("data {} = align 1 {{ b \"%d\\012\\000\", }}\n",
-         GlobalPointer{"builtin_print_format"});
+         "$.builtin_print_format");
 
   for (const auto& func_def : program.func_def_list) {
     func_def->Accept(*this);
@@ -247,7 +250,7 @@ void QbeIrGenerator::Visit(const WhileStmtNode& while_stmt) {
   }
   WriteLabel_(body_label);
   label_views_of_jumpable_blocks.push_back(
-      {.entry = pred_label.name(), .exit = end_label.name()});
+      {.entry = pred_label, .exit = end_label});
   while_stmt.loop_body->Accept(*this);
   label_views_of_jumpable_blocks.pop_back();
   if (!while_stmt.is_do_while) {
@@ -288,7 +291,7 @@ void QbeIrGenerator::Visit(const ForStmtNode& for_stmt) {
   }
   WriteLabel_(body_label);
   label_views_of_jumpable_blocks.push_back(
-      {.entry = step_label.name(), .exit = end_label.name()});
+      {.entry = step_label, .exit = end_label});
   for_stmt.loop_body->Accept(*this);
   label_views_of_jumpable_blocks.pop_back();
   WriteLabel_(step_label);
@@ -304,7 +307,7 @@ void QbeIrGenerator::Visit(const ReturnStmtNode& ret_stmt) {
 }
 
 void QbeIrGenerator::Visit(const GotoStmtNode& goto_stmt) {
-  WriteInstr_("jmp @{}", goto_stmt.label);
+  WriteInstr_("jmp {}", user_defined::BlockLabel{goto_stmt.label});
 }
 
 void QbeIrGenerator::Visit(const BreakStmtNode& break_stmt) {
@@ -323,15 +326,19 @@ namespace {
 struct CaseInfo {
   /// @note This is a non-owning pointer that points to the expression of the
   /// case.
-  const ExprNode* expr;
-  std::shared_ptr<BlockLabel> label;
+  const ExprNode* expr = nullptr;
+  BlockLabel label;
 };
 
 struct SwitchInfo {
   std::vector<CaseInfo> case_infos{};
-  /// @note `nullptr` if no default label exists.
-  std::shared_ptr<BlockLabel> default_label = nullptr;
-  std::shared_ptr<BlockLabel> exit_label;
+  std::optional<BlockLabel> default_label;
+  BlockLabel exit_label;
+
+  explicit SwitchInfo(BlockLabel exit_label,
+                      std::optional<BlockLabel> default_label = std::nullopt)
+      : default_label{std::move(default_label)},
+        exit_label{std::move(exit_label)} {}
 };
 
 /// @brief The shared states passed around during the generation of a switch.
@@ -341,16 +348,15 @@ auto switch_infos  // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
 
 /// @brief The label of the next condition depends on whether we've already
 /// handled the last one and whether there is a default label.
-std::unique_ptr<BlockLabel> GetNextCondLabel(
-    bool is_last_cond, const std::shared_ptr<BlockLabel>& default_label) {
+BlockLabel GetNextCondLabel(bool is_last_cond,
+                            const std::optional<BlockLabel>& default_label) {
   if (is_last_cond && default_label) {
-    return std::make_unique<BlockLabel>(default_label->name());
+    return *default_label;
   }
   if (is_last_cond) {
-    return std::make_unique<BlockLabel>(
-        switch_infos.back()->exit_label->name());
+    return switch_infos.back()->exit_label;
   }
-  return std::make_unique<BlockLabel>("switch_cond", NextLabelNum());
+  return {"switch_cond", NextLabelNum()};
 }
 
 }  // namespace
@@ -407,42 +413,43 @@ void QbeIrGenerator::Visit(const SwitchStmtNode& switch_stmt) {
   // (2) Evaluation of case expressions is done in the condition part.
 
   WriteComment_("switch");
-  switch_infos.push_back(std::make_shared<SwitchInfo>());
   switch_stmt.ctrl->Accept(*this);
   const auto ctrl_num = num_recorder.NumOfPrevExpr();
   auto cond_label = BlockLabel{"switch_cond", NextLabelNum()};
   WriteInstr_("jmp {}", cond_label);
 
+  switch_infos.push_back(
+      std::make_shared<SwitchInfo>(BlockLabel{"switch_exit", NextLabelNum()}));
   GenerateCases_(switch_stmt);
   GenerateConditions_(switch_stmt, cond_label, ctrl_num);
 
-  WriteLabel_(*switch_infos.back()->exit_label);
+  WriteLabel_(switch_infos.back()->exit_label);
   switch_infos.pop_back();
 }
 
 void QbeIrGenerator::GenerateCases_(const SwitchStmtNode& switch_stmt) {
   auto this_switch_info = switch_infos.back();
-  this_switch_info->exit_label =
-      std::make_shared<BlockLabel>("switch_exit", NextLabelNum());
   label_views_of_jumpable_blocks.push_back(
-      {// The break statement only jumps to the exit label; the entry label is
-       // irrelevant.
-       .entry = "",
-       .exit = this_switch_info->exit_label->name()});
+      {// FIXME: The break statement only jumps to the exit label; there's no
+       // appropriate entry label to set here.
+       .entry = this_switch_info->exit_label,
+       .exit = this_switch_info->exit_label}
+
+  );
   switch_stmt.stmt->Accept(*this);
   label_views_of_jumpable_blocks.pop_back();
   WriteLabel_(BlockLabel{"switch_bottom", NextLabelNum()});
-  WriteInstr_("jmp {}", *this_switch_info->exit_label);
+  WriteInstr_("jmp {}", this_switch_info->exit_label);
 }
 
 void QbeIrGenerator::GenerateConditions_(const SwitchStmtNode& switch_stmt,
                                          const BlockLabel& first_cond_label,
                                          int ctrl_num) {
   auto this_switch_info = switch_infos.back();
-  auto cond_label = std::make_unique<BlockLabel>(first_cond_label.name());
+  auto cond_label = first_cond_label;
   for (auto i = std::size_t{0}, e = this_switch_info->case_infos.size(); i < e;
        ++i) {
-    WriteLabel_(*cond_label);
+    WriteLabel_(cond_label);
     const auto& case_info = this_switch_info->case_infos.at(i);
     case_info.expr->Accept(*this);
     const auto expr_num = num_recorder.NumOfPrevExpr();
@@ -452,33 +459,32 @@ void QbeIrGenerator::GenerateConditions_(const SwitchStmtNode& switch_stmt,
     const auto is_last_cond = i == e - 1;
     cond_label =
         GetNextCondLabel(is_last_cond, this_switch_info->default_label);
-    WriteInstr_("jnz {}, {}, {}", FuncScopeTemp{match_num}, *case_info.label,
-                *cond_label);
+    WriteInstr_("jnz {}, {}, {}", FuncScopeTemp{match_num}, case_info.label,
+                cond_label);
   }
 }
 
 void QbeIrGenerator::Visit(const IdLabeledStmtNode& id_labeled_stmt) {
-  Write_("@{}\n", id_labeled_stmt.label);
+  WriteLabel_(user_defined::BlockLabel{id_labeled_stmt.label});
   id_labeled_stmt.stmt->Accept(*this);
 }
 
 void QbeIrGenerator::Visit(const CaseStmtNode& case_stmt) {
   assert(!switch_infos.empty());
   // The evaluation of the case expression is done in the condition part.
-  auto case_label = std::make_shared<BlockLabel>("switch_case", NextLabelNum());
+  auto case_label = BlockLabel{"switch_case", NextLabelNum()};
   switch_infos.back()->case_infos.push_back(
       CaseInfo{case_stmt.expr.get(), case_label});
   auto& this_case_info = switch_infos.back()->case_infos.back();
-  WriteLabel_(*this_case_info.label);
+  WriteLabel_(this_case_info.label);
   case_stmt.stmt->Accept(*this);
 }
 
 void QbeIrGenerator::Visit(const DefaultStmtNode& default_stmt) {
   assert(!switch_infos.empty());
-  auto this_switch_info = switch_infos.back();
-  this_switch_info->default_label =
-      std::make_shared<BlockLabel>("switch_default", NextLabelNum());
-  WriteLabel_(*this_switch_info->default_label);
+  auto default_label = BlockLabel{"switch_default", NextLabelNum()};
+  WriteLabel_(default_label);
+  switch_infos.back()->default_label = default_label;
   default_stmt.stmt->Accept(*this);
 }
 
@@ -525,9 +531,10 @@ void QbeIrGenerator::Visit(const FuncCallExprNode& call_expr) {
   Write_(kIndentStr);
   if (id_expr->id == "__builtin_print") {
     Write_("{} =w call $printf(", FuncScopeTemp{res_num});
-    Write_("l {}, ", GlobalPointer{"builtin_print_format"});
+    Write_("l {}, ", "$.builtin_print_format");
   } else {
-    Write_("{} =w call ${}(", FuncScopeTemp{res_num}, id_expr->id);
+    Write_("{} =w call {}(", FuncScopeTemp{res_num},
+           user_defined::GlobalPointer{id_expr->id});
   }
   for (const auto& arg_num : arg_nums) {
     Write_("w %.{}", arg_num);

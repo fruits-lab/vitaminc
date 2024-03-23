@@ -6,97 +6,96 @@
 
 #include <string>
 #include <string_view>
-#include <variant>
 
 namespace qbe {
 
-/// @brief QBE makes heavy use of sigils, all user-defined names are prefixed
-/// with a sigil. This is to avoid keyword conflicts, and also to quickly spot
-/// the scope and nature of identifiers. This class is a strongly-typed wrapper
-/// for names, adding the corresponding sigil as a prefix.
-/// @note This is an abstract class.
+// QBE makes heavy use of sigils, all user-defined (as well as
+// compiler-generated) names are prefixed with a sigil. This is to avoid keyword
+// conflicts, and also to quickly spot the scope and nature of identifiers.
+// This class is a strongly-typed wrapper for names, adding the corresponding
+// sigil as a prefix.
+
+// NOTE: Inheritance is not used for the following reasons:
+// 1. The kind of sigil is unlikely to be extended.
+// 2. All sigils have the same interface and behavior, except for the prefix.
+// 3. Polymorphic objects cannot be easily copied or moved.
+// Thus, template specialization is used instead.
+
+namespace user_defined {
+
+/// @note This class is not meant to be used directly, use the aliases.
+template <char prefix>
 class Sigil {
  public:
-  /// @brief Returns the name.
-  std::string_view name()  // NOLINT(readability-identifier-naming): Accessors
-                           // may be named like variables.
-      const noexcept {
-    return name_;
+  /// @note No unique number because the name should already be unique.
+  Sigil(std::string_view name) : name_{name} {}
+
+  std::string Repr() const {
+    return fmt::format("{}{}", prefix, name_);
   }
-
-  /// @param name The name may be a meaningful string or an meaningless integer.
-  Sigil(std::variant<std::string_view, int> name) noexcept
-      : name_{std::holds_alternative<std::string_view>(name)
-                  ? std::get<std::string_view>(name)
-                  : std::to_string(std::get<int>(name))} {}
-
-  /// @note To make the class abstract.
-  virtual ~Sigil() = 0;
-
-  // Delete copy/move operations to avoid slicing.
-
-  Sigil(const Sigil&) = delete;
-  Sigil(Sigil&&) = delete;
-  Sigil& operator=(const Sigil&) = delete;
-  Sigil& operator=(Sigil&&) = delete;
 
  private:
   std::string name_;
 };
 
-/// @brief Block labels.
-class BlockLabel : public Sigil {
- public:
-  using Sigil::Sigil;
+/// @brief Block labels (user-defined).
+using BlockLabel = Sigil<'@'>;
+/// @brief Globals (represented by a pointer) (user-defined).
+using GlobalPointer = Sigil<'$'>;
+/// @brief function-scope temporaries (user-defined).
+using FuncScopeTemp = Sigil<'%'>;
+/// @brief User-defined Aggregate Types (user-defined).
+using AggregateType = Sigil<':'>;
 
-  /// @brief For labels, we usually have a meaningful name followed by a number.
-  /// They are separated by a dot.
-  BlockLabel(std::string_view name, int number) noexcept
-      : Sigil{fmt::format("{}.{}", name, number)} {}
+}  // namespace user_defined
+
+namespace compiler_generated {
+
+/// @note This class is not meant to be used directly, use the aliases.
+template <char prefix>
+class Sigil {
+ public:
+  Sigil(std::string_view name, int number)
+      : name_{fmt::format("{}.{}", name, number)} {}
+  Sigil(int number) : name_{std::to_string(number)} {}
+
+  /// @note Add an additional `.` before the name.
+  std::string Repr() const {
+    return fmt::format("{}.{}", prefix, name_);
+  }
+
+ private:
+  std::string name_;
 };
 
-/// @brief Globals (represented by a pointer).
-class GlobalPointer : public Sigil {
- public:
-  using Sigil::Sigil;
-};
+/// @brief Block labels (compiler generated).
+using BlockLabel = Sigil<'@'>;
+/// @brief Globals (represented by a pointer) (compiler generated).
+using GlobalPointer = Sigil<'$'>;
+/// @brief function-scope temporaries (compiler generated).
+using FuncScopeTemp = Sigil<'%'>;
+/// @brief User-defined Aggregate Types (compiler generated).
+using AggregateType = Sigil<':'>;
 
-/// @brief function-scope temporaries.
-class FuncScopeTemp : public Sigil {
- public:
-  using Sigil::Sigil;
-};
-
-/// @brief User-defined Aggregate Types.
-class AggregateType : public Sigil {
- public:
-  using Sigil::Sigil;
-};
+}  // namespace compiler_generated
 
 }  // namespace qbe
 
-template <>
-struct fmt::formatter<qbe::FuncScopeTemp> : fmt::formatter<std::string_view> {
-  auto format(const qbe::FuncScopeTemp& s, fmt::format_context& ctx) const
-      -> decltype(ctx.out());
+template <char prefix>
+struct fmt::formatter<qbe::user_defined::Sigil<prefix>>
+    : fmt::formatter<std::string_view> {
+  auto format(const qbe::user_defined::Sigil<prefix>& s,
+              fmt::format_context& ctx) const -> decltype(ctx.out()) {
+    return fmt::format_to(ctx.out(), "{}", s.Repr());
+  }
 };
-
-template <>
-struct fmt::formatter<qbe::BlockLabel> : fmt::formatter<std::string_view> {
-  auto format(const qbe::BlockLabel& s, fmt::format_context& ctx) const
-      -> decltype(ctx.out());
-};
-
-template <>
-struct fmt::formatter<qbe::GlobalPointer> : fmt::formatter<std::string_view> {
-  auto format(const qbe::GlobalPointer& s, fmt::format_context& ctx) const
-      -> decltype(ctx.out());
-};
-
-template <>
-struct fmt::formatter<qbe::AggregateType> : fmt::formatter<std::string_view> {
-  auto format(const qbe::AggregateType& s, fmt::format_context& ctx) const
-      -> decltype(ctx.out());
+template <char prefix>
+struct fmt::formatter<qbe::compiler_generated::Sigil<prefix>>
+    : fmt::formatter<std::string_view> {
+  auto format(const qbe::compiler_generated::Sigil<prefix>& s,
+              fmt::format_context& ctx) const -> decltype(ctx.out()) {
+    return fmt::format_to(ctx.out(), "{}", s.Repr());
+  }
 };
 
 #endif  // QBE_SIGIL_HPP_
