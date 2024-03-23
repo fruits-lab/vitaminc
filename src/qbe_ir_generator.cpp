@@ -186,10 +186,8 @@ void QbeIrGenerator::Visit(const CompoundStmtNode& compound_stmt) {
 
 void QbeIrGenerator::Visit(const ProgramNode& program) {
   // Generate the data of builtin functions.
-  // FIXME: The format is not of a user-defined sigil, nor a compiler-generated
-  // one.
   Write_("data {} = align 1 {{ b \"%d\\012\\000\", }}\n",
-         "$.builtin_print_format");
+         user_defined::GlobalPointer{"__builtin_print_format"});
 
   for (const auto& func_def : program.func_def_list) {
     func_def->Accept(*this);
@@ -531,7 +529,7 @@ void QbeIrGenerator::Visit(const FuncCallExprNode& call_expr) {
   Write_(kIndentStr);
   if (id_expr->id == "__builtin_print") {
     Write_("{} =w call $printf(", FuncScopeTemp{res_num});
-    Write_("l {}, ", "$.builtin_print_format");
+    Write_("l {}, ", user_defined::GlobalPointer{"__builtin_print_format"});
   } else {
     Write_("{} =w call {}(", FuncScopeTemp{res_num},
            user_defined::GlobalPointer{id_expr->id});
