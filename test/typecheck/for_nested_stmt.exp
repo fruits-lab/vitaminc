@@ -11,7 +11,7 @@ ProgramNode
           IdExprNode i: int
           IntConstExprNode 5: int
         SimpleAssignmentExprNode int
-          i: int
+          IdExprNode i: int
           BinaryExprNode int +
             IdExprNode i: int
             IntConstExprNode 1: int
@@ -24,14 +24,14 @@ ProgramNode
               IdExprNode j: int
               IntConstExprNode 5: int
             SimpleAssignmentExprNode int
-              j: int
+              IdExprNode j: int
               BinaryExprNode int +
                 IdExprNode j: int
                 IntConstExprNode 1: int
             CompoundStmtNode
               ExprStmtNode
                 SimpleAssignmentExprNode int
-                  k: int
+                  IdExprNode k: int
                   BinaryExprNode int +
                     IdExprNode k: int
                     IntConstExprNode 1: int

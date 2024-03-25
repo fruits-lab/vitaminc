@@ -10,20 +10,20 @@ ProgramNode
             IntConstExprNode 1: int
             ExprStmtNode
               SimpleAssignmentExprNode int
-                a: int
+                IdExprNode a: int
                 IntConstExprNode 2: int
           BreakStmtNode
           CaseStmtNode
             IntConstExprNode 2: int
             ExprStmtNode
               SimpleAssignmentExprNode int
-                a: int
+                IdExprNode a: int
                 IntConstExprNode 3: int
           BreakStmtNode
           DefaultStmtNode
             ExprStmtNode
               SimpleAssignmentExprNode int
-                a: int
+                IdExprNode a: int
                 IntConstExprNode 4: int
       ReturnStmtNode
         IdExprNode a: int

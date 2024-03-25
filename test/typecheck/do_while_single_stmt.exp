@@ -7,7 +7,7 @@ ProgramNode
         // Do
         ExprStmtNode
           SimpleAssignmentExprNode int
-            i: int
+            IdExprNode i: int
             BinaryExprNode int -
               IdExprNode i: int
               IntConstExprNode 1: int

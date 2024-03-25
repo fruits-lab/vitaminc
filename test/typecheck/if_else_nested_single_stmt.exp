@@ -15,17 +15,17 @@ ProgramNode
           // Then
           ExprStmtNode
             SimpleAssignmentExprNode int
-              i: int
+              IdExprNode i: int
               IntConstExprNode 2: int
           // Else
           ExprStmtNode
             SimpleAssignmentExprNode int
-              i: int
+              IdExprNode i: int
               IntConstExprNode 7: int
         // Else
         ExprStmtNode
           SimpleAssignmentExprNode int
-            i: int
+            IdExprNode i: int
             IntConstExprNode 15: int
       ReturnStmtNode
         IdExprNode i: int

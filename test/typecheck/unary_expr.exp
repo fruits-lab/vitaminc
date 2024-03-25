@@ -11,22 +11,22 @@ ProgramNode
           IdExprNode i: int
       ExprStmtNode
         SimpleAssignmentExprNode int
-          i: int
+          IdExprNode i: int
           UnaryExprNode int +
             IdExprNode i: int
       ExprStmtNode
         SimpleAssignmentExprNode int
-          i: int
+          IdExprNode i: int
           UnaryExprNode int -
             IdExprNode i: int
       ExprStmtNode
         SimpleAssignmentExprNode int
-          i: int
+          IdExprNode i: int
           UnaryExprNode int !
             IdExprNode i: int
       ExprStmtNode
         SimpleAssignmentExprNode int
-          i: int
+          IdExprNode i: int
           UnaryExprNode int ~
             IdExprNode i: int
       ReturnStmtNode

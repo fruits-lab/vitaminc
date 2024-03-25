@@ -66,6 +66,7 @@
 
 %nterm <Type> type_specifier
 %nterm <std::unique_ptr<ExprNode>> expr
+%nterm <std::unique_ptr<ExprNode>> assign_expr
 %nterm <std::unique_ptr<ExprNode>> expr_opt
 %nterm <std::unique_ptr<ExprNode>> unary_expr
 %nterm <std::unique_ptr<ExprNode>> postfix_expr
@@ -234,8 +235,14 @@ expr: unary_expr { $$ = $1; }
   /* equality 6.5.9 */
   | expr EQ expr { $$ = std::make_unique<BinaryExprNode>(BinaryOperator::kEq, $1, $3); }
   | expr NE expr { $$ = std::make_unique<BinaryExprNode>(BinaryOperator::kNeq, $1, $3); }
-  /* assignment 6.5.16 */
-  | ID '=' expr { $$ = std::make_unique<SimpleAssignmentExprNode>($1, $3); }
+  | assign_expr { $$ = $1; }
+  ;
+
+/* assignment 6.5.16 */
+/* TODO: support mulitple assignment operators */
+assign_expr: unary_expr '=' expr {
+    $$ = std::make_unique<SimpleAssignmentExprNode>($1, $3);
+  }
   ;
 
 /* 6.5.3 Unary operators */
