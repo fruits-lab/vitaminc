@@ -3,6 +3,7 @@ int main() {
   int* b;
   int* c = &a;
   b = c;
+  *c = 5;
 
   return *c;
 }

@@ -11,6 +11,11 @@ ProgramNode
         SimpleAssignmentExprNode int*
           IdExprNode b: int*
           IdExprNode c: int*
+      ExprStmtNode
+        SimpleAssignmentExprNode int
+          UnaryExprNode int *
+            IdExprNode c: int*
+          IntConstExprNode 5: int
       ReturnStmtNode
         UnaryExprNode int *
           IdExprNode c: int*
