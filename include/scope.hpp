@@ -1,6 +1,7 @@
 #ifndef SCOPE_HPP_
 #define SCOPE_HPP_
 
+#include <cstdint>
 #include <memory>
 #include <stdexcept>
 #include <string>
@@ -8,6 +9,20 @@
 #include <vector>
 
 #include "symbol.hpp"
+
+// 6.2.1 Scopes of identifiers
+enum class ScopeKind : std::uint8_t {
+  /// @note A label name is the only kind of identifier that has function scope.
+  kFunc,
+  /// @note Appears outside of any block or list of parameters.
+  kFile,
+  /// @note Appears inside a block or within the list of parameter declarations
+  /// in a function definition.
+  kBlock,
+  /// @note Appears within the list of parameter declarations in a function
+  /// prototype.
+  kParam,
+};
 
 /// @brief Manages scopes and symbol tables.
 class ScopeStack {
