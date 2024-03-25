@@ -9,7 +9,7 @@ ProgramNode
           IdExprNode a: int
       ExprStmtNode
         SimpleAssignmentExprNode int*
-          b: int*
+          IdExprNode b: int*
           IdExprNode c: int*
       ReturnStmtNode
         UnaryExprNode int *

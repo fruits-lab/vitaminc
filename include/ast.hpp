@@ -365,14 +365,15 @@ struct AssignmentExprNode  // NOLINT(cppcoreguidelines-special-member-functions)
 };
 
 struct SimpleAssignmentExprNode : public AssignmentExprNode {
-  SimpleAssignmentExprNode(std::string id, std::unique_ptr<ExprNode> expr)
-      : id{std::move(id)}, expr{std::move(expr)} {}
+  SimpleAssignmentExprNode(std::unique_ptr<ExprNode> lhs,
+                           std::unique_ptr<ExprNode> rhs)
+      : lhs{std::move(lhs)}, rhs{std::move(rhs)} {}
 
   void Accept(NonModifyingVisitor&) const override;
   void Accept(ModifyingVisitor&) override;
 
-  std::string id;
-  std::unique_ptr<ExprNode> expr;
+  std::unique_ptr<ExprNode> lhs;
+  std::unique_ptr<ExprNode> rhs;
 };
 
 #endif  // AST_HPP_

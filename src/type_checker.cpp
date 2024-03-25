@@ -301,19 +301,11 @@ void TypeChecker::Visit(BinaryExprNode& bin_expr) {
 }
 
 void TypeChecker::Visit(SimpleAssignmentExprNode& assign_expr) {
-  assign_expr.expr->Accept(*this);
-  if (auto symbol = env_.LookUp(assign_expr.id)) {
-    if (assign_expr.expr->type == symbol->expr_type) {
-      // 6.5.16 Assignment operators
-      // The type of an assignment expression is the type of the left
-      // operand unless the left operand has qualified type, in which case it
-      // is the unqualified version of the type of the left operand.
-      assign_expr.type = symbol->expr_type;
-    } else {
-      // TODO: assigning to 'symbol->expr_type' from incompatible type
-      // 'expr->type'
-    }
+  assign_expr.lhs->Accept(*this);
+  assign_expr.rhs->Accept(*this);
+  if (assign_expr.lhs->type != assign_expr.rhs->type) {
+    // TODO: unmatched assignment type
   } else {
-    // TODO: 'id' undeclared
+    assign_expr.type = assign_expr.rhs->type;
   }
 }

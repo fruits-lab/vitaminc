@@ -17,13 +17,13 @@ ProgramNode
             CompoundStmtNode
               ExprStmtNode
                 SimpleAssignmentExprNode int
-                  i: int
+                  IdExprNode i: int
                   IntConstExprNode 2: int
             // Else
             CompoundStmtNode
               ExprStmtNode
                 SimpleAssignmentExprNode int
-                  i: int
+                  IdExprNode i: int
                   IntConstExprNode 7: int
         // Else
         CompoundStmtNode
@@ -35,13 +35,13 @@ ProgramNode
             CompoundStmtNode
               ExprStmtNode
                 SimpleAssignmentExprNode int
-                  i: int
+                  IdExprNode i: int
                   IntConstExprNode 30: int
             // Else
             CompoundStmtNode
               ExprStmtNode
                 SimpleAssignmentExprNode int
-                  i: int
+                  IdExprNode i: int
                   IntConstExprNode 15: int
       ReturnStmtNode
         IdExprNode i: int

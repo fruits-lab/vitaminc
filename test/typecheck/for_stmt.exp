@@ -7,20 +7,20 @@ ProgramNode
       ForStmtNode
         LoopInitNode
           SimpleAssignmentExprNode int
-            i: int
+            IdExprNode i: int
             IntConstExprNode 0: int
         BinaryExprNode int <
           IdExprNode i: int
           IntConstExprNode 5: int
         SimpleAssignmentExprNode int
-          i: int
+          IdExprNode i: int
           BinaryExprNode int +
             IdExprNode i: int
             IntConstExprNode 1: int
         CompoundStmtNode
           ExprStmtNode
             SimpleAssignmentExprNode int
-              j: int
+              IdExprNode j: int
               BinaryExprNode int +
                 IdExprNode j: int
                 IntConstExprNode 1: int

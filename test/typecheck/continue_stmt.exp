@@ -12,12 +12,12 @@ ProgramNode
             CompoundStmtNode
               ExprStmtNode
                 SimpleAssignmentExprNode int
-                  a: int
+                  IdExprNode a: int
                   IntConstExprNode 5: int
               ContinueStmtNode
           ExprStmtNode
             SimpleAssignmentExprNode int
-              a: int
+              IdExprNode a: int
               IntConstExprNode 0: int
         // While
         BinaryExprNode int <

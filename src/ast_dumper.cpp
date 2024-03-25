@@ -273,10 +273,9 @@ void AstDumper::Visit(const BinaryExprNode& bin_expr) {
 
 void AstDumper::Visit(const SimpleAssignmentExprNode& assign_expr) {
   std::cout << indenter_.Indent() << "SimpleAssignmentExprNode "
-            << TypeToString(assign_expr.expr->type) << '\n';
-  indenter_.IncreaseLevel();
-  std::cout << indenter_.Indent() << assign_expr.id << ": "
             << TypeToString(assign_expr.type) << '\n';
-  assign_expr.expr->Accept(*this);
+  indenter_.IncreaseLevel();
+  assign_expr.lhs->Accept(*this);
+  assign_expr.rhs->Accept(*this);
   indenter_.DecreaseLevel();
 }

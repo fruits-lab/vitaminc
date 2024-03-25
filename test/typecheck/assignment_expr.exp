@@ -4,7 +4,7 @@ ProgramNode
       DeclNode a: int
       ExprStmtNode
         SimpleAssignmentExprNode int
-          a: int
+          IdExprNode a: int
           BinaryExprNode int +
             IntConstExprNode 3: int
             IntConstExprNode 2: int
