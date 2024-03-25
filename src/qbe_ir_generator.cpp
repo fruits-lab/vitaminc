@@ -73,6 +73,13 @@ auto id_to_num  // NOLINT(cppcoreguidelines-avoid-non-const-global-variables):
                 // data member introduces unnecessary dependency.
     = std::map<std::string, int>{};
 
+auto
+    reg_num_to_id_num  // NOLINT(cppcoreguidelines-avoid-non-const-global-variables):
+                       // Accessible only within this translation unit;
+                       // declaring as a data member introduces unnecessary
+                       // dependency.
+    = std::map<int, int>{};
+
 /// @brief Every expression generates a temporary. The local number of such
 /// temporary should be stored, so can propagate to later uses.
 class PrevExprNumRecorder {
@@ -502,6 +509,9 @@ void QbeIrGenerator::Visit(const IdExprNode& id_expr) {
   int reg_num = NextLocalNum();
   WriteInstr_("{} =w loadw {}", FuncScopeTemp{reg_num}, FuncScopeTemp{id_num});
   num_recorder.Record(reg_num);
+  // Map the temporary reg_num to id_num, so that upper level nodes can store
+  // value to id_num instead of reg_num.
+  reg_num_to_id_num[reg_num] = id_num;
 }
 
 void QbeIrGenerator::Visit(const IntConstExprNode& int_expr) {
@@ -614,11 +624,13 @@ void QbeIrGenerator::Visit(const BinaryExprNode& bin_expr) {
 }
 
 void QbeIrGenerator::Visit(const SimpleAssignmentExprNode& assign_expr) {
-  assign_expr.expr->Accept(*this);
-  int expr_num = num_recorder.NumOfPrevExpr();
-  WriteInstr_("storew {}, {}", FuncScopeTemp{expr_num},
-              FuncScopeTemp{id_to_num.at(assign_expr.id)});
-  num_recorder.Record(expr_num);
+  assign_expr.lhs->Accept(*this);
+  int lhs_num = num_recorder.NumOfPrevExpr();
+  assign_expr.rhs->Accept(*this);
+  int rhs_num = num_recorder.NumOfPrevExpr();
+  WriteInstr_("storew {}, {}", FuncScopeTemp{rhs_num},
+              FuncScopeTemp{reg_num_to_id_num.at(lhs_num)});
+  num_recorder.Record(rhs_num);
 }
 
 void QbeIrGenerator::VWrite_(fmt::string_view format, fmt::format_args args) {
