@@ -5,6 +5,8 @@
 #include <cstddef>
 #include <cstdint>
 #include <memory>
+#include <string>
+#include <unordered_map>
 #include <utility>
 #include <variant>
 #include <vector>
@@ -63,6 +65,17 @@ void TypeChecker::Visit(ParamNode& parameter) {
   }
 }
 
+namespace {
+
+/// @brief Associate with a function scope. Keep track of the use and definition
+/// of a label. This is essential for forward referencing. Each time a label is
+/// used, add it to the map. Each time a label is defined, mark its
+/// corresponding mapping as true. In case a label is defined before used, also
+/// add it to the map.
+std::unordered_map<std::string, bool>
+    label_defined;  // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
+}  // namespace
+
 void TypeChecker::Visit(FuncDefNode& func_def) {
   if (env_.Probe(func_def.id)) {
     // TODO: redefinition of function id
@@ -75,8 +88,14 @@ void TypeChecker::Visit(FuncDefNode& func_def) {
 
     env_.Add(std::move(symbol));
   }
-
+  label_defined.clear();
   func_def.body->Accept(*this);
+  for (auto& [label, defined] : label_defined) {
+    if (!defined) {
+      // TODO: use of undeclared label 'label'
+    }
+  }
+  label_defined.clear();
   //  TODO: check body return type and function return type
 }
 
@@ -152,7 +171,15 @@ void TypeChecker::Visit(ReturnStmtNode& ret_stmt) {
 }
 
 void TypeChecker::Visit(GotoStmtNode& goto_stmt) {
-  // FIXME: To allow forward reference, we assume the label is declared.
+  // NOTE: We can know whether a label is defined until the function is about to
+  // end. Thus, it's checked in the function definition.
+  // Also the lookup from the environment is not necessary.
+  const bool is_not_defined =
+      label_defined.find(goto_stmt.label) == label_defined.end() ||
+      !label_defined.at(goto_stmt.label);
+  if (is_not_defined) {
+    label_defined[goto_stmt.label] = false;
+  }
 }
 
 void TypeChecker::Visit(BreakStmtNode& break_stmt) {
@@ -193,12 +220,11 @@ void TypeChecker::Visit(SwitchStmtNode& switch_stmt) {
 }
 
 void TypeChecker::Visit(IdLabeledStmtNode& id_labeled_stmt) {
-  // TODO: To allow forward reference, the label has to be added in some other
-  // way.
   // TODO: The label has function scope.
   // FIXME: Labels have error type.
   env_.Add(std::make_unique<SymbolEntry>(id_labeled_stmt.label,
                                          PrimitiveType::kUnknown));
+  label_defined[id_labeled_stmt.label] = true;
   id_labeled_stmt.stmt->Accept(*this);
 }
 
