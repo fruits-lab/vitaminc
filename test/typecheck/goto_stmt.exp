@@ -3,13 +3,14 @@ ProgramNode <1:1>
     CompoundStmtNode <1:12>
       DeclNode <2:7> i: int
         IntConstExprNode <2:11> 0: int
-      IdLabeledStmtNode <3:1> begin
-        ExprStmtNode <4:3>
-          SimpleAssignmentExprNode <4:5> int
-            IdExprNode <4:3> i: int
-            BinaryExprNode <4:9> int +
-              IdExprNode <4:7> i: int
-              IntConstExprNode <4:11> 1: int
-      GotoStmtNode <5:3> begin
-      ReturnStmtNode <6:3>
-        IntConstExprNode <6:10> 0: int
+      CompoundStmtNode <3:3>
+        IdLabeledStmtNode <4:3> begin
+          ExprStmtNode <5:5>
+            SimpleAssignmentExprNode <5:7> int
+              IdExprNode <5:5> i: int
+              BinaryExprNode <5:11> int +
+                IdExprNode <5:9> i: int
+                IntConstExprNode <5:13> 1: int
+      GotoStmtNode <9:3> begin
+      ReturnStmtNode <10:3>
+        IntConstExprNode <10:10> 0: int
