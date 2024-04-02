@@ -12,5 +12,6 @@ ProgramNode <1:1>
                 IdExprNode <5:9> i: int
                 IntConstExprNode <5:13> 1: int
       GotoStmtNode <9:3> begin
-      ReturnStmtNode <10:3>
-        IntConstExprNode <10:10> 0: int
+      DeclNode <11:7> begin: int
+      ReturnStmtNode <12:3>
+        IntConstExprNode <12:10> 0: int
