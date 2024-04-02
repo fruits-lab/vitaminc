@@ -24,32 +24,52 @@ enum class ScopeKind : std::uint8_t {
   kParam,
 };
 
+/// @brief A symbol table associated with a scope kind.
+struct Scope {
+  ScopeKind kind;
+  std::unique_ptr<SymbolTable> table;
+
+  Scope(ScopeKind kind, std::unique_ptr<SymbolTable> table)
+      : kind{kind}, table{std::move(table)} {}
+};
+
 /// @brief Manages scopes and symbol tables.
 class ScopeStack {
  public:
-  void PushScope() {
-    scopes_.push_back(std::make_unique<SymbolTable>());
+  // TODO: Remove default value.
+  /// @brief Pushes a new scope of the kind.
+  void PushScope(ScopeKind kind = ScopeKind::kBlock) {
+    scopes_.emplace_back(kind, std::make_unique<SymbolTable>());
   }
 
   /// @throws `NotInScopeError`
   void PopScope() {
-    TopScope_();  // ensure in scope
+    ThrowIfNotInScope_();
     scopes_.pop_back();
   }
 
-  /// @brief Adds an entry to the top-most scope.
+  // TODO: Remove default value.
+  /// @brief Adds an entry to the top-most scope of the kind.
   /// @throws `NotInScopeError`
-  std::shared_ptr<SymbolEntry> Add(std::unique_ptr<SymbolEntry> entry) {
-    return TopScope_().Add(std::move(entry));
+  /// @throws `NotInSuchKindOfScopeError`
+  std::shared_ptr<SymbolEntry> Add(std::unique_ptr<SymbolEntry> entry,
+                                   ScopeKind kind = ScopeKind::kBlock) {
+    ThrowIfNotInScope_();
+    for (auto it = scopes_.rbegin(); it != scopes_.rend(); ++it) {
+      if (it->kind == kind) {
+        return it->table->Add(std::move(entry));
+      }
+    }
+    throw NotInSuchKindOfScopeError{""};
   }
 
   /// @brief Looks up the `id` from through all scopes.
   /// @throws `NotInScopeError`
   std::shared_ptr<SymbolEntry> LookUp(const std::string& id) const {
-    TopScope_();  // ensure in scope
+    ThrowIfNotInScope_();
     // Iterates backward since we're using the container as a stack.
     for (auto it = scopes_.crbegin(); it != scopes_.crend(); ++it) {
-      if (auto entry = (*it)->Probe(id)) {
+      if (auto entry = it->table->Probe(id)) {
         return entry;
       }
     }
@@ -59,20 +79,20 @@ class ScopeStack {
   /// @brief Probes the `id` from the top-most scope.
   /// @throws `NotInScopeError`
   std::shared_ptr<SymbolEntry> Probe(const std::string& id) const {
-    return TopScope_().Probe(id);
+    ThrowIfNotInScope_();
+    return scopes_.back().table->Probe(id);
   }
 
+  using NotInSuchKindOfScopeError = std::runtime_error;
   using NotInScopeError = std::runtime_error;
 
  private:
-  std::vector<std::unique_ptr<SymbolTable>> scopes_{};
+  std::vector<Scope> scopes_{};
 
   /// @throws `NotInScopeError`
-  SymbolTable& TopScope_() const {
+  void ThrowIfNotInScope_() const {
     if (scopes_.empty()) {
       throw NotInScopeError{""};
-    } else {
-      return *scopes_.back();
     }
   }
 };
