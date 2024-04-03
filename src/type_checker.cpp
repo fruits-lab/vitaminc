@@ -82,18 +82,19 @@ std::unordered_map<std::string, bool>
 void TypeChecker::Visit(FuncDefNode& func_def) {
   if (env_.Probe(func_def.id)) {
     // TODO: redefinition of function id
-  } else {
-    auto symbol = std::make_unique<SymbolEntry>(func_def.id, func_def.type);
-    for (auto& parameter : func_def.parameters) {
-      // FIXME: The parameters are in the same scope of the function body.
-      parameter->Accept(*this);
-      symbol->param_types.push_back(parameter->type);
-    }
-
-    env_.Add(std::move(symbol), ScopeKind::kFile);
   }
 
   env_.PushScope(ScopeKind::kFunc);
+  // NOTE: This block scope will be merged with the function body. Don't pop it.
+  env_.PushScope(ScopeKind::kBlock);
+  env_.MergeWithNextScope();
+  auto symbol = std::make_unique<SymbolEntry>(func_def.id, func_def.type);
+  for (auto& parameter : func_def.parameters) {
+    parameter->Accept(*this);
+    symbol->param_types.push_back(parameter->type);
+  }
+  env_.Add(std::move(symbol), ScopeKind::kFile);
+
   label_defined.clear();
   func_def.body->Accept(*this);
   for (auto& [label, defined] : label_defined) {
@@ -102,6 +103,7 @@ void TypeChecker::Visit(FuncDefNode& func_def) {
     }
   }
   label_defined.clear();
+  // Pops the function scope.
   env_.PopScope();
   //  TODO: check body return type and function return type
 }
