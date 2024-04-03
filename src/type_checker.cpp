@@ -230,6 +230,10 @@ void TypeChecker::Visit(SwitchStmtNode& switch_stmt) {
 }
 
 void TypeChecker::Visit(IdLabeledStmtNode& id_labeled_stmt) {
+  if (label_defined.find(id_labeled_stmt.label) != label_defined.end() &&
+      label_defined.at(id_labeled_stmt.label)) {
+    // TODO: redefinition of label 'label'
+  }
   label_defined[id_labeled_stmt.label] = true;
   id_labeled_stmt.stmt->Accept(*this);
 }
