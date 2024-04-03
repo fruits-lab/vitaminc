@@ -13,6 +13,7 @@
 
 #include "ast.hpp"
 #include "operator.hpp"
+#include "scope.hpp"
 #include "symbol.hpp"
 #include "type.hpp"
 
@@ -52,7 +53,8 @@ void TypeChecker::Visit(DeclNode& decl) {
     // TODO: redefinition of 'id'
   } else {
     auto symbol = std::make_unique<SymbolEntry>(decl.id, decl.type);
-    env_.Add(std::move(symbol));
+    // TODO: May be file scope once we support global variables.
+    env_.Add(std::move(symbol), ScopeKind::kBlock);
   }
 }
 
@@ -61,7 +63,8 @@ void TypeChecker::Visit(ParamNode& parameter) {
     // TODO: redefinition of 'id'
   } else {
     auto symbol = std::make_unique<SymbolEntry>(parameter.id, parameter.type);
-    env_.Add(std::move(symbol));
+    // TODO: May be parameter scope once we support function prototypes.
+    env_.Add(std::move(symbol), ScopeKind::kBlock);
   }
 }
 
@@ -82,12 +85,15 @@ void TypeChecker::Visit(FuncDefNode& func_def) {
   } else {
     auto symbol = std::make_unique<SymbolEntry>(func_def.id, func_def.type);
     for (auto& parameter : func_def.parameters) {
+      // FIXME: The parameters are in the same scope of the function body.
       parameter->Accept(*this);
       symbol->param_types.push_back(parameter->type);
     }
 
-    env_.Add(std::move(symbol));
+    env_.Add(std::move(symbol), ScopeKind::kFile);
   }
+
+  env_.PushScope(ScopeKind::kFunc);
   label_defined.clear();
   func_def.body->Accept(*this);
   for (auto& [label, defined] : label_defined) {
@@ -96,6 +102,7 @@ void TypeChecker::Visit(FuncDefNode& func_def) {
     }
   }
   label_defined.clear();
+  env_.PopScope();
   //  TODO: check body return type and function return type
 }
 
@@ -105,7 +112,7 @@ void TypeChecker::Visit(LoopInitNode& loop_init) {
 }
 
 void TypeChecker::Visit(CompoundStmtNode& compound_stmt) {
-  env_.PushScope();
+  env_.PushScope(ScopeKind::kBlock);
   for (auto& item : compound_stmt.items) {
     std::visit([this](auto&& item) { item->Accept(*this); }, item);
   }
@@ -119,11 +126,11 @@ void TypeChecker::InstallBuiltins_(ScopeStack& env) {
   auto symbol =
       std::make_unique<SymbolEntry>("__builtin_print", PrimitiveType::kInt);
   symbol->param_types.emplace_back(PrimitiveType::kInt);
-  env.Add(std::move(symbol));
+  env.Add(std::move(symbol), ScopeKind::kFile);
 }
 
 void TypeChecker::Visit(ProgramNode& program) {
-  env_.PushScope();
+  env_.PushScope(ScopeKind::kFile);
   InstallBuiltins_(env_);
   bool has_main_func = false;
   for (auto& func_def : program.func_def_list) {
@@ -220,10 +227,10 @@ void TypeChecker::Visit(SwitchStmtNode& switch_stmt) {
 }
 
 void TypeChecker::Visit(IdLabeledStmtNode& id_labeled_stmt) {
-  // TODO: The label has function scope.
   // FIXME: Labels have error type.
   env_.Add(std::make_unique<SymbolEntry>(id_labeled_stmt.label,
-                                         PrimitiveType::kUnknown));
+                                         PrimitiveType::kUnknown),
+           ScopeKind::kFunc);
   label_defined[id_labeled_stmt.label] = true;
   id_labeled_stmt.stmt->Accept(*this);
 }

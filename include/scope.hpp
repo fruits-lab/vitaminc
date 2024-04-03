@@ -36,9 +36,8 @@ struct Scope {
 /// @brief Manages scopes and symbol tables.
 class ScopeStack {
  public:
-  // TODO: Remove default value.
   /// @brief Pushes a new scope of the kind.
-  void PushScope(ScopeKind kind = ScopeKind::kBlock) {
+  void PushScope(ScopeKind kind) {
     scopes_.emplace_back(kind, std::make_unique<SymbolTable>());
   }
 
@@ -48,12 +47,11 @@ class ScopeStack {
     scopes_.pop_back();
   }
 
-  // TODO: Remove default value.
   /// @brief Adds an entry to the top-most scope of the kind.
   /// @throws `NotInScopeError`
   /// @throws `NotInSuchKindOfScopeError`
   std::shared_ptr<SymbolEntry> Add(std::unique_ptr<SymbolEntry> entry,
-                                   ScopeKind kind = ScopeKind::kBlock) {
+                                   ScopeKind kind) {
     ThrowIfNotInScope_();
     for (auto it = scopes_.rbegin(); it != scopes_.rend(); ++it) {
       if (it->kind == kind) {
