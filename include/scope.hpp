@@ -37,7 +37,17 @@ struct Scope {
 class ScopeStack {
  public:
   /// @brief Pushes a new scope of the kind.
+  /// @throws `ScopesOfDifferentKindIsNotMergeableError` if the previous scope
+  /// had set to merge with the next (this) scope, which is of a different kind.
   void PushScope(ScopeKind kind) {
+    if (should_merge_with_next_scope_) {
+      if (scopes_.back().kind != kind) {
+        throw ScopesOfDifferentKindIsNotMergeableError{""};
+      }
+      should_merge_with_next_scope_ = false;
+      // No need to push a new scope.
+      return;
+    }
     scopes_.emplace_back(kind, std::make_unique<SymbolTable>());
   }
 
@@ -81,11 +91,23 @@ class ScopeStack {
     return scopes_.back().table->Probe(id);
   }
 
+  /// @brief Merges the current scope with the next pushed scope.
+  /// @throws `NotInScopeError` if currently not in any scope.
+  void MergeWithNextScope() {
+    ThrowIfNotInScope_();
+    should_merge_with_next_scope_ = true;
+  }
+
   using NotInSuchKindOfScopeError = std::runtime_error;
   using NotInScopeError = std::runtime_error;
+  using ScopesOfDifferentKindIsNotMergeableError = std::runtime_error;
 
  private:
   std::vector<Scope> scopes_{};
+  /// @brief If `true`, the current scope will be merged with the next scope.
+  /// @note This is used specifically for the function parameters to be included
+  /// in the scope of the function body.
+  bool should_merge_with_next_scope_{false};
 
   /// @throws `NotInScopeError`
   void ThrowIfNotInScope_() const {
