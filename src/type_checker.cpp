@@ -182,7 +182,8 @@ void TypeChecker::Visit(ReturnStmtNode& ret_stmt) {
 void TypeChecker::Visit(GotoStmtNode& goto_stmt) {
   // NOTE: We can know whether a label is defined until the function is about to
   // end. Thus, it's checked in the function definition.
-  // Also the lookup from the environment is not necessary.
+  // Also the lookup from the environment is not necessary. In fact, labels are
+  // not added to the environment.
   const bool is_not_defined =
       label_defined.find(goto_stmt.label) == label_defined.end() ||
       !label_defined.at(goto_stmt.label);
@@ -229,10 +230,6 @@ void TypeChecker::Visit(SwitchStmtNode& switch_stmt) {
 }
 
 void TypeChecker::Visit(IdLabeledStmtNode& id_labeled_stmt) {
-  // FIXME: Labels have error type.
-  env_.Add(std::make_unique<SymbolEntry>(id_labeled_stmt.label,
-                                         PrimitiveType::kUnknown),
-           ScopeKind::kFunc);
   label_defined[id_labeled_stmt.label] = true;
   id_labeled_stmt.stmt->Accept(*this);
 }
