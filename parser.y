@@ -5,8 +5,9 @@
 #include <utility>
 #include <vector>
 
-#include "operator.hpp"
 #include "ast.hpp"
+#include "location.hpp"
+#include "operator.hpp"
 #include "type.hpp"
 
 %}
@@ -24,6 +25,11 @@
 // Placed after the usual contents of the parser header file.
 %code {
   extern yy::parser::symbol_type yylex();
+
+  /// @brief Converts the location information from Bison to our own location type.
+  Location Loc(const yy::location& loc) {
+    return Location{loc.begin.line, loc.begin.column};
+  }
 }
 
 %skeleton "lalr1.cc"
@@ -122,7 +128,7 @@
 %%
 // TODO: support global variables
 entry: func_def_list_opt {
-    program = std::make_unique<ProgramNode>($1);
+    program = std::make_unique<ProgramNode>(Loc(@1), $1);
   }
   ;
 
@@ -135,7 +141,7 @@ func_def_list_opt: func_def_list_opt func_def {
   ;
 
 func_def: type_specifier ID LEFT_PAREN parameter_list_opt RIGHT_PAREN compound_stmt {
-    $$ = std::make_unique<FuncDefNode>($2, $4, $6, $1);
+    $$ = std::make_unique<FuncDefNode>(Loc(@2), $2, $4, $6, $1);
   }
   ;
 
@@ -155,13 +161,13 @@ parameter_list: parameter_list COMMA parameter {
   ;
 
 parameter: type_specifier ID {
-    $$ = std::make_unique<ParamNode>($2, $1);
+    $$ = std::make_unique<ParamNode>(Loc(@2), $2, $1);
   }
   ;
 
   /* 6.8.2 Compound statement */
 compound_stmt: LEFT_CURLY block_item_list_opt RIGHT_CURLY {
-    $$ = std::make_unique<CompoundStmtNode>($2);
+    $$ = std::make_unique<CompoundStmtNode>(Loc(@1), $2);
   }
   ;
 
@@ -186,92 +192,92 @@ block_item: decl { $$ = $1; }
   | stmt { $$ = $1; }
   ;
 
-decl: type_specifier ID SEMICOLON { $$ = std::make_unique<DeclNode>($2, $1); }
-    | type_specifier ID ASSIGN expr SEMICOLON { $$ = std::make_unique<DeclNode>($2, $1, $4); }
+decl: type_specifier ID SEMICOLON { $$ = std::make_unique<DeclNode>(Loc(@2), $2, $1); }
+    | type_specifier ID ASSIGN expr SEMICOLON { $$ = std::make_unique<DeclNode>(Loc(@2), $2, $1, $4); }
     ;
 
-stmt: expr_opt SEMICOLON { $$ = std::make_unique<ExprStmtNode>($1); }
+stmt: expr_opt SEMICOLON { $$ = std::make_unique<ExprStmtNode>(Loc(@1), $1); }
     | compound_stmt { $$ = $1; }
     | selection_stmt { $$ = $1; }
     | labeled_stmt { $$ = $1; }
-    | WHILE LEFT_PAREN expr RIGHT_PAREN stmt { $$ = std::make_unique<WhileStmtNode>($3, $5); }
-    | DO stmt WHILE LEFT_PAREN expr RIGHT_PAREN SEMICOLON { $$ = std::make_unique<WhileStmtNode>($5, $2, true); }
-    | FOR LEFT_PAREN loop_init expr_opt SEMICOLON expr_opt RIGHT_PAREN stmt { $$ = std::make_unique<ForStmtNode>($3, $4, $6, $8); }
+    | WHILE LEFT_PAREN expr RIGHT_PAREN stmt { $$ = std::make_unique<WhileStmtNode>(Loc(@1), $3, $5); }
+    | DO stmt WHILE LEFT_PAREN expr RIGHT_PAREN SEMICOLON { $$ = std::make_unique<WhileStmtNode>(Loc(@1), $5, $2, true); }
+    | FOR LEFT_PAREN loop_init expr_opt SEMICOLON expr_opt RIGHT_PAREN stmt { $$ = std::make_unique<ForStmtNode>(Loc(@1), $3, $4, $6, $8); }
     | jump_stmt { $$ = $1; }
     ;
 
 /* 6.8.1 Labeled statements */
-labeled_stmt: ID COLON stmt { $$ = std::make_unique<IdLabeledStmtNode>($1, $3); }
+labeled_stmt: ID COLON stmt { $$ = std::make_unique<IdLabeledStmtNode>(Loc(@1), $1, $3); }
     /* TODO: constant expression */
-    | CASE expr COLON stmt { $$ = std::make_unique<CaseStmtNode>($2, $4); }
-    | DEFAULT COLON stmt { $$ = std::make_unique<DefaultStmtNode>($3); }
+    | CASE expr COLON stmt { $$ = std::make_unique<CaseStmtNode>(Loc(@1), $2, $4); }
+    | DEFAULT COLON stmt { $$ = std::make_unique<DefaultStmtNode>(Loc(@1), $3); }
     ;
 
 /* 6.8.4 Selection statements */
-selection_stmt: IF LEFT_PAREN expr RIGHT_PAREN stmt %prec IF_WITHOUT_ELSE { $$ = std::make_unique<IfStmtNode>($3, $5); }
-    | IF LEFT_PAREN expr RIGHT_PAREN stmt ELSE stmt { $$ = std::make_unique<IfStmtNode>($3, $5, $7); }
-    | SWITCH LEFT_PAREN expr RIGHT_PAREN stmt { $$ = std::make_unique<SwitchStmtNode>($3, $5); }
+selection_stmt: IF LEFT_PAREN expr RIGHT_PAREN stmt %prec IF_WITHOUT_ELSE { $$ = std::make_unique<IfStmtNode>(Loc(@1), $3, $5); }
+    | IF LEFT_PAREN expr RIGHT_PAREN stmt ELSE stmt { $$ = std::make_unique<IfStmtNode>(Loc(@1), $3, $5, $7); }
+    | SWITCH LEFT_PAREN expr RIGHT_PAREN stmt { $$ = std::make_unique<SwitchStmtNode>(Loc(@1), $3, $5); }
     ;
 
 /* 6.8.6 Jump statements */
-jump_stmt: RETURN expr SEMICOLON { $$ = std::make_unique<ReturnStmtNode>($2); }
-    | BREAK SEMICOLON { $$ = std::make_unique<BreakStmtNode>(); }
-    | CONTINUE SEMICOLON { $$ = std::make_unique<ContinueStmtNode>(); }
-    | GOTO ID SEMICOLON { $$ = std::make_unique<GotoStmtNode>($2); }
+jump_stmt: RETURN expr SEMICOLON { $$ = std::make_unique<ReturnStmtNode>(Loc(@1), $2); }
+    | BREAK SEMICOLON { $$ = std::make_unique<BreakStmtNode>(Loc(@1)); }
+    | CONTINUE SEMICOLON { $$ = std::make_unique<ContinueStmtNode>(Loc(@1)); }
+    | GOTO ID SEMICOLON { $$ = std::make_unique<GotoStmtNode>(Loc(@1), $2); }
     ;
 
-loop_init: decl { $$ = std::make_unique<LoopInitNode>($1); }
-    | expr_opt SEMICOLON { $$ = std::make_unique<LoopInitNode>($1); }
+loop_init: decl { $$ = std::make_unique<LoopInitNode>(Loc(@1), $1); }
+    | expr_opt SEMICOLON { $$ = std::make_unique<LoopInitNode>(Loc(@1), $1); }
     ;
 
 expr_opt: expr { $$ = $1; }
-    | epsilon { $$ = std::make_unique<NullExprNode>(); }
+    | epsilon { $$ = std::make_unique<NullExprNode>(Loc(@1)); }
     ;
 
 expr: unary_expr { $$ = $1; }
   /* additive 6.5.6 */
-  | expr PLUS expr { $$ = std::make_unique<BinaryExprNode>(BinaryOperator::kAdd, $1, $3); }
-  | expr MINUS expr { $$ = std::make_unique<BinaryExprNode>(BinaryOperator::kSub, $1, $3); }
+  | expr PLUS expr { $$ = std::make_unique<BinaryExprNode>(Loc(@2), BinaryOperator::kAdd, $1, $3); }
+  | expr MINUS expr { $$ = std::make_unique<BinaryExprNode>(Loc(@2), BinaryOperator::kSub, $1, $3); }
   /* multiplicative 6.5.5 */
-  | expr STAR expr { $$ = std::make_unique<BinaryExprNode>(BinaryOperator::kMul, $1, $3); }
-  | expr DIV expr { $$ = std::make_unique<BinaryExprNode>(BinaryOperator::kDiv, $1, $3); }
-  | expr MOD expr { $$ = std::make_unique<BinaryExprNode>(BinaryOperator::kMod, $1, $3); }
+  | expr STAR expr { $$ = std::make_unique<BinaryExprNode>(Loc(@2), BinaryOperator::kMul, $1, $3); }
+  | expr DIV expr { $$ = std::make_unique<BinaryExprNode>(Loc(@2), BinaryOperator::kDiv, $1, $3); }
+  | expr MOD expr { $$ = std::make_unique<BinaryExprNode>(Loc(@2), BinaryOperator::kMod, $1, $3); }
   /* relational 6.5.8 */
-  | expr GT expr { $$ = std::make_unique<BinaryExprNode>(BinaryOperator::kGt, $1, $3); }
-  | expr LT expr { $$ = std::make_unique<BinaryExprNode>(BinaryOperator::kLt, $1, $3); }
-  | expr GE expr { $$ = std::make_unique<BinaryExprNode>(BinaryOperator::kGte, $1, $3); }
-  | expr LE expr { $$ = std::make_unique<BinaryExprNode>(BinaryOperator::kLte, $1, $3); }
+  | expr GT expr { $$ = std::make_unique<BinaryExprNode>(Loc(@2), BinaryOperator::kGt, $1, $3); }
+  | expr LT expr { $$ = std::make_unique<BinaryExprNode>(Loc(@2), BinaryOperator::kLt, $1, $3); }
+  | expr GE expr { $$ = std::make_unique<BinaryExprNode>(Loc(@2), BinaryOperator::kGte, $1, $3); }
+  | expr LE expr { $$ = std::make_unique<BinaryExprNode>(Loc(@2), BinaryOperator::kLte, $1, $3); }
   /* equality 6.5.9 */
-  | expr EQ expr { $$ = std::make_unique<BinaryExprNode>(BinaryOperator::kEq, $1, $3); }
-  | expr NE expr { $$ = std::make_unique<BinaryExprNode>(BinaryOperator::kNeq, $1, $3); }
+  | expr EQ expr { $$ = std::make_unique<BinaryExprNode>(Loc(@2), BinaryOperator::kEq, $1, $3); }
+  | expr NE expr { $$ = std::make_unique<BinaryExprNode>(Loc(@2), BinaryOperator::kNeq, $1, $3); }
   | assign_expr { $$ = $1; }
   ;
 
 /* assignment 6.5.16 */
-/* TODO: support mulitple assignment operators */
+/* TODO: support multiple assignment operators */
 assign_expr: unary_expr ASSIGN expr {
-    $$ = std::make_unique<SimpleAssignmentExprNode>($1, $3);
+    $$ = std::make_unique<SimpleAssignmentExprNode>(Loc(@2), $1, $3);
   }
   ;
 
 /* 6.5.3 Unary operators */
 unary_expr: postfix_expr { $$ = $1; }
-  | INCR unary_expr { $$ = std::make_unique<UnaryExprNode>(UnaryOperator::kIncr, $2); }
-  | DECR unary_expr { $$ = std::make_unique<UnaryExprNode>(UnaryOperator::kDecr, $2); }
-  | PLUS unary_expr { $$ = std::make_unique<UnaryExprNode>(UnaryOperator::kPos, $2); }
-  | MINUS unary_expr { $$ = std::make_unique<UnaryExprNode>(UnaryOperator::kNeg, $2); }
-  | EXCLAMATION unary_expr { $$ = std::make_unique<UnaryExprNode>(UnaryOperator::kNot, $2); }
+  | INCR unary_expr { $$ = std::make_unique<UnaryExprNode>(Loc(@1), UnaryOperator::kIncr, $2); }
+  | DECR unary_expr { $$ = std::make_unique<UnaryExprNode>(Loc(@1), UnaryOperator::kDecr, $2); }
+  | PLUS unary_expr { $$ = std::make_unique<UnaryExprNode>(Loc(@1), UnaryOperator::kPos, $2); }
+  | MINUS unary_expr { $$ = std::make_unique<UnaryExprNode>(Loc(@1), UnaryOperator::kNeg, $2); }
+  | EXCLAMATION unary_expr { $$ = std::make_unique<UnaryExprNode>(Loc(@1), UnaryOperator::kNot, $2); }
   /* TODO: implement pointer type */
-  | AMPERSAND unary_expr { $$ = std::make_unique<UnaryExprNode>(UnaryOperator::kAddr, $2); }
-  | STAR unary_expr { $$ = std::make_unique<UnaryExprNode>(UnaryOperator::kDeref, $2); }
-  | TILDE unary_expr { $$ = std::make_unique<UnaryExprNode>(UnaryOperator::kBitComp, $2); }
+  | AMPERSAND unary_expr { $$ = std::make_unique<UnaryExprNode>(Loc(@1), UnaryOperator::kAddr, $2); }
+  | STAR unary_expr { $$ = std::make_unique<UnaryExprNode>(Loc(@1), UnaryOperator::kDeref, $2); }
+  | TILDE unary_expr { $$ = std::make_unique<UnaryExprNode>(Loc(@1), UnaryOperator::kBitComp, $2); }
   /* TODO: sizeof */
   ;
 
 /* 6.5.2 Postfix operators */
 postfix_expr: primary_expr { $$ = $1; }
   /* TODO: support arguments */
-  | postfix_expr LEFT_PAREN arg_list_opt RIGHT_PAREN { $$ = std::make_unique<FuncCallExprNode>($1, $3); }
+  | postfix_expr LEFT_PAREN arg_list_opt RIGHT_PAREN { $$ = std::make_unique<FuncCallExprNode>(Loc(@1), $1, $3); }
   ;
 
 arg_list_opt: arg_list { $$ = $1; }
@@ -290,12 +296,12 @@ arg_list: arg_list COMMA arg {
   ;
 
 arg: expr {
-    $$ = std::make_unique<ArgExprNode>($1);
+    $$ = std::make_unique<ArgExprNode>(Loc(@1), $1);
   }
   ;
 
-primary_expr: ID { $$ = std::make_unique<IdExprNode>($1); }
-  | NUM { $$ = std::make_unique<IntConstExprNode>($1); }
+primary_expr: ID { $$ = std::make_unique<IdExprNode>(Loc(@1), $1); }
+  | NUM { $$ = std::make_unique<IntConstExprNode>(Loc(@1), $1); }
   | LEFT_PAREN expr RIGHT_PAREN { $$ = $2; }
   ;
 
