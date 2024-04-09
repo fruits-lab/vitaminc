@@ -29,6 +29,7 @@
 %skeleton "lalr1.cc"
 %require "3.2"
 %language "c++"
+%locations
 
 %parse-param {std::unique_ptr<AstNode>& program}
 
@@ -50,13 +51,21 @@
 // Improve syntax error handling, as LALR parser might perform additional
 // parser stack reductions before discovering the syntax error.
 %define parse.lac full
+// Avoid creating header file since we don't use yy::location outside of the parser.
+%define api.location.file none
+
+%token MINUS PLUS STAR DIV MOD ASSIGN
+%token EXCLAMATION TILDE AMPERSAND
+%token COMMA SEMICOLON COLON
+// (), {}, []
+%token LEFT_PAREN RIGHT_PAREN LEFT_CURLY RIGHT_CURLY LEFT_SQUARE RIGHT_SQUARE
 
 %token <int> NUM
 %token <std::string> ID
 %token INT
 %token IF ELSE
 %token SWITCH CASE DEFAULT
-%token EQ NE LE GE
+%token EQ LT GT NE LE GE
 %token DO WHILE FOR
 %token CONTINUE BREAK RETURN
 %token GOTO
@@ -84,23 +93,23 @@
 %nterm <std::vector<CompoundStmtNode::Item>> block_item_list block_item_list_opt
 %nterm <CompoundStmtNode::Item> block_item
 
-%precedence '='
+%precedence ASSIGN
 %left EQ NE
-%left '<' '>' LE GE
-%left '+' '-'
-%left '*' '/' '%'
+%left LT GT LE GE
+%left PLUS MINUS
+%left STAR DIV MOD
 
 // Resolve the ambiguity in the "dangling-else" grammar.
-// Example: IF '(' expr ')' IF '(' expr ')' stmt • ELSE stmt
+// Example: IF LEFT_PAREN expr RIGHT_PAREN IF LEFT_PAREN expr RIGHT_PAREN stmt • ELSE stmt
 // Yacc has two options to make, either shift or reduce:
 // Shift derivation
 //   stmt
-//   ↳ 13: IF '(' expr ')' stmt
-//                         ↳ 14: IF '(' expr ')' stmt • ELSE stmt
+//   ↳ 13: IF LEFT_PAREN expr RIGHT_PAREN stmt
+//                         ↳ 14: IF LEFT_PAREN expr RIGHT_PAREN stmt • ELSE stmt
 // Reduce derivation
 //   stmt
-//   ↳ 14: IF '(' expr ')' stmt                         ELSE stmt
-//                         ↳ 13: IF '(' expr ')' stmt •
+//   ↳ 14: IF LEFT_PAREN expr RIGHT_PAREN stmt                         ELSE stmt
+//                         ↳ 13: IF LEFT_PAREN expr RIGHT_PAREN stmt •
 //
 // Our goal is to find the closest IF for ELSE, so we tell Yacc to shift.
 // Since the token "ELSE" has a higher precedence than the production rule
@@ -125,7 +134,7 @@ func_def_list_opt: func_def_list_opt func_def {
   | epsilon { $$ = std::vector<std::unique_ptr<FuncDefNode>>{}; }
   ;
 
-func_def: type_specifier ID '(' parameter_list_opt ')' compound_stmt {
+func_def: type_specifier ID LEFT_PAREN parameter_list_opt RIGHT_PAREN compound_stmt {
     $$ = std::make_unique<FuncDefNode>($2, $4, $6, $1);
   }
   ;
@@ -134,7 +143,7 @@ parameter_list_opt: parameter_list { $$ = $1; }
   | epsilon { $$ = std::vector<std::unique_ptr<ParamNode>>{}; }
   ;
 
-parameter_list: parameter_list ',' parameter {
+parameter_list: parameter_list COMMA parameter {
     auto parameter_list = $1;
     parameter_list.push_back($3);
     $$ = std::move(parameter_list);
@@ -151,7 +160,7 @@ parameter: type_specifier ID {
   ;
 
   /* 6.8.2 Compound statement */
-compound_stmt: '{' block_item_list_opt '}' {
+compound_stmt: LEFT_CURLY block_item_list_opt RIGHT_CURLY {
     $$ = std::make_unique<CompoundStmtNode>($2);
   }
   ;
@@ -177,42 +186,42 @@ block_item: decl { $$ = $1; }
   | stmt { $$ = $1; }
   ;
 
-decl: type_specifier ID ';' { $$ = std::make_unique<DeclNode>($2, $1); }
-    | type_specifier ID '=' expr ';' { $$ = std::make_unique<DeclNode>($2, $1, $4); }
+decl: type_specifier ID SEMICOLON { $$ = std::make_unique<DeclNode>($2, $1); }
+    | type_specifier ID ASSIGN expr SEMICOLON { $$ = std::make_unique<DeclNode>($2, $1, $4); }
     ;
 
-stmt: expr_opt ';' { $$ = std::make_unique<ExprStmtNode>($1); }
+stmt: expr_opt SEMICOLON { $$ = std::make_unique<ExprStmtNode>($1); }
     | compound_stmt { $$ = $1; }
     | selection_stmt { $$ = $1; }
     | labeled_stmt { $$ = $1; }
-    | WHILE '(' expr ')' stmt { $$ = std::make_unique<WhileStmtNode>($3, $5); }
-    | DO stmt WHILE '(' expr ')' ';' { $$ = std::make_unique<WhileStmtNode>($5, $2, true); }
-    | FOR '(' loop_init expr_opt ';' expr_opt ')' stmt { $$ = std::make_unique<ForStmtNode>($3, $4, $6, $8); }
+    | WHILE LEFT_PAREN expr RIGHT_PAREN stmt { $$ = std::make_unique<WhileStmtNode>($3, $5); }
+    | DO stmt WHILE LEFT_PAREN expr RIGHT_PAREN SEMICOLON { $$ = std::make_unique<WhileStmtNode>($5, $2, true); }
+    | FOR LEFT_PAREN loop_init expr_opt SEMICOLON expr_opt RIGHT_PAREN stmt { $$ = std::make_unique<ForStmtNode>($3, $4, $6, $8); }
     | jump_stmt { $$ = $1; }
     ;
 
 /* 6.8.1 Labeled statements */
-labeled_stmt: ID ':' stmt { $$ = std::make_unique<IdLabeledStmtNode>($1, $3); }
+labeled_stmt: ID COLON stmt { $$ = std::make_unique<IdLabeledStmtNode>($1, $3); }
     /* TODO: constant expression */
-    | CASE expr ':' stmt { $$ = std::make_unique<CaseStmtNode>($2, $4); }
-    | DEFAULT ':' stmt { $$ = std::make_unique<DefaultStmtNode>($3); }
+    | CASE expr COLON stmt { $$ = std::make_unique<CaseStmtNode>($2, $4); }
+    | DEFAULT COLON stmt { $$ = std::make_unique<DefaultStmtNode>($3); }
     ;
 
 /* 6.8.4 Selection statements */
-selection_stmt: IF '(' expr ')' stmt %prec IF_WITHOUT_ELSE { $$ = std::make_unique<IfStmtNode>($3, $5); }
-    | IF '(' expr ')' stmt ELSE stmt { $$ = std::make_unique<IfStmtNode>($3, $5, $7); }
-    | SWITCH '(' expr ')' stmt { $$ = std::make_unique<SwitchStmtNode>($3, $5); }
+selection_stmt: IF LEFT_PAREN expr RIGHT_PAREN stmt %prec IF_WITHOUT_ELSE { $$ = std::make_unique<IfStmtNode>($3, $5); }
+    | IF LEFT_PAREN expr RIGHT_PAREN stmt ELSE stmt { $$ = std::make_unique<IfStmtNode>($3, $5, $7); }
+    | SWITCH LEFT_PAREN expr RIGHT_PAREN stmt { $$ = std::make_unique<SwitchStmtNode>($3, $5); }
     ;
 
 /* 6.8.6 Jump statements */
-jump_stmt: RETURN expr ';' { $$ = std::make_unique<ReturnStmtNode>($2); }
-    | BREAK ';' { $$ = std::make_unique<BreakStmtNode>(); }
-    | CONTINUE ';' { $$ = std::make_unique<ContinueStmtNode>(); }
-    | GOTO ID ';' { $$ = std::make_unique<GotoStmtNode>($2); }
+jump_stmt: RETURN expr SEMICOLON { $$ = std::make_unique<ReturnStmtNode>($2); }
+    | BREAK SEMICOLON { $$ = std::make_unique<BreakStmtNode>(); }
+    | CONTINUE SEMICOLON { $$ = std::make_unique<ContinueStmtNode>(); }
+    | GOTO ID SEMICOLON { $$ = std::make_unique<GotoStmtNode>($2); }
     ;
 
 loop_init: decl { $$ = std::make_unique<LoopInitNode>($1); }
-    | expr_opt ';' { $$ = std::make_unique<LoopInitNode>($1); }
+    | expr_opt SEMICOLON { $$ = std::make_unique<LoopInitNode>($1); }
     ;
 
 expr_opt: expr { $$ = $1; }
@@ -221,15 +230,15 @@ expr_opt: expr { $$ = $1; }
 
 expr: unary_expr { $$ = $1; }
   /* additive 6.5.6 */
-  | expr '+' expr { $$ = std::make_unique<BinaryExprNode>(BinaryOperator::kAdd, $1, $3); }
-  | expr '-' expr { $$ = std::make_unique<BinaryExprNode>(BinaryOperator::kSub, $1, $3); }
+  | expr PLUS expr { $$ = std::make_unique<BinaryExprNode>(BinaryOperator::kAdd, $1, $3); }
+  | expr MINUS expr { $$ = std::make_unique<BinaryExprNode>(BinaryOperator::kSub, $1, $3); }
   /* multiplicative 6.5.5 */
-  | expr '*' expr { $$ = std::make_unique<BinaryExprNode>(BinaryOperator::kMul, $1, $3); }
-  | expr '/' expr { $$ = std::make_unique<BinaryExprNode>(BinaryOperator::kDiv, $1, $3); }
-  | expr '%' expr { $$ = std::make_unique<BinaryExprNode>(BinaryOperator::kMod, $1, $3); }
+  | expr STAR expr { $$ = std::make_unique<BinaryExprNode>(BinaryOperator::kMul, $1, $3); }
+  | expr DIV expr { $$ = std::make_unique<BinaryExprNode>(BinaryOperator::kDiv, $1, $3); }
+  | expr MOD expr { $$ = std::make_unique<BinaryExprNode>(BinaryOperator::kMod, $1, $3); }
   /* relational 6.5.8 */
-  | expr '>' expr { $$ = std::make_unique<BinaryExprNode>(BinaryOperator::kGt, $1, $3); }
-  | expr '<' expr { $$ = std::make_unique<BinaryExprNode>(BinaryOperator::kLt, $1, $3); }
+  | expr GT expr { $$ = std::make_unique<BinaryExprNode>(BinaryOperator::kGt, $1, $3); }
+  | expr LT expr { $$ = std::make_unique<BinaryExprNode>(BinaryOperator::kLt, $1, $3); }
   | expr GE expr { $$ = std::make_unique<BinaryExprNode>(BinaryOperator::kGte, $1, $3); }
   | expr LE expr { $$ = std::make_unique<BinaryExprNode>(BinaryOperator::kLte, $1, $3); }
   /* equality 6.5.9 */
@@ -240,7 +249,7 @@ expr: unary_expr { $$ = $1; }
 
 /* assignment 6.5.16 */
 /* TODO: support mulitple assignment operators */
-assign_expr: unary_expr '=' expr {
+assign_expr: unary_expr ASSIGN expr {
     $$ = std::make_unique<SimpleAssignmentExprNode>($1, $3);
   }
   ;
@@ -249,27 +258,27 @@ assign_expr: unary_expr '=' expr {
 unary_expr: postfix_expr { $$ = $1; }
   | INCR unary_expr { $$ = std::make_unique<UnaryExprNode>(UnaryOperator::kIncr, $2); }
   | DECR unary_expr { $$ = std::make_unique<UnaryExprNode>(UnaryOperator::kDecr, $2); }
-  | '+' unary_expr { $$ = std::make_unique<UnaryExprNode>(UnaryOperator::kPos, $2); }
-  | '-' unary_expr { $$ = std::make_unique<UnaryExprNode>(UnaryOperator::kNeg, $2); }
-  | '!' unary_expr { $$ = std::make_unique<UnaryExprNode>(UnaryOperator::kNot, $2); }
+  | PLUS unary_expr { $$ = std::make_unique<UnaryExprNode>(UnaryOperator::kPos, $2); }
+  | MINUS unary_expr { $$ = std::make_unique<UnaryExprNode>(UnaryOperator::kNeg, $2); }
+  | EXCLAMATION unary_expr { $$ = std::make_unique<UnaryExprNode>(UnaryOperator::kNot, $2); }
   /* TODO: implement pointer type */
-  | '&' unary_expr { $$ = std::make_unique<UnaryExprNode>(UnaryOperator::kAddr, $2); }
-  | '*' unary_expr { $$ = std::make_unique<UnaryExprNode>(UnaryOperator::kDeref, $2); }
-  | '~' unary_expr { $$ = std::make_unique<UnaryExprNode>(UnaryOperator::kBitComp, $2); }
+  | AMPERSAND unary_expr { $$ = std::make_unique<UnaryExprNode>(UnaryOperator::kAddr, $2); }
+  | STAR unary_expr { $$ = std::make_unique<UnaryExprNode>(UnaryOperator::kDeref, $2); }
+  | TILDE unary_expr { $$ = std::make_unique<UnaryExprNode>(UnaryOperator::kBitComp, $2); }
   /* TODO: sizeof */
   ;
 
 /* 6.5.2 Postfix operators */
 postfix_expr: primary_expr { $$ = $1; }
   /* TODO: support arguments */
-  | postfix_expr '(' arg_list_opt ')' { $$ = std::make_unique<FuncCallExprNode>($1, $3); }
+  | postfix_expr LEFT_PAREN arg_list_opt RIGHT_PAREN { $$ = std::make_unique<FuncCallExprNode>($1, $3); }
   ;
 
 arg_list_opt: arg_list { $$ = $1; }
   | epsilon { $$ = std::vector<std::unique_ptr<ArgExprNode>>{}; }
   ;
 
-arg_list: arg_list ',' arg {
+arg_list: arg_list COMMA arg {
     auto arg_list = $1;
     arg_list.push_back($3);
     $$ = std::move(arg_list);
@@ -287,19 +296,19 @@ arg: expr {
 
 primary_expr: ID { $$ = std::make_unique<IdExprNode>($1); }
   | NUM { $$ = std::make_unique<IntConstExprNode>($1); }
-  | '(' expr ')' { $$ = $2; }
+  | LEFT_PAREN expr RIGHT_PAREN { $$ = $2; }
   ;
 
 /* 6.7.2 Type specifiers */
 /* TODO: support multiple data types */
 /* TODO: support pointer to pointer */
 type_specifier: INT { $$ = Type{PrimitiveType::kInt}; }
-  | INT '*' { $$ = Type{PrimitiveType::kInt, true}; }
+  | INT STAR { $$ = Type{PrimitiveType::kInt, true}; }
   ;
 
 epsilon: %empty;
 %%
 
-void yy::parser::error(const std::string& err) {
-  std::cerr << err << std::endl;
+void yy::parser::error(const yy::location& loc, const std::string& err) {
+  std::cerr << loc << ": " << err << std::endl;
 }
