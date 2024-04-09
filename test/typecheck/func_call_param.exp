@@ -1,39 +1,39 @@
-ProgramNode
-  FuncDefNode sum: int
-    ParamNode a: int
-    ParamNode b: int
-    ParamNode c: int
-    CompoundStmtNode
-      ReturnStmtNode
-        BinaryExprNode int +
-          BinaryExprNode int +
-            IdExprNode a: int
-            IdExprNode b: int
-          IdExprNode c: int
-  FuncDefNode add_five: int
-    ParamNode d: int
-    CompoundStmtNode
-      ReturnStmtNode
-        BinaryExprNode int +
-          IdExprNode d: int
-          IntConstExprNode 5: int
-  FuncDefNode main: int
-    CompoundStmtNode
-      DeclNode a: int
-        FuncCallExprNode int
-          IdExprNode sum: int
-          ArgExprNode int
-            IntConstExprNode 1: int
-          ArgExprNode int
-            IntConstExprNode 2: int
-          ArgExprNode int
-            IntConstExprNode 3: int
-      DeclNode b: int
-        BinaryExprNode int +
-          IdExprNode a: int
-          IntConstExprNode 4: int
-      ReturnStmtNode
-        FuncCallExprNode int
-          IdExprNode add_five: int
-          ArgExprNode int
-            IdExprNode b: int
+ProgramNode <1:1>
+  FuncDefNode <1:5> sum: int
+    ParamNode <1:13> a: int
+    ParamNode <1:20> b: int
+    ParamNode <1:27> c: int
+    CompoundStmtNode <1:30>
+      ReturnStmtNode <2:3>
+        BinaryExprNode <2:16> int +
+          BinaryExprNode <2:12> int +
+            IdExprNode <2:10> a: int
+            IdExprNode <2:14> b: int
+          IdExprNode <2:18> c: int
+  FuncDefNode <5:5> add_five: int
+    ParamNode <5:18> d: int
+    CompoundStmtNode <5:21>
+      ReturnStmtNode <6:3>
+        BinaryExprNode <6:12> int +
+          IdExprNode <6:10> d: int
+          IntConstExprNode <6:14> 5: int
+  FuncDefNode <9:5> main: int
+    CompoundStmtNode <9:12>
+      DeclNode <10:7> a: int
+        FuncCallExprNode <10:11> int
+          IdExprNode <10:11> sum: int
+          ArgExprNode <10:15> int
+            IntConstExprNode <10:15> 1: int
+          ArgExprNode <10:18> int
+            IntConstExprNode <10:18> 2: int
+          ArgExprNode <10:21> int
+            IntConstExprNode <10:21> 3: int
+      DeclNode <11:7> b: int
+        BinaryExprNode <11:13> int +
+          IdExprNode <11:11> a: int
+          IntConstExprNode <11:15> 4: int
+      ReturnStmtNode <12:3>
+        FuncCallExprNode <12:10> int
+          IdExprNode <12:10> add_five: int
+          ArgExprNode <12:19> int
+            IdExprNode <12:19> b: int

@@ -1,12 +1,12 @@
-ProgramNode
-  FuncDefNode main: int
-    CompoundStmtNode
-      DeclNode _: int
-      DeclNode __: int
-      DeclNode i: int
-      DeclNode _1: int
-      DeclNode _i: int
-      DeclNode _i1: int
-      DeclNode _i1_: int
-      DeclNode _I: int
-      DeclNode _I1: int
+ProgramNode <1:1>
+  FuncDefNode <1:5> main: int
+    CompoundStmtNode <1:12>
+      DeclNode <2:7> _: int
+      DeclNode <3:7> __: int
+      DeclNode <4:7> i: int
+      DeclNode <5:7> _1: int
+      DeclNode <6:7> _i: int
+      DeclNode <7:7> _i1: int
+      DeclNode <8:7> _i1_: int
+      DeclNode <9:7> _I: int
+      DeclNode <10:7> _I1: int
