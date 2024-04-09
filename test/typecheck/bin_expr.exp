@@ -1,37 +1,37 @@
-ProgramNode
-  FuncDefNode main: int
-    CompoundStmtNode
-      ExprStmtNode
-        BinaryExprNode int +
-          IntConstExprNode 1: int
-          IntConstExprNode 2: int
-      ExprStmtNode
-        BinaryExprNode int -
-          IntConstExprNode 1: int
-          IntConstExprNode 2: int
-      ExprStmtNode
-        BinaryExprNode int *
-          IntConstExprNode 1: int
-          IntConstExprNode 2: int
-      ExprStmtNode
-        BinaryExprNode int /
-          IntConstExprNode 1: int
-          IntConstExprNode 2: int
-      ExprStmtNode
-        BinaryExprNode int %
-          IntConstExprNode 1: int
-          IntConstExprNode 2: int
-      ExprStmtNode
-        BinaryExprNode int +
-          BinaryExprNode int +
-            BinaryExprNode int -
-              IntConstExprNode 1: int
-              BinaryExprNode int *
-                IntConstExprNode 2: int
-                IntConstExprNode 3: int
-            BinaryExprNode int /
-              IntConstExprNode 4: int
-              IntConstExprNode 5: int
-          BinaryExprNode int %
-            IntConstExprNode 6: int
-            IntConstExprNode 2: int
+ProgramNode <1:1>
+  FuncDefNode <1:5> main: int
+    CompoundStmtNode <1:12>
+      ExprStmtNode <2:3>
+        BinaryExprNode <2:5> int +
+          IntConstExprNode <2:3> 1: int
+          IntConstExprNode <2:7> 2: int
+      ExprStmtNode <3:3>
+        BinaryExprNode <3:5> int -
+          IntConstExprNode <3:3> 1: int
+          IntConstExprNode <3:7> 2: int
+      ExprStmtNode <4:3>
+        BinaryExprNode <4:5> int *
+          IntConstExprNode <4:3> 1: int
+          IntConstExprNode <4:7> 2: int
+      ExprStmtNode <5:3>
+        BinaryExprNode <5:5> int /
+          IntConstExprNode <5:3> 1: int
+          IntConstExprNode <5:7> 2: int
+      ExprStmtNode <6:3>
+        BinaryExprNode <6:5> int %
+          IntConstExprNode <6:3> 1: int
+          IntConstExprNode <6:7> 2: int
+      ExprStmtNode <7:3>
+        BinaryExprNode <7:21> int +
+          BinaryExprNode <7:13> int +
+            BinaryExprNode <7:5> int -
+              IntConstExprNode <7:3> 1: int
+              BinaryExprNode <7:9> int *
+                IntConstExprNode <7:7> 2: int
+                IntConstExprNode <7:11> 3: int
+            BinaryExprNode <7:17> int /
+              IntConstExprNode <7:15> 4: int
+              IntConstExprNode <7:19> 5: int
+          BinaryExprNode <7:25> int %
+            IntConstExprNode <7:23> 6: int
+            IntConstExprNode <7:27> 2: int

@@ -1,11 +1,11 @@
-ProgramNode
-  FuncDefNode main: int
-    CompoundStmtNode
-      ForStmtNode
-        LoopInitNode
-          NullStmtNode
-        NullStmtNode
-        NullStmtNode
-        BreakStmtNode
-      ReturnStmtNode
-        IntConstExprNode 0: int
+ProgramNode <1:1>
+  FuncDefNode <1:5> main: int
+    CompoundStmtNode <1:12>
+      ForStmtNode <2:3>
+        LoopInitNode <2:8>
+          NullStmtNode <2:8>
+        NullStmtNode <2:9>
+        NullStmtNode <2:10>
+        BreakStmtNode <3:5>
+      ReturnStmtNode <5:3>
+        IntConstExprNode <5:10> 0: int

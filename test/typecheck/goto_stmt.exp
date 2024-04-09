@@ -1,15 +1,15 @@
-ProgramNode
-  FuncDefNode main: int
-    CompoundStmtNode
-      DeclNode i: int
-        IntConstExprNode 0: int
-      IdLabeledStmtNode begin
-        ExprStmtNode
-          SimpleAssignmentExprNode int
-            IdExprNode i: int
-            BinaryExprNode int +
-              IdExprNode i: int
-              IntConstExprNode 1: int
-      GotoStmtNode begin
-      ReturnStmtNode
-        IntConstExprNode 0: int
+ProgramNode <1:1>
+  FuncDefNode <1:5> main: int
+    CompoundStmtNode <1:12>
+      DeclNode <2:7> i: int
+        IntConstExprNode <2:11> 0: int
+      IdLabeledStmtNode <3:1> begin
+        ExprStmtNode <4:3>
+          SimpleAssignmentExprNode <4:5> int
+            IdExprNode <4:3> i: int
+            BinaryExprNode <4:9> int +
+              IdExprNode <4:7> i: int
+              IntConstExprNode <4:11> 1: int
+      GotoStmtNode <5:3> begin
+      ReturnStmtNode <6:3>
+        IntConstExprNode <6:10> 0: int

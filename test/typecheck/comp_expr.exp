@@ -1,27 +1,27 @@
-ProgramNode
-  FuncDefNode main: int
-    CompoundStmtNode
-      ExprStmtNode
-        BinaryExprNode int >
-          IntConstExprNode 1: int
-          IntConstExprNode 2: int
-      ExprStmtNode
-        BinaryExprNode int <
-          IntConstExprNode 1: int
-          IntConstExprNode 2: int
-      ExprStmtNode
-        BinaryExprNode int >=
-          IntConstExprNode 1: int
-          IntConstExprNode 2: int
-      ExprStmtNode
-        BinaryExprNode int <=
-          IntConstExprNode 1: int
-          IntConstExprNode 2: int
-      ExprStmtNode
-        BinaryExprNode int ==
-          IntConstExprNode 1: int
-          IntConstExprNode 2: int
-      ExprStmtNode
-        BinaryExprNode int !=
-          IntConstExprNode 1: int
-          IntConstExprNode 2: int
+ProgramNode <1:1>
+  FuncDefNode <1:5> main: int
+    CompoundStmtNode <1:12>
+      ExprStmtNode <2:3>
+        BinaryExprNode <2:5> int >
+          IntConstExprNode <2:3> 1: int
+          IntConstExprNode <2:7> 2: int
+      ExprStmtNode <3:3>
+        BinaryExprNode <3:5> int <
+          IntConstExprNode <3:3> 1: int
+          IntConstExprNode <3:7> 2: int
+      ExprStmtNode <4:3>
+        BinaryExprNode <4:5> int >=
+          IntConstExprNode <4:3> 1: int
+          IntConstExprNode <4:8> 2: int
+      ExprStmtNode <5:3>
+        BinaryExprNode <5:5> int <=
+          IntConstExprNode <5:3> 1: int
+          IntConstExprNode <5:8> 2: int
+      ExprStmtNode <6:3>
+        BinaryExprNode <6:5> int ==
+          IntConstExprNode <6:3> 1: int
+          IntConstExprNode <6:8> 2: int
+      ExprStmtNode <7:3>
+        BinaryExprNode <7:5> int !=
+          IntConstExprNode <7:3> 1: int
+          IntConstExprNode <7:8> 2: int
