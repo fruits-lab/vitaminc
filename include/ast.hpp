@@ -7,6 +7,7 @@
 #include <variant>
 #include <vector>
 
+#include "location.hpp"
 #include "operator.hpp"
 #include "type.hpp"
 #include "visitor.hpp"
@@ -19,7 +20,8 @@ struct AstNode {
 
   /// @note To make the class abstract.
   virtual ~AstNode() = 0;
-  AstNode() = default;
+
+  AstNode(Location loc) : loc{loc} {}
 
   // Delete copy/move operations to avoid slicing. [1]
   // And "You almost never want to copy or move polymorphic objects. They
@@ -32,6 +34,8 @@ struct AstNode {
   AstNode& operator=(const AstNode&) = delete;
   AstNode(AstNode&&) = delete;
   AstNode& operator=(AstNode&&) = delete;
+
+  Location loc;
 };
 
 // NOLINTBEGIN(cppcoreguidelines-special-member-functions):
@@ -42,6 +46,8 @@ struct AstNode {
 
 /// @note This is an abstract class.
 struct StmtNode : public AstNode {
+  using AstNode::AstNode;
+
   void Accept(NonModifyingVisitor&) const override;
   void Accept(ModifyingVisitor&) override;
 
@@ -54,6 +60,8 @@ struct StmtNode : public AstNode {
 /// @note This is an abstract class.
 struct ExprNode  // NOLINT(cppcoreguidelines-special-member-functions)
     : public AstNode {
+  using AstNode::AstNode;
+
   void Accept(NonModifyingVisitor&) const override;
   void Accept(ModifyingVisitor&) override;
 
@@ -64,8 +72,9 @@ struct ExprNode  // NOLINT(cppcoreguidelines-special-member-functions)
 };
 
 struct DeclNode : public AstNode {
-  DeclNode(std::string id, Type type, std::unique_ptr<ExprNode> init = {})
-      : id{std::move(id)}, type{type}, init{std::move(init)} {}
+  DeclNode(Location loc, std::string id, Type type,
+           std::unique_ptr<ExprNode> init = {})
+      : AstNode{loc}, id{std::move(id)}, type{type}, init{std::move(init)} {}
 
   void Accept(NonModifyingVisitor&) const override;
   void Accept(ModifyingVisitor&) override;
@@ -76,7 +85,8 @@ struct DeclNode : public AstNode {
 };
 
 struct ParamNode : public AstNode {
-  ParamNode(std::string id, Type type) : id{std::move(id)}, type{type} {}
+  ParamNode(Location loc, std::string id, Type type)
+      : AstNode{loc}, id{std::move(id)}, type{type} {}
 
   void Accept(NonModifyingVisitor&) const override;
   void Accept(ModifyingVisitor&) override;
@@ -86,10 +96,11 @@ struct ParamNode : public AstNode {
 };
 
 struct FuncDefNode : public AstNode {
-  FuncDefNode(std::string id,
+  FuncDefNode(Location loc, std::string id,
               std::vector<std::unique_ptr<ParamNode>> parameters,
               std::unique_ptr<CompoundStmtNode> body, Type type)
-      : id{std::move(id)},
+      : AstNode{loc},
+        id{std::move(id)},
         parameters{std::move(parameters)},
         body{std::move(body)},
         type{type} {}
@@ -106,8 +117,9 @@ struct FuncDefNode : public AstNode {
 /// @brief A loop initialization can be either a declaration or an expression.
 struct LoopInitNode : public AstNode {
   LoopInitNode(
+      Location loc,
       std::variant<std::unique_ptr<DeclNode>, std::unique_ptr<ExprNode>> clause)
-      : clause{std::move(clause)} {}
+      : AstNode{loc}, clause{std::move(clause)} {}
 
   void Accept(NonModifyingVisitor&) const override;
   void Accept(ModifyingVisitor&) override;
@@ -118,7 +130,8 @@ struct LoopInitNode : public AstNode {
 struct CompoundStmtNode : public StmtNode {
   using Item =
       std::variant<std::unique_ptr<DeclNode>, std::unique_ptr<StmtNode>>;
-  CompoundStmtNode(std::vector<Item> items) : items{std::move(items)} {}
+  CompoundStmtNode(Location loc, std::vector<Item> items)
+      : StmtNode{loc}, items{std::move(items)} {}
 
   void Accept(NonModifyingVisitor&) const override;
   void Accept(ModifyingVisitor&) override;
@@ -129,8 +142,9 @@ struct CompoundStmtNode : public StmtNode {
 /// @brief Root of the entire program.
 struct ProgramNode : public AstNode {
   /// @note vector of move-only elements are move-only
-  ProgramNode(std::vector<std::unique_ptr<FuncDefNode>> func_def_list)
-      : func_def_list{std::move(func_def_list)} {}
+  ProgramNode(Location loc,
+              std::vector<std::unique_ptr<FuncDefNode>> func_def_list)
+      : AstNode{loc}, func_def_list{std::move(func_def_list)} {}
 
   void Accept(NonModifyingVisitor&) const override;
   void Accept(ModifyingVisitor&) override;
@@ -139,9 +153,11 @@ struct ProgramNode : public AstNode {
 };
 
 struct IfStmtNode : public StmtNode {
-  IfStmtNode(std::unique_ptr<ExprNode> expr, std::unique_ptr<StmtNode> then,
+  IfStmtNode(Location loc, std::unique_ptr<ExprNode> expr,
+             std::unique_ptr<StmtNode> then,
              std::unique_ptr<StmtNode> or_else = {})
-      : predicate{std::move(expr)},
+      : StmtNode{loc},
+        predicate{std::move(expr)},
         then{std::move(then)},
         or_else{std::move(or_else)} {}
 
@@ -154,9 +170,10 @@ struct IfStmtNode : public StmtNode {
 };
 
 struct WhileStmtNode : public StmtNode {
-  WhileStmtNode(std::unique_ptr<ExprNode> predicate,
+  WhileStmtNode(Location loc, std::unique_ptr<ExprNode> predicate,
                 std::unique_ptr<StmtNode> loop_body, bool is_do_while = false)
-      : predicate{std::move(predicate)},
+      : StmtNode{loc},
+        predicate{std::move(predicate)},
         loop_body{std::move(loop_body)},
         is_do_while{is_do_while} {}
 
@@ -169,11 +186,12 @@ struct WhileStmtNode : public StmtNode {
 };
 
 struct ForStmtNode : public StmtNode {
-  ForStmtNode(std::unique_ptr<LoopInitNode> loop_init,
+  ForStmtNode(Location loc, std::unique_ptr<LoopInitNode> loop_init,
               std::unique_ptr<ExprNode> predicate,
               std::unique_ptr<ExprNode> step,
               std::unique_ptr<StmtNode> loop_body)
-      : loop_init{std::move(loop_init)},
+      : StmtNode{loc},
+        loop_init{std::move(loop_init)},
         predicate{std::move(predicate)},
         step{std::move(step)},
         loop_body{std::move(loop_body)} {}
@@ -188,7 +206,8 @@ struct ForStmtNode : public StmtNode {
 };
 
 struct ReturnStmtNode : public StmtNode {
-  ReturnStmtNode(std::unique_ptr<ExprNode> expr) : expr{std::move(expr)} {}
+  ReturnStmtNode(Location loc, std::unique_ptr<ExprNode> expr)
+      : StmtNode{loc}, expr{std::move(expr)} {}
 
   void Accept(NonModifyingVisitor&) const override;
   void Accept(ModifyingVisitor&) override;
@@ -197,7 +216,8 @@ struct ReturnStmtNode : public StmtNode {
 };
 
 struct GotoStmtNode : public StmtNode {
-  GotoStmtNode(std::string label) : label{std::move(label)} {}
+  GotoStmtNode(Location loc, std::string label)
+      : StmtNode{loc}, label{std::move(label)} {}
 
   void Accept(NonModifyingVisitor&) const override;
   void Accept(ModifyingVisitor&) override;
@@ -206,22 +226,23 @@ struct GotoStmtNode : public StmtNode {
 };
 
 struct BreakStmtNode : public StmtNode {
-  BreakStmtNode() = default;
+  using StmtNode::StmtNode;
 
   void Accept(NonModifyingVisitor&) const override;
   void Accept(ModifyingVisitor&) override;
 };
 
 struct ContinueStmtNode : public StmtNode {
-  ContinueStmtNode() = default;
+  using StmtNode::StmtNode;
 
   void Accept(NonModifyingVisitor&) const override;
   void Accept(ModifyingVisitor&) override;
 };
 
 struct SwitchStmtNode : public StmtNode {
-  SwitchStmtNode(std::unique_ptr<ExprNode> ctrl, std::unique_ptr<StmtNode> stmt)
-      : ctrl{std::move(ctrl)}, stmt{std::move(stmt)} {}
+  SwitchStmtNode(Location loc, std::unique_ptr<ExprNode> ctrl,
+                 std::unique_ptr<StmtNode> stmt)
+      : StmtNode{loc}, ctrl{std::move(ctrl)}, stmt{std::move(stmt)} {}
 
   void Accept(NonModifyingVisitor&) const override;
   void Accept(ModifyingVisitor&) override;
@@ -234,7 +255,8 @@ struct SwitchStmtNode : public StmtNode {
 /// @brief This is an abstract class.
 struct LabeledStmtNode  // NOLINT(cppcoreguidelines-special-member-functions)
     : public StmtNode {
-  LabeledStmtNode(std::unique_ptr<StmtNode> stmt) : stmt{std::move(stmt)} {}
+  LabeledStmtNode(Location loc, std::unique_ptr<StmtNode> stmt)
+      : StmtNode{loc}, stmt{std::move(stmt)} {}
 
   void Accept(NonModifyingVisitor&) const override;
   void Accept(ModifyingVisitor&) override;
@@ -246,8 +268,9 @@ struct LabeledStmtNode  // NOLINT(cppcoreguidelines-special-member-functions)
 };
 
 struct IdLabeledStmtNode : public LabeledStmtNode {
-  IdLabeledStmtNode(std::string label, std::unique_ptr<StmtNode> stmt)
-      : LabeledStmtNode{std::move(stmt)}, label{std::move(label)} {}
+  IdLabeledStmtNode(Location loc, std::string label,
+                    std::unique_ptr<StmtNode> stmt)
+      : LabeledStmtNode{loc, std::move(stmt)}, label{std::move(label)} {}
 
   void Accept(NonModifyingVisitor&) const override;
   void Accept(ModifyingVisitor&) override;
@@ -257,8 +280,9 @@ struct IdLabeledStmtNode : public LabeledStmtNode {
 
 /// @brief A specialized labeled statement with label `case`.
 struct CaseStmtNode : public LabeledStmtNode {
-  CaseStmtNode(std::unique_ptr<ExprNode> expr, std::unique_ptr<StmtNode> stmt)
-      : LabeledStmtNode{std::move(stmt)}, expr{std::move(expr)} {}
+  CaseStmtNode(Location loc, std::unique_ptr<ExprNode> expr,
+               std::unique_ptr<StmtNode> stmt)
+      : LabeledStmtNode{loc, std::move(stmt)}, expr{std::move(expr)} {}
 
   void Accept(NonModifyingVisitor&) const override;
   void Accept(ModifyingVisitor&) override;
@@ -277,7 +301,8 @@ struct DefaultStmtNode : public LabeledStmtNode {
 /// @note Any expression can be turned into a statement by adding a semicolon
 /// to the end of the expression.
 struct ExprStmtNode : public StmtNode {
-  ExprStmtNode(std::unique_ptr<ExprNode> expr) : expr{std::move(expr)} {}
+  ExprStmtNode(Location loc, std::unique_ptr<ExprNode> expr)
+      : StmtNode{loc}, expr{std::move(expr)} {}
 
   void Accept(NonModifyingVisitor&) const override;
   void Accept(ModifyingVisitor&) override;
@@ -287,12 +312,14 @@ struct ExprStmtNode : public StmtNode {
 
 /// @note Only appears in for statement's expressions and null statement.
 struct NullExprNode : public ExprNode {
+  using ExprNode::ExprNode;
+
   void Accept(NonModifyingVisitor&) const override;
   void Accept(ModifyingVisitor&) override;
 };
 
 struct IdExprNode : public ExprNode {
-  IdExprNode(std::string id) : id{std::move(id)} {}
+  IdExprNode(Location loc, std::string id) : ExprNode{loc}, id{std::move(id)} {}
 
   void Accept(NonModifyingVisitor&) const override;
   void Accept(ModifyingVisitor&) override;
@@ -301,7 +328,7 @@ struct IdExprNode : public ExprNode {
 };
 
 struct IntConstExprNode : public ExprNode {
-  IntConstExprNode(int val) : val{val} {}
+  IntConstExprNode(Location loc, int val) : ExprNode{loc}, val{val} {}
 
   void Accept(NonModifyingVisitor&) const override;
   void Accept(ModifyingVisitor&) override;
@@ -310,7 +337,8 @@ struct IntConstExprNode : public ExprNode {
 };
 
 struct ArgExprNode : public ExprNode {
-  ArgExprNode(std::unique_ptr<ExprNode> arg) : arg{std::move(arg)} {}
+  ArgExprNode(Location loc, std::unique_ptr<ExprNode> arg)
+      : ExprNode{loc}, arg{std::move(arg)} {}
 
   void Accept(NonModifyingVisitor&) const override;
   void Accept(ModifyingVisitor&) override;
@@ -319,9 +347,9 @@ struct ArgExprNode : public ExprNode {
 };
 
 struct FuncCallExprNode : public ExprNode {
-  FuncCallExprNode(std::unique_ptr<ExprNode> func_expr,
+  FuncCallExprNode(Location loc, std::unique_ptr<ExprNode> func_expr,
                    std::vector<std::unique_ptr<ArgExprNode>> args)
-      : func_expr{std::move(func_expr)}, args{std::move(args)} {}
+      : ExprNode{loc}, func_expr{std::move(func_expr)}, args{std::move(args)} {}
 
   void Accept(NonModifyingVisitor&) const override;
   void Accept(ModifyingVisitor&) override;
@@ -331,8 +359,9 @@ struct FuncCallExprNode : public ExprNode {
 };
 
 struct UnaryExprNode : public ExprNode {
-  UnaryExprNode(UnaryOperator op, std::unique_ptr<ExprNode> operand)
-      : op{op}, operand{std::move(operand)} {}
+  UnaryExprNode(Location loc, UnaryOperator op,
+                std::unique_ptr<ExprNode> operand)
+      : ExprNode{loc}, op{op}, operand{std::move(operand)} {}
 
   void Accept(NonModifyingVisitor&) const override;
   void Accept(ModifyingVisitor&) override;
@@ -342,9 +371,9 @@ struct UnaryExprNode : public ExprNode {
 };
 
 struct BinaryExprNode : public ExprNode {
-  BinaryExprNode(BinaryOperator op, std::unique_ptr<ExprNode> lhs,
+  BinaryExprNode(Location loc, BinaryOperator op, std::unique_ptr<ExprNode> lhs,
                  std::unique_ptr<ExprNode> rhs)
-      : op{op}, lhs{std::move(lhs)}, rhs{std::move(rhs)} {}
+      : ExprNode{loc}, op{op}, lhs{std::move(lhs)}, rhs{std::move(rhs)} {}
 
   void Accept(NonModifyingVisitor&) const override;
   void Accept(ModifyingVisitor&) override;
@@ -357,6 +386,8 @@ struct BinaryExprNode : public ExprNode {
 /// @note This is an abstract class.
 struct AssignmentExprNode  // NOLINT(cppcoreguidelines-special-member-functions)
     : public ExprNode {
+  using ExprNode::ExprNode;
+
   void Accept(NonModifyingVisitor&) const override;
   void Accept(ModifyingVisitor&) override;
 
@@ -365,9 +396,9 @@ struct AssignmentExprNode  // NOLINT(cppcoreguidelines-special-member-functions)
 };
 
 struct SimpleAssignmentExprNode : public AssignmentExprNode {
-  SimpleAssignmentExprNode(std::unique_ptr<ExprNode> lhs,
+  SimpleAssignmentExprNode(Location loc, std::unique_ptr<ExprNode> lhs,
                            std::unique_ptr<ExprNode> rhs)
-      : lhs{std::move(lhs)}, rhs{std::move(rhs)} {}
+      : AssignmentExprNode{loc}, lhs{std::move(lhs)}, rhs{std::move(rhs)} {}
 
   void Accept(NonModifyingVisitor&) const override;
   void Accept(ModifyingVisitor&) override;
