@@ -1,5 +1,5 @@
 command = """\
-  ../../vitaminc -o {filename}.ssa < {filename} \
+  ../../vitaminc -o {filename}.ssa {filename} \
   && qbe -o {filename}.s {filename}.ssa \
   && cc {filename}.s -o {filename}.o \
   && ./{filename}.o \
