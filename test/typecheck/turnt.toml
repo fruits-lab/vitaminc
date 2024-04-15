@@ -1,2 +1,2 @@
-command = "../../vitaminc --dump < {filename}"
+command = "../../vitaminc --dump {filename}"
 output.exp = "-"
