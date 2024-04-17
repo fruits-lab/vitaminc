@@ -123,13 +123,36 @@ auto
 
 void QbeIrGenerator::Visit(const DeclNode& decl) {
   int id_num = NextLocalNum();
-  WriteInstr_("{} =l alloc4 4", FuncScopeTemp{id_num});
+  if (decl.type.is_ptr) {
+    // QBE doesn't have pointer type, pointer type is represented as 64 bits
+    // integer. Thus, we allocate 8 * 8 bits of space for pointers.
+    // Reference: https://c9x.me/compile/doc/il-v1.2.html#Types
+    WriteInstr_("{} =l alloc8 8", FuncScopeTemp{id_num});
+  } else {
+    WriteInstr_("{} =l alloc4 4", FuncScopeTemp{id_num});
+  }
 
   if (decl.init) {
     decl.init->Accept(*this);
     int init_num = num_recorder.NumOfPrevExpr();
-    WriteInstr_("storew {}, {}", FuncScopeTemp{init_num},
-                FuncScopeTemp{id_num});
+    // A pointer declaration may have two options for its right hand side:
+    if (decl.init->type.is_ptr) {
+      // 1. int* a = &b; rhs is a reference of integer. We need to store b's
+      // address to a, where we need to map b's reg_num back to its id_num.
+      if (dynamic_cast<UnaryExprNode*>((decl.init).get())) {
+        WriteInstr_("storel {}, {}",
+                    FuncScopeTemp{reg_num_to_id_num.at(init_num)},
+                    FuncScopeTemp{id_num});
+      } else {
+        // 2. int* a = c; c itself stores the address of another integer. We can
+        // directly use the address c currently holds.
+        WriteInstr_("storel {}, {}", FuncScopeTemp{init_num},
+                    FuncScopeTemp{id_num});
+      }
+    } else {
+      WriteInstr_("storew {}, {}", FuncScopeTemp{init_num},
+                  FuncScopeTemp{id_num});
+    }
   }
   // Set up the number of the id so we know were to load it back.
   id_to_num[decl.id] = id_num;
@@ -507,7 +530,13 @@ void QbeIrGenerator::Visit(const IdExprNode& id_expr) {
   assert(id_to_num.count(id_expr.id) != 0);
   int id_num = id_to_num.at(id_expr.id);
   int reg_num = NextLocalNum();
-  WriteInstr_("{} =w loadw {}", FuncScopeTemp{reg_num}, FuncScopeTemp{id_num});
+  if (id_expr.type.is_ptr) {
+    WriteInstr_("{} =l loadl {}", FuncScopeTemp{reg_num},
+                FuncScopeTemp{id_num});
+  } else {
+    WriteInstr_("{} =w loadw {}", FuncScopeTemp{reg_num},
+                FuncScopeTemp{id_num});
+  }
   num_recorder.Record(reg_num);
   // Map the temporary reg_num to id_num, so that upper level nodes can store
   // value to id_num instead of reg_num.
@@ -603,6 +632,26 @@ void QbeIrGenerator::Visit(const UnaryExprNode& unary_expr) {
                   FuncScopeTemp{expr_num});
       num_recorder.Record(res_num);
     } break;
+    case UnaryOperator::kAddr: {
+      // Lhs can use res_num to map to the original id_num.
+      const int reg_num = num_recorder.NumOfPrevExpr();
+      const int id_num = reg_num_to_id_num.at(reg_num);
+      const int res_num = NextLocalNum();
+      WriteInstr_("{} =l loadl {}", FuncScopeTemp{res_num},
+                  FuncScopeTemp{id_num});
+      num_recorder.Record(res_num);
+      reg_num_to_id_num[res_num] = id_num;
+    } break;
+    case UnaryOperator::kDeref: {
+      // Lhs can use res_num to map to the address, which reg_num currently
+      // holds.
+      const int reg_num = num_recorder.NumOfPrevExpr();
+      const int res_num = NextLocalNum();
+      WriteInstr_("{} =l loadl {}", FuncScopeTemp{res_num},
+                  FuncScopeTemp{reg_num});
+      num_recorder.Record(res_num);
+      reg_num_to_id_num[res_num] = reg_num;
+    } break;
     default:
       break;
   }
@@ -628,8 +677,14 @@ void QbeIrGenerator::Visit(const SimpleAssignmentExprNode& assign_expr) {
   int lhs_num = num_recorder.NumOfPrevExpr();
   assign_expr.rhs->Accept(*this);
   int rhs_num = num_recorder.NumOfPrevExpr();
-  WriteInstr_("storew {}, {}", FuncScopeTemp{rhs_num},
-              FuncScopeTemp{reg_num_to_id_num.at(lhs_num)});
+  if (assign_expr.lhs->type.is_ptr) {
+    // Assign pointer address to another pointer.
+    WriteInstr_("storel {}, {}", FuncScopeTemp{rhs_num},
+                FuncScopeTemp{reg_num_to_id_num.at(lhs_num)});
+  } else {
+    WriteInstr_("storew {}, {}", FuncScopeTemp{rhs_num},
+                FuncScopeTemp{reg_num_to_id_num.at(lhs_num)});
+  }
   num_recorder.Record(rhs_num);
 }
 
