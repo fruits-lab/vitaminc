@@ -18,5 +18,10 @@ int main() {
   __builtin_print(a);
   __builtin_print(*d);
 
+  int x = 1;
+  int y = 2;
+  int z = *&x + *&y;
+  __builtin_print(z);
+
   return 0;
 }
