@@ -1,6 +1,7 @@
 #ifndef AST_HPP_
 #define AST_HPP_
 
+#include <cstddef>
 #include <memory>
 #include <string>
 #include <utility>
@@ -95,6 +96,18 @@ struct DeclVarNode : public DeclNode {
   std::string id;
   std::unique_ptr<Type> type;
   std::unique_ptr<ExprNode> init;
+};
+
+struct DeclArrayNode : public DeclNode {
+  DeclArrayNode(Location loc, std::string id, Type type, std::size_t size)
+      : DeclNode{loc}, id{std::move(id)}, type{type}, size{size} {}
+
+  void Accept(NonModifyingVisitor&) const override;
+  void Accept(ModifyingVisitor&) override;
+
+  std::string id;
+  Type type;
+  std::size_t size;
 };
 
 struct ParamNode : public AstNode {

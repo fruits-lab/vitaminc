@@ -58,6 +58,16 @@ void TypeChecker::Visit(DeclVarNode& decl) {
   }
 }
 
+void TypeChecker::Visit(DeclArrayNode& array_decl) {
+  if (env_.Probe(array_decl.id)) {
+    // TODO: redefinition of 'id'
+  } else {
+    auto symbol = std::make_unique<SymbolEntry>(array_decl.id, array_decl.type);
+    // TODO: May be file scope once we support global variables.
+    env_.Add(std::move(symbol), ScopeKind::kBlock);
+  }
+}
+
 void TypeChecker::Visit(ParamNode& parameter) {
   if (env_.Probe(parameter.id)) {
     // TODO: redefinition of 'id'

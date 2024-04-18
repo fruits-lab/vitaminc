@@ -50,6 +50,14 @@ void DeclVarNode::Accept(ModifyingVisitor& v) {
   v.Visit(*this);
 }
 
+void DeclArrayNode::Accept(NonModifyingVisitor& v) const {
+  v.Visit(*this);
+}
+
+void DeclArrayNode::Accept(ModifyingVisitor& v) {
+  v.Visit(*this);
+}
+
 void ParamNode::Accept(NonModifyingVisitor& v) const {
   v.Visit(*this);
 }
