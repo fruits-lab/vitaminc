@@ -310,18 +310,25 @@ void TypeChecker::Visit(FuncCallExprNode& call_expr) {
 void TypeChecker::Visit(UnaryExprNode& unary_expr) {
   unary_expr.operand->Accept(*this);
   unary_expr.type = unary_expr.operand->type;
-  if (unary_expr.op == UnaryOperator::kAddr ||
-      unary_expr.op == UnaryOperator::kDeref) {
-    const auto* id_expr = dynamic_cast<IdExprNode*>((unary_expr.operand).get());
-    assert(id_expr);
-    auto operand = env_.LookUp(id_expr->id);
-    if (operand == nullptr) {
-      // TODO: lvalue required as unary '&' or '*' operand
-    }
-
-    // Return pointer type for reference, or return primitive type for
-    // dereference.
-    unary_expr.type.is_ptr = (unary_expr.op == UnaryOperator::kAddr);
+  switch (unary_expr.op) {
+    case UnaryOperator::kAddr: {
+      const auto* id_expr =
+          dynamic_cast<IdExprNode*>((unary_expr.operand).get());
+      // NOTE: The operand of unary '&' must be an lvalue, and the only
+      // supported lvalue is an identifier.
+      if (!id_expr || !env_.LookUp(id_expr->id)) {
+        // TODO: lvalue required as unary '&' operand
+      }
+      unary_expr.type.is_ptr = true;
+    } break;
+    case UnaryOperator::kDeref:
+      if (!unary_expr.operand->type.is_ptr) {
+        // TODO: the operand of unary '*' shall have pointer type
+      }
+      unary_expr.type.is_ptr = false;
+      break;
+    default:
+      break;
   }
   // TODO: check operands type
 }
