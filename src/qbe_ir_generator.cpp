@@ -633,14 +633,21 @@ void QbeIrGenerator::Visit(const UnaryExprNode& unary_expr) {
       num_recorder.Record(res_num);
     } break;
     case UnaryOperator::kAddr: {
-      // Lhs can use res_num to map to the original id_num.
+      const auto* id_expr =
+          dynamic_cast<IdExprNode*>((unary_expr.operand).get());
+      // NOTE: The operand of the address-of operator must be an lvalue, and we
+      // do not support arrays now, so it must have been backed by an id.
+      assert(id_expr);
+      // The address of the id is the id itself.
       const int reg_num = num_recorder.NumOfPrevExpr();
       const int id_num = reg_num_to_id_num.at(reg_num);
+      // Since each expression has to generate a temporary, we need to copy the
+      // id to a new temporary, and update the mapping.
       const int res_num = NextLocalNum();
-      WriteInstr_("{} =l loadl {}", FuncScopeTemp{res_num},
+      WriteInstr_("{} =l copy {}", FuncScopeTemp{res_num},
                   FuncScopeTemp{id_num});
-      num_recorder.Record(res_num);
       reg_num_to_id_num[res_num] = id_num;
+      num_recorder.Record(res_num);
     } break;
     case UnaryOperator::kDeref: {
       // Lhs can use res_num to map to the address, which reg_num currently
