@@ -1,7 +1,7 @@
 ProgramNode <1:1>
   FuncDefNode <1:5> main: int
     CompoundStmtNode <1:12>
-      DeclNode <2:7> i: int
+      DeclVarNode <2:7> i: int
         IntConstExprNode <2:11> 1: int
       ExprStmtNode <3:3>
         SimpleAssignmentExprNode <3:5> int
@@ -9,7 +9,7 @@ ProgramNode <1:1>
           BinaryExprNode <3:9> int +
             IdExprNode <3:7> i: int
             IntConstExprNode <3:11> 1: int
-      DeclNode <4:7> j: int
+      DeclVarNode <4:7> j: int
         IntConstExprNode <4:11> 2: int
       ReturnStmtNode <5:3>
         BinaryExprNode <5:12> int +

@@ -10,6 +10,7 @@ struct AstNode;
 struct StmtNode;
 struct ExprNode;
 struct DeclNode;
+struct DeclVarNode;
 struct ParamNode;
 struct FuncDefNode;
 struct LoopInitNode;
@@ -58,6 +59,7 @@ class Visitor {
   virtual void Visit(CondMut<StmtNode>&){};
   virtual void Visit(CondMut<ExprNode>&){};
   virtual void Visit(CondMut<DeclNode>&){};
+  virtual void Visit(CondMut<DeclVarNode>&){};
   virtual void Visit(CondMut<ParamNode>&){};
   virtual void Visit(CondMut<FuncDefNode>&){};
   virtual void Visit(CondMut<LoopInitNode>&){};

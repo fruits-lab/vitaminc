@@ -11,7 +11,7 @@ class TypeChecker : public ModifyingVisitor {
   TypeChecker(ScopeStack& env) : env_{env} {}
 
   void Visit(LoopInitNode&) override;
-  void Visit(DeclNode&) override;
+  void Visit(DeclVarNode&) override;
   void Visit(ParamNode&) override;
   void Visit(FuncDefNode&) override;
   void Visit(CompoundStmtNode&) override;

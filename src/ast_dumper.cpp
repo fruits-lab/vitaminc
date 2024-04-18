@@ -65,7 +65,7 @@ std::string GetUnaryOperator(UnaryOperator op) {
 
 }  // namespace
 
-void AstDumper::Visit(const DeclNode& decl) {
+void AstDumper::Visit(const DeclVarNode& decl) {
   std::cout << indenter_.Indent() << "DeclNode <" << decl.loc << "> " << decl.id
             << ": " << decl.type->ToString() << '\n';
 

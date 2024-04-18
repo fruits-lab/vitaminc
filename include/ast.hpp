@@ -58,6 +58,18 @@ struct StmtNode : public AstNode {
 // NOLINTEND(cppcoreguidelines-special-member-functions)
 
 /// @note This is an abstract class.
+struct DeclNode  // NOLINT(cppcoreguidelines-special-member-functions)
+    : public AstNode {
+  using AstNode::AstNode;
+
+  void Accept(NonModifyingVisitor&) const override;
+  void Accept(ModifyingVisitor&) override;
+
+  /// @note To make the class abstract.
+  ~DeclNode() override = 0;
+};
+
+/// @note This is an abstract class.
 struct ExprNode  // NOLINT(cppcoreguidelines-special-member-functions)
     : public AstNode {
   using AstNode::AstNode;
@@ -72,13 +84,10 @@ struct ExprNode  // NOLINT(cppcoreguidelines-special-member-functions)
       std::make_unique<PrimType>(PrimitiveType::kUnknown);
 };
 
-struct DeclNode : public AstNode {
-  DeclNode(Location loc, std::string id, std::unique_ptr<Type> type,
-           std::unique_ptr<ExprNode> init = {})
-      : AstNode{loc},
-        id{std::move(id)},
-        type{std::move(type)},
-        init{std::move(init)} {}
+struct DeclVarNode : public DeclNode {
+  DeclVarNode(Location loc, std::string id, std::unique_ptr<Type> type,
+              std::unique_ptr<ExprNode> init = {})
+      : DeclNode{loc}, id{std::move(id)}, type{std::move(type)}, init{std::move(init)} {}
 
   void Accept(NonModifyingVisitor&) const override;
   void Accept(ModifyingVisitor&) override;

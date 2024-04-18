@@ -40,7 +40,7 @@ bool IsInBodyOf(BodyType type) {
 
 }  // namespace
 
-void TypeChecker::Visit(DeclNode& decl) {
+void TypeChecker::Visit(DeclVarNode& decl) {
   if (decl.init) {
     decl.init->Accept(*this);
     if (decl.init->type != decl.type) {
