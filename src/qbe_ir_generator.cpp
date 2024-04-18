@@ -121,7 +121,7 @@ auto
 
 }  // namespace
 
-void QbeIrGenerator::Visit(const DeclNode& decl) {
+void QbeIrGenerator::Visit(const DeclVarNode& decl) {
   int id_num = NextLocalNum();
   if (decl.type->IsPtr()) {
     // QBE doesn't have pointer type, pointer type is represented as 64 bits

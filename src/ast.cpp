@@ -40,6 +40,16 @@ void DeclNode::Accept(ModifyingVisitor& v) {
   v.Visit(*this);
 }
 
+DeclNode::~DeclNode() = default;
+
+void DeclVarNode::Accept(NonModifyingVisitor& v) const {
+  v.Visit(*this);
+}
+
+void DeclVarNode::Accept(ModifyingVisitor& v) {
+  v.Visit(*this);
+}
+
 void ParamNode::Accept(NonModifyingVisitor& v) const {
   v.Visit(*this);
 }

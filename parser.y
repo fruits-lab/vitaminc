@@ -193,8 +193,8 @@ block_item: decl { $$ = $1; }
   | stmt { $$ = $1; }
   ;
 
-decl: type_specifier ID SEMICOLON { $$ = std::make_unique<DeclNode>(Loc(@2), $2, $1); }
-    | type_specifier ID ASSIGN expr SEMICOLON { $$ = std::make_unique<DeclNode>(Loc(@2), $2, $1, $4); }
+decl: type_specifier ID SEMICOLON { $$ = std::make_unique<DeclVarNode>(Loc(@2), $2, $1); }
+    | type_specifier ID ASSIGN expr SEMICOLON { $$ = std::make_unique<DeclVarNode>(Loc(@2), $2, $1, $4); }
     ;
 
 stmt: expr_opt SEMICOLON { $$ = std::make_unique<ExprStmtNode>(Loc(@1), $1); }
