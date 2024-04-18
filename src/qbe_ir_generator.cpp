@@ -647,8 +647,15 @@ void QbeIrGenerator::Visit(const UnaryExprNode& unary_expr) {
       // holds.
       const int reg_num = num_recorder.NumOfPrevExpr();
       const int res_num = NextLocalNum();
-      WriteInstr_("{} =l loadl {}", FuncScopeTemp{res_num},
-                  FuncScopeTemp{reg_num});
+      // The result might yet be another pointer if the operand is a pointer to
+      // a pointer.
+      if (unary_expr.type.is_ptr) {
+        WriteInstr_("{} =l loadl {}", FuncScopeTemp{res_num},
+                    FuncScopeTemp{reg_num});
+      } else {
+        WriteInstr_("{} =w loadw {}", FuncScopeTemp{res_num},
+                    FuncScopeTemp{reg_num});
+      }
       num_recorder.Record(res_num);
       reg_num_to_id_num[res_num] = reg_num;
     } break;
