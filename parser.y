@@ -88,6 +88,7 @@
 %nterm <std::unique_ptr<ExprNode>> postfix_expr
 %nterm <std::unique_ptr<ExprNode>> primary_expr
 %nterm <std::unique_ptr<DeclNode>> decl
+%nterm <std::unique_ptr<DeclArrayNode>> array_decl
 %nterm <std::unique_ptr<ArgExprNode>> arg
 %nterm <std::vector<std::unique_ptr<ArgExprNode>>> arg_list_opt arg_list
 %nterm <std::unique_ptr<FuncDefNode>> func_def
@@ -195,6 +196,13 @@ block_item: decl { $$ = $1; }
 
 decl: type_specifier ID SEMICOLON { $$ = std::make_unique<DeclVarNode>(Loc(@2), $2, $1); }
     | type_specifier ID ASSIGN expr SEMICOLON { $$ = std::make_unique<DeclVarNode>(Loc(@2), $2, $1, $4); }
+    | array_decl { $$ = $1; }
+    ;
+
+/* 6.7.6.2 Array declarator */
+/* 6.7.9 Initialization */
+/* the current object shall have array type and the expression shall be an integer constant expression. */
+array_decl : type_specifier ID LEFT_SQUARE NUM RIGHT_SQUARE SEMICOLON { $$ = std::make_unique<DeclArrayNode>(Loc(@2), $2, $1, $4); }
     ;
 
 stmt: expr_opt SEMICOLON { $$ = std::make_unique<ExprStmtNode>(Loc(@1), $1); }

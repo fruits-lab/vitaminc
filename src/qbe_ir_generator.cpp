@@ -158,6 +158,8 @@ void QbeIrGenerator::Visit(const DeclVarNode& decl) {
   id_to_num[decl.id] = id_num;
 }
 
+void QbeIrGenerator::Visit(const DeclArrayNode& array_decl) {}
+
 void QbeIrGenerator::Visit(const ParamNode& parameter) {
   int id_num = NextLocalNum();
   // TODO: support different data types

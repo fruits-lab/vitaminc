@@ -9,6 +9,7 @@ class AstDumper : public NonModifyingVisitor {
  public:
   void Visit(const LoopInitNode&) override;
   void Visit(const DeclVarNode&) override;
+  void Visit(const DeclArrayNode&) override;
   void Visit(const ParamNode&) override;
   void Visit(const FuncDefNode&) override;
   void Visit(const CompoundStmtNode&) override;
