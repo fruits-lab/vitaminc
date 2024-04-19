@@ -161,7 +161,11 @@ void QbeIrGenerator::Visit(const DeclNode& decl) {
 void QbeIrGenerator::Visit(const ParamNode& parameter) {
   int id_num = NextLocalNum();
   // TODO: support different data types
-  Write_("w %.{}", id_num);
+  if (parameter.type.is_ptr) {
+    Write_("l %.{}", id_num);
+  } else {
+    Write_("w %.{}", id_num);
+  }
   id_to_num[parameter.id] = id_num;
 }
 
@@ -170,8 +174,15 @@ void QbeIrGenerator::AllocMemForParams_(
   for (const auto& parameter : parameters) {
     int id_num = id_to_num.at(parameter->id);
     int reg_num = NextLocalNum();
-    WriteInstr_("{} =l alloc4 4", FuncScopeTemp{reg_num});
-    WriteInstr_("storew {}, {}", FuncScopeTemp{id_num}, FuncScopeTemp{reg_num});
+    if (parameter->type.is_ptr) {
+      WriteInstr_("{} =l alloc8 8", FuncScopeTemp{reg_num});
+      WriteInstr_("storel {}, {}", FuncScopeTemp{id_num},
+                  FuncScopeTemp{reg_num});
+    } else {
+      WriteInstr_("{} =l alloc4 4", FuncScopeTemp{reg_num});
+      WriteInstr_("storew {}, {}", FuncScopeTemp{id_num},
+                  FuncScopeTemp{reg_num});
+    }
     // Update to store the new number.
     id_to_num[parameter->id] = reg_num;
   }
@@ -555,9 +566,11 @@ void QbeIrGenerator::Visit(const ArgExprNode& arg_expr) {
 
 void QbeIrGenerator::Visit(const FuncCallExprNode& call_expr) {
   const auto* id_expr = dynamic_cast<IdExprNode*>((call_expr.func_expr).get());
+  // TODO: The right hand side may not be an IdExprNode of a function.
   assert(id_expr);
   const int res_num = NextLocalNum();
 
+  // Evaluate the arguments.
   std::vector<int> arg_nums{};
   for (const auto& arg : call_expr.args) {
     arg->Accept(*this);
@@ -573,9 +586,14 @@ void QbeIrGenerator::Visit(const FuncCallExprNode& call_expr) {
     Write_("{} =w call {}(", FuncScopeTemp{res_num},
            user_defined::GlobalPointer{id_expr->id});
   }
-  for (const auto& arg_num : arg_nums) {
-    Write_("w %.{}", arg_num);
-    if (arg_num != arg_nums.back()) {
+  // Traverse the argument number along with the argument to get the type.
+  for (auto i = size_t{0}, e = arg_nums.size(); i < e; ++i) {
+    if (call_expr.args.at(i)->type.is_ptr) {
+      Write_("l %.{}", arg_nums.at(i));
+    } else {
+      Write_("w %.{}", arg_nums.at(i));
+    }
+    if (i != e - 1) {
       Write_(", ");
     }
   }
