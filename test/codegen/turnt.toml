@@ -1,7 +1,2 @@
-command = """\
-  ../../vitaminc -o {filename}.ssa {filename} \
-  && qbe -o {filename}.s {filename}.ssa \
-  && cc {filename}.s -o {filename}.o \
-  && ./{filename}.o \
-"""
+command = """../../vitaminc -o {filename}.o {filename} && ./{filename}.o"""
 output.exp = "-"

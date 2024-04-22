@@ -1,6 +1,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cxxopts.hpp>
+#include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <memory>
@@ -31,8 +32,10 @@ int main(  // NOLINT(bugprone-exception-escape): Using a big try-catch block to
   // clang-format off
   cmd_options.custom_help("[options] file");
   cmd_options.add_options()
-      ("o, output", "Write output to <file>", cxxopts::value<std::string>()->default_value("test.ssa"), "<file>")
+      ("o, output", "Write output to <file>", cxxopts::value<std::string>()->default_value("a.out"), "<file>")
       ("d, dump", "Dump the abstract syntax tree", cxxopts::value<bool>()->default_value("false"))
+      // TODO: support LLVM IR
+      ("t, target", "Specify target IR", cxxopts::value<std::string>()->default_value("qbe"), "[qbe]")
       ("h, help", "Display available options")
       ;
   // clang-format on
@@ -55,14 +58,14 @@ int main(  // NOLINT(bugprone-exception-escape): Using a big try-catch block to
     std::exit(0);
   }
 
+  auto input_path = std::filesystem::path(args.at(0));
   // NOLINTNEXTLINE(cppcoreguidelines-owning-memory)
-  yyin = fopen(args.at(0).c_str(), "r");
+  yyin = fopen(input_path.c_str(), "r");
   if (yyin == nullptr) {
     std::cerr << "cannot open input file" << '\n';
     std::exit(0);
   }
 
-  auto output = std::ofstream{opts["output"].as<std::string>()};
   /// @brief The root node of the program.
   auto program = std::unique_ptr<AstNode>{};
   yy::parser parser{program};
@@ -87,10 +90,37 @@ int main(  // NOLINT(bugprone-exception-escape): Using a big try-catch block to
                                   Indenter::MaxLevel{max_level}}};
     program->Accept(ast_dumper);
   }
-  QbeIrGenerator code_generator{output};
+
+  // generate intermediate representation
+  auto input_basename = input_path.stem().string();
+  auto output_ir = std::ofstream{fmt::format("{}.ssa", input_basename)};
+  QbeIrGenerator code_generator{output_ir};
   program->Accept(code_generator);
 
-  output.close();
+  output_ir.close();
+
+  // generate assembly
+  if (opts["target"].as<std::string>() == "qbe") {
+    std::string qbe_command =
+        fmt::format("qbe -o {0}.s {0}.ssa", input_basename);
+    auto qbe_ret = std::system(qbe_command.c_str());
+    // 0 on success, 1 otherwise
+    if (qbe_ret) {
+      return qbe_ret;
+    }
+  } else {
+    std::cerr << "unknown target" << '\n';
+    std::exit(0);
+  }
+
+  // generate executable
+  auto output = opts["output"].as<std::string>();
+  std::string cc_command = fmt::format("cc -o {} {}.s", output, input_basename);
+  auto cc_ret = std::system(cc_command.c_str());
+  // 0 on success, 1 otherwise
+  if (cc_ret) {
+    return cc_ret;
+  }
 
   return 0;
 }
