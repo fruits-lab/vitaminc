@@ -99,15 +99,15 @@ struct DeclVarNode : public DeclNode {
 };
 
 struct DeclArrayNode : public DeclNode {
-  DeclArrayNode(Location loc, std::string id, Type type, std::size_t size)
-      : DeclNode{loc}, id{std::move(id)}, type{type}, size{size} {}
+  DeclArrayNode(Location loc, std::string id, Type type, std::size_t count)
+      : DeclNode{loc}, id{std::move(id)}, type{type}, count{count} {}
 
   void Accept(NonModifyingVisitor&) const override;
   void Accept(ModifyingVisitor&) override;
 
   std::string id;
   Type type;
-  std::size_t size;
+  std::size_t count;
 };
 
 struct ParamNode : public AstNode {
@@ -371,6 +371,21 @@ struct ArgExprNode : public ExprNode {
   void Accept(ModifyingVisitor&) override;
 
   std::unique_ptr<ExprNode> arg;
+};
+
+// @brief An array subscripting expression.
+struct ArraySubExprNode : public ExprNode {
+  ArraySubExprNode(Location loc, std::unique_ptr<ExprNode> postfix_expr,
+                   std::unique_ptr<ExprNode> index)
+      : ExprNode{loc},
+        postfix_expr{std::move(postfix_expr)},
+        index{std::move(index)} {}
+
+  void Accept(NonModifyingVisitor&) const override;
+  void Accept(ModifyingVisitor&) override;
+
+  std::unique_ptr<ExprNode> postfix_expr;
+  std::unique_ptr<ExprNode> index;
 };
 
 struct FuncCallExprNode : public ExprNode {

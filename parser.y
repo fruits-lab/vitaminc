@@ -284,8 +284,8 @@ unary_expr: postfix_expr { $$ = $1; }
 
 /* 6.5.2 Postfix operators */
 postfix_expr: primary_expr { $$ = $1; }
-  /* TODO: support arguments */
   | postfix_expr LEFT_PAREN arg_list_opt RIGHT_PAREN { $$ = std::make_unique<FuncCallExprNode>(Loc(@1), $1, $3); }
+  | postfix_expr LEFT_SQUARE expr RIGHT_SQUARE { $$ = std::make_unique<ArraySubExprNode>(Loc(@1), $1, $3); }
   ;
 
 arg_list_opt: arg_list { $$ = $1; }
