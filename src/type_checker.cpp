@@ -299,6 +299,12 @@ void TypeChecker::Visit(ArgExprNode& arg_expr) {
   arg_expr.type = arg_expr.arg->type->Clone();
 }
 
+void TypeChecker::Visit(ArraySubExprNode& array_expr) {
+  array_expr.postfix_expr->Accept(*this);
+  array_expr.index->Accept(*this);
+  array_expr.type = array_expr.postfix_expr->type;
+}
+
 void TypeChecker::Visit(FuncCallExprNode& call_expr) {
   call_expr.func_expr->Accept(*this);
   call_expr.type = call_expr.func_expr->type->Clone();

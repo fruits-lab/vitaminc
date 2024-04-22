@@ -236,6 +236,14 @@ void ArgExprNode::Accept(ModifyingVisitor& v) {
   v.Visit(*this);
 }
 
+void ArraySubExprNode::Accept(NonModifyingVisitor& v) const {
+  v.Visit(*this);
+}
+
+void ArraySubExprNode::Accept(ModifyingVisitor& v) {
+  v.Visit(*this);
+}
+
 void FuncCallExprNode::Accept(NonModifyingVisitor& v) const {
   v.Visit(*this);
 }
