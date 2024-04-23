@@ -51,7 +51,7 @@ tidy: y.tab.hpp
 	$(CLANG_TIDY) $(CLANG_TIDY_FLAGS) -p . $(SRC) $(INC) -- $(CXXFLAGS)
 
 clean:
-	rm -rf *.s *.o lex.yy.* y.tab.* *.output *.ssa $(TARGET) $(OBJS) $(DEPS)
+	rm -rf *.s *.o lex.yy.* y.tab.* *.output *.ssa *.out $(TARGET) $(OBJS) $(DEPS)
 	cd test/ && $(MAKE) clean
 
 -include $(DEPS)
