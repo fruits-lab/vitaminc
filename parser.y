@@ -268,7 +268,6 @@ unary_expr: postfix_expr { $$ = $1; }
   | PLUS unary_expr { $$ = std::make_unique<UnaryExprNode>(Loc(@1), UnaryOperator::kPos, $2); }
   | MINUS unary_expr { $$ = std::make_unique<UnaryExprNode>(Loc(@1), UnaryOperator::kNeg, $2); }
   | EXCLAMATION unary_expr { $$ = std::make_unique<UnaryExprNode>(Loc(@1), UnaryOperator::kNot, $2); }
-  /* TODO: implement pointer type */
   | AMPERSAND unary_expr { $$ = std::make_unique<UnaryExprNode>(Loc(@1), UnaryOperator::kAddr, $2); }
   | STAR unary_expr { $$ = std::make_unique<UnaryExprNode>(Loc(@1), UnaryOperator::kDeref, $2); }
   | TILDE unary_expr { $$ = std::make_unique<UnaryExprNode>(Loc(@1), UnaryOperator::kBitComp, $2); }
@@ -308,7 +307,6 @@ primary_expr: ID { $$ = std::make_unique<IdExprNode>(Loc(@1), $1); }
 
 /* 6.7.2 Type specifiers */
 /* TODO: support multiple data types */
-/* TODO: support pointer to pointer */
 type_specifier: INT { $$ = std::make_unique<PrimType>(PrimitiveType::kInt); }
   | pointer_type { $$ = $1; }
   ;
