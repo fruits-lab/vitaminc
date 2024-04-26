@@ -68,42 +68,47 @@ struct ExprNode  // NOLINT(cppcoreguidelines-special-member-functions)
   /// @note To make the class abstract.
   ~ExprNode() override = 0;
 
-  Type type = Type{};
+  std::unique_ptr<Type> type =
+      std::make_unique<PrimType>(PrimitiveType::kUnknown);
 };
 
 struct DeclNode : public AstNode {
-  DeclNode(Location loc, std::string id, Type type,
+  DeclNode(Location loc, std::string id, std::unique_ptr<Type> type,
            std::unique_ptr<ExprNode> init = {})
-      : AstNode{loc}, id{std::move(id)}, type{type}, init{std::move(init)} {}
+      : AstNode{loc},
+        id{std::move(id)},
+        type{std::move(type)},
+        init{std::move(init)} {}
 
   void Accept(NonModifyingVisitor&) const override;
   void Accept(ModifyingVisitor&) override;
 
   std::string id;
-  Type type;
+  std::unique_ptr<Type> type;
   std::unique_ptr<ExprNode> init;
 };
 
 struct ParamNode : public AstNode {
-  ParamNode(Location loc, std::string id, Type type)
-      : AstNode{loc}, id{std::move(id)}, type{type} {}
+  ParamNode(Location loc, std::string id, std::unique_ptr<Type> type)
+      : AstNode{loc}, id{std::move(id)}, type{std::move(type)} {}
 
   void Accept(NonModifyingVisitor&) const override;
   void Accept(ModifyingVisitor&) override;
 
   std::string id;
-  Type type;
+  std::unique_ptr<Type> type;
 };
 
 struct FuncDefNode : public AstNode {
   FuncDefNode(Location loc, std::string id,
               std::vector<std::unique_ptr<ParamNode>> parameters,
-              std::unique_ptr<CompoundStmtNode> body, Type type)
+              std::unique_ptr<CompoundStmtNode> body,
+              std::unique_ptr<Type> type)
       : AstNode{loc},
         id{std::move(id)},
         parameters{std::move(parameters)},
         body{std::move(body)},
-        type{type} {}
+        type{std::move(type)} {}
 
   void Accept(NonModifyingVisitor&) const override;
   void Accept(ModifyingVisitor&) override;
@@ -111,7 +116,7 @@ struct FuncDefNode : public AstNode {
   std::string id;
   std::vector<std::unique_ptr<ParamNode>> parameters;
   std::unique_ptr<CompoundStmtNode> body;
-  Type type;
+  std::unique_ptr<Type> type;
 };
 
 /// @brief A loop initialization can be either a declaration or an expression.

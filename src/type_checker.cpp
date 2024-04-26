@@ -52,7 +52,7 @@ void TypeChecker::Visit(DeclNode& decl) {
   if (env_.Probe(decl.id)) {
     // TODO: redefinition of 'id'
   } else {
-    auto symbol = std::make_unique<SymbolEntry>(decl.id, decl.type);
+    auto symbol = std::make_unique<SymbolEntry>(decl.id, decl.type->Clone());
     // TODO: May be file scope once we support global variables.
     env_.Add(std::move(symbol), ScopeKind::kBlock);
   }
@@ -62,7 +62,8 @@ void TypeChecker::Visit(ParamNode& parameter) {
   if (env_.Probe(parameter.id)) {
     // TODO: redefinition of 'id'
   } else {
-    auto symbol = std::make_unique<SymbolEntry>(parameter.id, parameter.type);
+    auto symbol =
+        std::make_unique<SymbolEntry>(parameter.id, parameter.type->Clone());
     // TODO: May be parameter scope once we support function prototypes.
     env_.Add(std::move(symbol), ScopeKind::kBlock);
   }
@@ -88,10 +89,11 @@ void TypeChecker::Visit(FuncDefNode& func_def) {
   // NOTE: This block scope will be merged with the function body. Don't pop it.
   env_.PushScope(ScopeKind::kBlock);
   env_.MergeWithNextScope();
-  auto symbol = std::make_unique<SymbolEntry>(func_def.id, func_def.type);
+  auto symbol =
+      std::make_unique<SymbolEntry>(func_def.id, func_def.type->Clone());
   for (auto& parameter : func_def.parameters) {
     parameter->Accept(*this);
-    symbol->param_types.push_back(parameter->type);
+    symbol->param_types.push_back(parameter->type->Clone());
   }
   env_.Add(std::move(symbol), ScopeKind::kFile);
 
@@ -125,9 +127,10 @@ void TypeChecker::InstallBuiltins_(ScopeStack& env) {
   // The supported builtins are:
   // - int __builtin_print(int)
 
-  auto symbol =
-      std::make_unique<SymbolEntry>("__builtin_print", PrimitiveType::kInt);
-  symbol->param_types.emplace_back(PrimitiveType::kInt);
+  auto symbol = std::make_unique<SymbolEntry>(
+      "__builtin_print", std::make_unique<PrimType>(PrimitiveType::kInt));
+  symbol->param_types.emplace_back(
+      std::make_unique<PrimType>(PrimitiveType::kInt));
   env.Add(std::move(symbol), ScopeKind::kFile);
 }
 
@@ -174,7 +177,7 @@ void TypeChecker::Visit(ForStmtNode& for_stmt) {
 
 void TypeChecker::Visit(ReturnStmtNode& ret_stmt) {
   ret_stmt.expr->Accept(*this);
-  if (ret_stmt.expr->type != PrimitiveType::kInt) {
+  if (!ret_stmt.expr->type->IsEqual(PrimitiveType::kInt)) {
     // TODO: return value type does not match the function type
   }
 }
@@ -217,7 +220,7 @@ auto
 
 void TypeChecker::Visit(SwitchStmtNode& switch_stmt) {
   switch_stmt.ctrl->Accept(*this);
-  if (switch_stmt.ctrl->type != PrimitiveType::kInt) {
+  if (!switch_stmt.ctrl->type->IsEqual(PrimitiveType::kInt)) {
     // TODO: statement requires expression of integer type
   }
   body_types.push_back(BodyType::kSwitch);
@@ -243,7 +246,7 @@ void TypeChecker::Visit(CaseStmtNode& case_stmt) {
     // TODO: 'case' statement not in switch statement
   }
   case_stmt.expr->Accept(*this);
-  if (case_stmt.expr->type != PrimitiveType::kInt) {
+  if (!case_stmt.expr->type->IsEqual(PrimitiveType::kInt)) {
     // TODO: expression is not an integer constant expression
   }
   case_stmt.stmt->Accept(*this);
@@ -271,24 +274,24 @@ void TypeChecker::Visit(NullExprNode&) {
 
 void TypeChecker::Visit(IdExprNode& id_expr) {
   if (auto symbol = env_.LookUp(id_expr.id)) {
-    id_expr.type = symbol->expr_type;
+    id_expr.type = symbol->expr_type->Clone();
   } else {
     // TODO: 'id' undeclared
   }
 }
 
 void TypeChecker::Visit(IntConstExprNode& int_expr) {
-  int_expr.type = Type{PrimitiveType::kInt};
+  int_expr.type = std::make_unique<PrimType>(PrimitiveType::kInt);
 }
 
 void TypeChecker::Visit(ArgExprNode& arg_expr) {
   arg_expr.arg->Accept(*this);
-  arg_expr.type = arg_expr.arg->type;
+  arg_expr.type = arg_expr.arg->type->Clone();
 }
 
 void TypeChecker::Visit(FuncCallExprNode& call_expr) {
   call_expr.func_expr->Accept(*this);
-  call_expr.type = call_expr.func_expr->type;
+  call_expr.type = call_expr.func_expr->type->Clone();
 
   const auto* id_expr = dynamic_cast<IdExprNode*>((call_expr.func_expr).get());
   assert(id_expr);
@@ -309,7 +312,6 @@ void TypeChecker::Visit(FuncCallExprNode& call_expr) {
 
 void TypeChecker::Visit(UnaryExprNode& unary_expr) {
   unary_expr.operand->Accept(*this);
-  unary_expr.type = unary_expr.operand->type;
   switch (unary_expr.op) {
     case UnaryOperator::kAddr: {
       const auto* id_expr =
@@ -319,15 +321,19 @@ void TypeChecker::Visit(UnaryExprNode& unary_expr) {
       if (!id_expr || !env_.LookUp(id_expr->id)) {
         // TODO: lvalue required as unary '&' operand
       }
-      unary_expr.type.is_ptr = true;
+      unary_expr.type =
+          std::make_unique<PtrType>(unary_expr.operand->type->Clone());
     } break;
     case UnaryOperator::kDeref:
-      if (!unary_expr.operand->type.is_ptr) {
+      if (!unary_expr.operand->type->IsPtr()) {
         // TODO: the operand of unary '*' shall have pointer type
       }
-      unary_expr.type.is_ptr = false;
+      unary_expr.type = dynamic_cast<PtrType*>(unary_expr.operand->type.get())
+                            ->base_type()
+                            .Clone();
       break;
     default:
+      unary_expr.type = unary_expr.operand->type->Clone();
       break;
   }
   // TODO: check operands type
@@ -336,19 +342,19 @@ void TypeChecker::Visit(UnaryExprNode& unary_expr) {
 void TypeChecker::Visit(BinaryExprNode& bin_expr) {
   bin_expr.lhs->Accept(*this);
   bin_expr.rhs->Accept(*this);
-  if (bin_expr.lhs->type != bin_expr.rhs->type) {
+  if (!bin_expr.lhs->type->IsEqual(*bin_expr.rhs->type)) {
     // TODO: invalid operands to binary +
   } else {
-    bin_expr.type = bin_expr.lhs->type;
+    bin_expr.type = bin_expr.lhs->type->Clone();
   }
 }
 
 void TypeChecker::Visit(SimpleAssignmentExprNode& assign_expr) {
   assign_expr.lhs->Accept(*this);
   assign_expr.rhs->Accept(*this);
-  if (assign_expr.lhs->type != assign_expr.rhs->type) {
+  if (!assign_expr.lhs->type->IsEqual(*assign_expr.rhs->type)) {
     // TODO: unmatched assignment type
   } else {
-    assign_expr.type = assign_expr.rhs->type;
+    assign_expr.type = assign_expr.rhs->type->Clone();
   }
 }
