@@ -1,0 +1,48 @@
+ProgramNode <1:1>
+  FuncDefNode <1:5> main: int
+    CompoundStmtNode <1:12>
+      DeclNode <2:7> a: int
+        IntConstExprNode <2:11> 10: int
+      DeclNode <3:8> pa: int*
+        UnaryExprNode <3:13> int* &
+          IdExprNode <3:14> a: int
+      DeclNode <4:9> ppa: int**
+        UnaryExprNode <4:15> int** &
+          IdExprNode <4:16> pa: int*
+      ExprStmtNode <5:3>
+        FuncCallExprNode <5:3> int
+          IdExprNode <5:3> __builtin_print: int
+          ArgExprNode <5:19> int
+            UnaryExprNode <5:19> int *
+              UnaryExprNode <5:20> int* *
+                IdExprNode <5:21> ppa: int**
+      DeclNode <7:7> b: int
+        IntConstExprNode <7:11> 20: int
+      DeclNode <8:8> pb: int*
+        UnaryExprNode <8:13> int* &
+          IdExprNode <8:14> b: int
+      ExprStmtNode <9:3>
+        SimpleAssignmentExprNode <9:8> int*
+          UnaryExprNode <9:3> int* *
+            IdExprNode <9:4> ppa: int**
+          IdExprNode <9:10> pb: int*
+      ExprStmtNode <10:3>
+        FuncCallExprNode <10:3> int
+          IdExprNode <10:3> __builtin_print: int
+          ArgExprNode <10:19> int
+            UnaryExprNode <10:19> int *
+              UnaryExprNode <10:20> int* *
+                IdExprNode <10:21> ppa: int**
+      ExprStmtNode <12:3>
+        SimpleAssignmentExprNode <12:9> int
+          UnaryExprNode <12:3> int *
+            UnaryExprNode <12:4> int* *
+              IdExprNode <12:5> ppa: int**
+          IntConstExprNode <12:11> 30: int
+      ExprStmtNode <13:3>
+        FuncCallExprNode <13:3> int
+          IdExprNode <13:3> __builtin_print: int
+          ArgExprNode <13:19> int
+            IdExprNode <13:19> b: int
+      ReturnStmtNode <15:3>
+        IntConstExprNode <15:10> 0: int
