@@ -20,6 +20,7 @@
   #include <vector>
 
   #include "ast.hpp"
+  #include "type.hpp"
 }
 
 // Placed after the usual contents of the parser header file.
@@ -79,7 +80,7 @@
 %token INCR DECR
 %token EOF 0
 
-%nterm <Type> type_specifier
+%nterm <std::unique_ptr<Type>> type_specifier pointer_type
 %nterm <std::unique_ptr<ExprNode>> expr
 %nterm <std::unique_ptr<ExprNode>> assign_expr
 %nterm <std::unique_ptr<ExprNode>> expr_opt
@@ -308,9 +309,13 @@ primary_expr: ID { $$ = std::make_unique<IdExprNode>(Loc(@1), $1); }
 /* 6.7.2 Type specifiers */
 /* TODO: support multiple data types */
 /* TODO: support pointer to pointer */
-type_specifier: INT { $$ = Type{PrimitiveType::kInt}; }
-  | INT STAR { $$ = Type{PrimitiveType::kInt, true}; }
+type_specifier: INT { $$ = std::make_unique<PrimType>(PrimitiveType::kInt); }
+  | pointer_type { $$ = $1; }
   ;
+
+pointer_type: type_specifier STAR { $$ = std::make_unique<PtrType>($1); }
+  ;
+
 
 epsilon: %empty;
 %%

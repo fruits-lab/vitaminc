@@ -1,21 +1,43 @@
 #include "type.hpp"
 
+#include <memory>
 #include <string>
 
-std::string TypeToString(Type type) {
-  std::string out = "";
-  switch (type.prim_type) {
+bool Type::IsEqual(PrimitiveType that) const noexcept {
+  return IsEqual(PrimType{that});
+}
+
+bool PrimType::IsEqual(const Type& that) const noexcept {
+  if (const auto* that_prim = dynamic_cast<const PrimType*>(&that)) {
+    return that_prim->prim_type_ == prim_type_;
+  }
+  return false;
+}
+
+std::string PrimType::ToString() const {
+  switch (prim_type_) {
     case PrimitiveType::kInt:
-      out.append("int");
-      break;
-    case PrimitiveType::kUnknown:
+      return "int";
     default:
-      out.append("unknown");
+      return "unknown";
   }
+}
 
-  if (type.is_ptr) {
-    out.append("*");
+std::unique_ptr<Type> PrimType::Clone() const {
+  return std::make_unique<PrimType>(prim_type_);
+}
+
+bool PtrType::IsEqual(const Type& that) const noexcept {
+  if (const auto* that_ptr = dynamic_cast<const PtrType*>(&that)) {
+    return that_ptr->base_type_->IsEqual(*base_type_);
   }
+  return false;
+}
 
-  return out;
+std::string PtrType::ToString() const {
+  return base_type_->ToString() + "*";
+}
+
+std::unique_ptr<Type> PtrType::Clone() const {
+  return std::make_unique<PtrType>(base_type_->Clone());
 }

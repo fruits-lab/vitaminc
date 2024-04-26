@@ -11,11 +11,11 @@
 
 struct SymbolEntry {
   std::string id;
-  Type expr_type;
-  std::vector<Type> param_types{};
+  std::unique_ptr<Type> expr_type;
+  std::vector<std::unique_ptr<Type>> param_types{};
 
-  SymbolEntry(std::string id, Type expr_type)
-      : id{std::move(id)}, expr_type{expr_type} {}
+  SymbolEntry(std::string id, std::unique_ptr<Type> expr_type)
+      : id{std::move(id)}, expr_type{std::move(expr_type)} {}
 };
 
 class SymbolTable {

@@ -123,7 +123,7 @@ auto
 
 void QbeIrGenerator::Visit(const DeclNode& decl) {
   int id_num = NextLocalNum();
-  if (decl.type.is_ptr) {
+  if (decl.type->IsPtr()) {
     // QBE doesn't have pointer type, pointer type is represented as 64 bits
     // integer. Thus, we allocate 8 * 8 bits of space for pointers.
     // Reference: https://c9x.me/compile/doc/il-v1.2.html#Types
@@ -136,7 +136,7 @@ void QbeIrGenerator::Visit(const DeclNode& decl) {
     decl.init->Accept(*this);
     int init_num = num_recorder.NumOfPrevExpr();
     // A pointer declaration may have two options for its right hand side:
-    if (decl.init->type.is_ptr) {
+    if (decl.init->type->IsPtr()) {
       // 1. int* a = &b; rhs is a reference of integer. We need to store b's
       // address to a, where we need to map b's reg_num back to its id_num.
       if (dynamic_cast<UnaryExprNode*>((decl.init).get())) {
@@ -161,7 +161,7 @@ void QbeIrGenerator::Visit(const DeclNode& decl) {
 void QbeIrGenerator::Visit(const ParamNode& parameter) {
   int id_num = NextLocalNum();
   // TODO: support different data types
-  if (parameter.type.is_ptr) {
+  if (parameter.type->IsPtr()) {
     Write_("l %.{}", id_num);
   } else {
     Write_("w %.{}", id_num);
@@ -174,7 +174,7 @@ void QbeIrGenerator::AllocMemForParams_(
   for (const auto& parameter : parameters) {
     int id_num = id_to_num.at(parameter->id);
     int reg_num = NextLocalNum();
-    if (parameter->type.is_ptr) {
+    if (parameter->type->IsPtr()) {
       WriteInstr_("{} =l alloc8 8", FuncScopeTemp{reg_num});
       WriteInstr_("storel {}, {}", FuncScopeTemp{id_num},
                   FuncScopeTemp{reg_num});
@@ -541,7 +541,7 @@ void QbeIrGenerator::Visit(const IdExprNode& id_expr) {
   assert(id_to_num.count(id_expr.id) != 0);
   int id_num = id_to_num.at(id_expr.id);
   int reg_num = NextLocalNum();
-  if (id_expr.type.is_ptr) {
+  if (id_expr.type->IsPtr()) {
     WriteInstr_("{} =l loadl {}", FuncScopeTemp{reg_num},
                 FuncScopeTemp{id_num});
   } else {
@@ -588,7 +588,7 @@ void QbeIrGenerator::Visit(const FuncCallExprNode& call_expr) {
   }
   // Traverse the argument number along with the argument to get the type.
   for (auto i = size_t{0}, e = arg_nums.size(); i < e; ++i) {
-    if (call_expr.args.at(i)->type.is_ptr) {
+    if (call_expr.args.at(i)->type->IsPtr()) {
       Write_("l %.{}", arg_nums.at(i));
     } else {
       Write_("w %.{}", arg_nums.at(i));
@@ -674,7 +674,7 @@ void QbeIrGenerator::Visit(const UnaryExprNode& unary_expr) {
       const int res_num = NextLocalNum();
       // The result might yet be another pointer if the operand is a pointer to
       // a pointer.
-      if (unary_expr.type.is_ptr) {
+      if (unary_expr.type->IsPtr()) {
         WriteInstr_("{} =l loadl {}", FuncScopeTemp{res_num},
                     FuncScopeTemp{reg_num});
       } else {
@@ -709,7 +709,7 @@ void QbeIrGenerator::Visit(const SimpleAssignmentExprNode& assign_expr) {
   int lhs_num = num_recorder.NumOfPrevExpr();
   assign_expr.rhs->Accept(*this);
   int rhs_num = num_recorder.NumOfPrevExpr();
-  if (assign_expr.lhs->type.is_ptr) {
+  if (assign_expr.lhs->type->IsPtr()) {
     // Assign pointer address to another pointer.
     WriteInstr_("storel {}, {}", FuncScopeTemp{rhs_num},
                 FuncScopeTemp{reg_num_to_id_num.at(lhs_num)});

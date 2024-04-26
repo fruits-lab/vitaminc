@@ -67,7 +67,7 @@ std::string GetUnaryOperator(UnaryOperator op) {
 
 void AstDumper::Visit(const DeclNode& decl) {
   std::cout << indenter_.Indent() << "DeclNode <" << decl.loc << "> " << decl.id
-            << ": " << TypeToString(decl.type) << '\n';
+            << ": " << decl.type->ToString() << '\n';
 
   if (decl.init) {
     indenter_.IncreaseLevel();
@@ -78,12 +78,12 @@ void AstDumper::Visit(const DeclNode& decl) {
 
 void AstDumper::Visit(const ParamNode& parameter) {
   std::cout << indenter_.Indent() << "ParamNode <" << parameter.loc << "> "
-            << parameter.id << ": " << TypeToString(parameter.type) << '\n';
+            << parameter.id << ": " << parameter.type->ToString() << '\n';
 }
 
 void AstDumper::Visit(const FuncDefNode& func_def) {
   std::cout << indenter_.Indent() << "FuncDefNode <" << func_def.loc << "> "
-            << func_def.id << ": " << TypeToString(func_def.type) << '\n';
+            << func_def.id << ": " << func_def.type->ToString() << '\n';
 
   indenter_.IncreaseLevel();
   for (const auto& parameter : func_def.parameters) {
@@ -233,18 +233,18 @@ void AstDumper::Visit(const NullExprNode& null_expr) {
 
 void AstDumper::Visit(const IdExprNode& id_expr) {
   std::cout << indenter_.Indent() << "IdExprNode <" << id_expr.loc << "> "
-            << id_expr.id << ": " << TypeToString(id_expr.type) << '\n';
+            << id_expr.id << ": " << id_expr.type->ToString() << '\n';
 }
 
 void AstDumper::Visit(const IntConstExprNode& int_expr) {
   std::cout << indenter_.Indent() << "IntConstExprNode <" << int_expr.loc
-            << "> " << int_expr.val << ": " << TypeToString(int_expr.type)
+            << "> " << int_expr.val << ": " << int_expr.type->ToString()
             << '\n';
 }
 
 void AstDumper::Visit(const ArgExprNode& arg_expr) {
   std::cout << indenter_.Indent() << "ArgExprNode <" << arg_expr.loc << "> "
-            << TypeToString(arg_expr.type) << '\n';
+            << arg_expr.type->ToString() << '\n';
   indenter_.IncreaseLevel();
   arg_expr.arg->Accept(*this);
   indenter_.DecreaseLevel();
@@ -252,7 +252,7 @@ void AstDumper::Visit(const ArgExprNode& arg_expr) {
 
 void AstDumper::Visit(const FuncCallExprNode& call_expr) {
   std::cout << indenter_.Indent() << "FuncCallExprNode <" << call_expr.loc
-            << "> " << TypeToString(call_expr.type) << '\n';
+            << "> " << call_expr.type->ToString() << '\n';
   indenter_.IncreaseLevel();
   call_expr.func_expr->Accept(*this);
   for (const auto& arg : call_expr.args) {
@@ -263,7 +263,7 @@ void AstDumper::Visit(const FuncCallExprNode& call_expr) {
 
 void AstDumper::Visit(const UnaryExprNode& unary_expr) {
   std::cout << indenter_.Indent() << "UnaryExprNode <" << unary_expr.loc << "> "
-            << TypeToString(unary_expr.type) << " "
+            << unary_expr.type->ToString() << " "
             << GetUnaryOperator(unary_expr.op) << '\n';
   indenter_.IncreaseLevel();
   unary_expr.operand->Accept(*this);
@@ -272,7 +272,7 @@ void AstDumper::Visit(const UnaryExprNode& unary_expr) {
 
 void AstDumper::Visit(const BinaryExprNode& bin_expr) {
   std::cout << indenter_.Indent() << "BinaryExprNode <" << bin_expr.loc << "> "
-            << TypeToString(bin_expr.type) << " "
+            << bin_expr.type->ToString() << " "
             << GetBinaryOperator(bin_expr.op) << '\n';
   indenter_.IncreaseLevel();
   bin_expr.lhs->Accept(*this);
@@ -282,8 +282,7 @@ void AstDumper::Visit(const BinaryExprNode& bin_expr) {
 
 void AstDumper::Visit(const SimpleAssignmentExprNode& assign_expr) {
   std::cout << indenter_.Indent() << "SimpleAssignmentExprNode <"
-            << assign_expr.loc << "> " << TypeToString(assign_expr.type)
-            << '\n';
+            << assign_expr.loc << "> " << assign_expr.type->ToString() << '\n';
   indenter_.IncreaseLevel();
   assign_expr.lhs->Accept(*this);
   assign_expr.rhs->Accept(*this);
