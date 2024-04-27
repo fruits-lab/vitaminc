@@ -158,7 +158,12 @@ void QbeIrGenerator::Visit(const DeclVarNode& decl) {
   id_to_num[decl.id] = id_num;
 }
 
-void QbeIrGenerator::Visit(const DeclArrayNode& array_decl) {}
+void QbeIrGenerator::Visit(const DeclArrNode& array_decl) {
+  int id_num = NextLocalNum();
+  std::size_t elem_size = array_decl.type->ToSize();
+  WriteInstr_("{} =l alloc{} {}", FuncScopeTemp{id_num}, elem_size, elem_size * array_decl.type->GetLen());
+  id_to_num[array_decl.id] = id_num;
+}
 
 void QbeIrGenerator::Visit(const ParamNode& parameter) {
   int id_num = NextLocalNum();
@@ -564,6 +569,33 @@ void QbeIrGenerator::Visit(const IntConstExprNode& int_expr) {
 
 void QbeIrGenerator::Visit(const ArgExprNode& arg_expr) {
   arg_expr.arg->Accept(*this);
+}
+
+void QbeIrGenerator::Visit(const ArrSubExprNode& arr_sub_expr) {
+  arr_sub_expr.postfix_expr->Accept(*this);
+  const int reg_num = num_recorder.NumOfPrevExpr();
+  // address of the first element
+  const int base_addr = reg_num_to_id_num.at(reg_num);
+  arr_sub_expr.index->Accept(*this);
+  const int index_num = num_recorder.NumOfPrevExpr();
+
+  // extend word to long
+  const int extended_num = NextLocalNum();
+  WriteInstr_("{} =l extsw {}", FuncScopeTemp{extended_num}, FuncScopeTemp{index_num});
+
+  // TODO: figure out what mul 4 means, I think it is related to word addressing
+  const int offset = NextLocalNum();
+  WriteInstr_("{} =l mul {}, {}", FuncScopeTemp{offset}, FuncScopeTemp{extended_num}, 4);
+
+  // res_addr = base_addr + offset
+  const int res_addr_num = NextLocalNum();
+  WriteInstr_("{} =l add {}, {}", FuncScopeTemp{res_addr_num}, FuncScopeTemp{base_addr}, FuncScopeTemp{offset});
+
+  // load value from res_addr
+  const int res_num = NextLocalNum();
+  WriteInstr_("{} =w loadw {}", FuncScopeTemp{res_num}, FuncScopeTemp{res_addr_num});
+  reg_num_to_id_num[res_num] = res_addr_num;
+  num_recorder.Record(res_num);
 }
 
 void QbeIrGenerator::Visit(const FuncCallExprNode& call_expr) {
