@@ -123,15 +123,7 @@ auto
 
 void QbeIrGenerator::Visit(const DeclVarNode& decl) {
   int id_num = NextLocalNum();
-  if (decl.type->IsPtr()) {
-    // QBE doesn't have pointer type, pointer type is represented as 64 bits
-    // integer. Thus, we allocate 8 * 8 bits of space for pointers.
-    // Reference: https://c9x.me/compile/doc/il-v1.2.html#Types
-    WriteInstr_("{} =l alloc8 8", FuncScopeTemp{id_num});
-  } else {
-    WriteInstr_("{} =l alloc4 4", FuncScopeTemp{id_num});
-  }
-
+  WriteInstr_("{} =l alloc{} {}", FuncScopeTemp{id_num}, decl.type->ToSize(), decl.type->ToSize());
   if (decl.init) {
     decl.init->Accept(*this);
     int init_num = num_recorder.NumOfPrevExpr();
@@ -181,12 +173,11 @@ void QbeIrGenerator::AllocMemForParams_(
   for (const auto& parameter : parameters) {
     int id_num = id_to_num.at(parameter->id);
     int reg_num = NextLocalNum();
+    WriteInstr_("{} =l alloc{} {}", FuncScopeTemp{reg_num}, parameter->type->ToSize(), parameter->type->ToSize());
     if (parameter->type->IsPtr()) {
-      WriteInstr_("{} =l alloc8 8", FuncScopeTemp{reg_num});
       WriteInstr_("storel {}, {}", FuncScopeTemp{id_num},
                   FuncScopeTemp{reg_num});
     } else {
-      WriteInstr_("{} =l alloc4 4", FuncScopeTemp{reg_num});
       WriteInstr_("storew {}, {}", FuncScopeTemp{id_num},
                   FuncScopeTemp{reg_num});
     }
