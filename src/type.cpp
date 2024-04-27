@@ -41,3 +41,24 @@ std::string PtrType::ToString() const {
 std::unique_ptr<Type> PtrType::Clone() const {
   return std::make_unique<PtrType>(base_type_->Clone());
 }
+
+bool ArrType::IsEqual(const Type& that) const noexcept {
+  if (const auto* that_arr = dynamic_cast<const ArrType*>(&that)) {
+    return that_arr->base_type_->IsEqual(*base_type_);
+  } else if (const auto* that_prim = dynamic_cast<const PrimType*>(&that)) {
+    return that_prim->IsEqual(*base_type_);
+  }
+  return false;
+}
+
+std::string ArrType::ToString() const {
+  return base_type_->ToString();
+}
+
+std::unique_ptr<Type> ArrType::Clone() const {
+  return std::make_unique<ArrType>(base_type_->Clone(), len_);
+}
+
+std::size_t ArrType::GetLen() const {
+  return len_;
+}
