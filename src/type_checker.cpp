@@ -303,9 +303,12 @@ void TypeChecker::Visit(ArgExprNode& arg_expr) {
 }
 
 void TypeChecker::Visit(ArrSubExprNode& arr_sub_expr) {
-  arr_sub_expr.postfix_expr->Accept(*this);
+  arr_sub_expr.arr->Accept(*this);
   arr_sub_expr.index->Accept(*this);
-  arr_sub_expr.type = arr_sub_expr.postfix_expr->type->Clone();
+  const auto* arr_type = dynamic_cast<ArrType*>((arr_sub_expr.arr->type).get());
+  assert(arr_type);
+  // arr_sub_expr should have the element type of the array.
+  arr_sub_expr.type = arr_type->element_type().Clone();
 }
 
 void TypeChecker::Visit(FuncCallExprNode& call_expr) {

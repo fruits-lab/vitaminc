@@ -31,7 +31,8 @@ class Type {
   /// @brief A convenience function to compare with a primitive type.
   bool IsEqual(PrimitiveType that) const noexcept;
 
-  virtual std::size_t ToSize() const = 0;
+  // NOLINTNEXTLINE(readability-identifier-naming)
+  virtual std::size_t size() const = 0;
   virtual std::string ToString() const = 0;
   virtual std::unique_ptr<Type> Clone() const = 0;
 
@@ -57,7 +58,7 @@ class PrimType : public Type {
   }
 
   bool IsEqual(const Type& that) const noexcept override;
-  std::size_t ToSize() const override;
+  std::size_t size() const override;
   std::string ToString() const override;
   std::unique_ptr<Type> Clone() const override;
 
@@ -80,23 +81,23 @@ class PtrType : public Type {
   }
 
   bool IsEqual(const Type& that) const noexcept override;
-  std::size_t ToSize() const override;
+  std::size_t size() const override;
   std::string ToString() const override;
   std::unique_ptr<Type> Clone() const override;
 
  private:
   std::unique_ptr<Type> base_type_;
-  const std::size_t size_ = 8;
 };
 
 class ArrType : public Type {
  public:
-  explicit ArrType(std::unique_ptr<Type> base_type, std::size_t len)
-      : base_type_{std::move(base_type)}, len_{len} {}
+  /// @param element_type The type of a single element in the array.
+  explicit ArrType(std::unique_ptr<Type> element_type, std::size_t len)
+      : element_type_{std::move(element_type)}, len_{len} {}
 
-  const Type& base_type()  // NOLINT(readability-identifier-naming)
+  const Type& element_type()  // NOLINT(readability-identifier-naming)
       const noexcept {
-    return *base_type_;
+    return *element_type_;
   }
 
   bool IsArr() const noexcept override {
@@ -104,14 +105,14 @@ class ArrType : public Type {
   }
 
   bool IsEqual(const Type& that) const noexcept override;
-  std::size_t ToSize() const override;
+  std::size_t size() const override;
   std::string ToString() const override;
   std::unique_ptr<Type> Clone() const override;
 
-  std::size_t GetLen() const;
+  std::size_t len() const;  // NOLINT(readability-identifier-naming)
 
  private:
-  std::unique_ptr<Type> base_type_;
+  std::unique_ptr<Type> element_type_;
   std::size_t len_;
 };
 
