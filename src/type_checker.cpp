@@ -66,6 +66,8 @@ void TypeChecker::Visit(DeclArrNode& array_decl) {
     // TODO: May be file scope once we support global variables.
     env_.Add(std::move(symbol), ScopeKind::kBlock);
   }
+
+  // TODO: Check initializer type
 }
 
 void TypeChecker::Visit(ParamNode& parameter) {
@@ -299,10 +301,10 @@ void TypeChecker::Visit(ArgExprNode& arg_expr) {
   arg_expr.type = arg_expr.arg->type->Clone();
 }
 
-void TypeChecker::Visit(ArrSubExprNode& array_expr) {
-  array_expr.postfix_expr->Accept(*this);
-  array_expr.index->Accept(*this);
-  array_expr.type = array_expr.postfix_expr->type->Clone();
+void TypeChecker::Visit(ArrSubExprNode& arr_sub_expr) {
+  arr_sub_expr.postfix_expr->Accept(*this);
+  arr_sub_expr.index->Accept(*this);
+  arr_sub_expr.type = arr_sub_expr.postfix_expr->type->Clone();
 }
 
 void TypeChecker::Visit(FuncCallExprNode& call_expr) {

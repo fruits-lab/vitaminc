@@ -202,7 +202,10 @@ decl: type_specifier ID SEMICOLON { $$ = std::make_unique<DeclVarNode>(Loc(@2), 
 /* 6.7.6.2 Array declarator */
 /* 6.7.9 Initialization */
 /* the current object shall have array type and the expression shall be an integer constant expression. */
-array_decl : type_specifier ID LEFT_SQUARE NUM RIGHT_SQUARE SEMICOLON { $$ = std::make_unique<DeclArrNode>(Loc(@2), $2, $1, $4); }
+array_decl : type_specifier ID LEFT_SQUARE NUM RIGHT_SQUARE SEMICOLON {
+      auto arr_type = std::make_unique<ArrType>($1, $4);
+      $$ = std::make_unique<DeclArrNode>(Loc(@2), $2, std::move(arr_type));
+    }
     ;
 
 stmt: expr_opt SEMICOLON { $$ = std::make_unique<ExprStmtNode>(Loc(@1), $1); }

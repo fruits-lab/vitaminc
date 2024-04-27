@@ -79,7 +79,7 @@ void AstDumper::Visit(const DeclVarNode& decl) {
 void AstDumper::Visit(const DeclArrNode& array_decl) {
   std::cout << indenter_.Indent() << "DeclArrNode <" << array_decl.loc << "> "
             << array_decl.id << ": " << array_decl.type->ToString() << "["
-            << array_decl.count << "]" << '\n';
+            << array_decl.type->GetLen() << "]" << '\n';
 }
 
 void AstDumper::Visit(const ParamNode& parameter) {

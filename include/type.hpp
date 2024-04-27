@@ -1,6 +1,7 @@
 #ifndef TYPE_HPP_
 #define TYPE_HPP_
 
+#include <cstddef>
 #include <cstdint>
 #include <memory>
 #include <string>
@@ -20,6 +21,9 @@ class Type {
     return false;
   }
   virtual bool IsPrim() const noexcept {
+    return false;
+  }
+  virtual bool IsArr() const noexcept {
     return false;
   }
 
@@ -79,6 +83,31 @@ class PtrType : public Type {
 
  private:
   std::unique_ptr<Type> base_type_;
+};
+
+class ArrType : public Type {
+ public:
+  explicit ArrType(std::unique_ptr<Type> base_type, std::size_t len)
+      : base_type_{std::move(base_type)}, len_{len} {}
+
+  const Type& base_type()  // NOLINT(readability-identifier-naming)
+      const noexcept {
+    return *base_type_;
+  }
+
+  bool IsArr() const noexcept override {
+    return true;
+  }
+
+  bool IsEqual(const Type& that) const noexcept override;
+  std::string ToString() const override;
+  std::unique_ptr<Type> Clone() const override;
+
+  std::size_t GetLen() const;
+
+ private:
+  std::unique_ptr<Type> base_type_;
+  std::size_t len_;
 };
 
 #endif  // TYPE_HPP_

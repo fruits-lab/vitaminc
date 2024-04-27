@@ -19,6 +19,10 @@ ProgramNode <1:1>
           ArrSubExprNode<6:3> int
             IdExprNode <6:3> a: int
             IntConstExprNode <6:5> 2: int
-          IntConstExprNode <6:10> 3: int
+          BinaryExprNode <6:15> int +
+            ArrSubExprNode<6:10> int
+              IdExprNode <6:10> a: int
+              IntConstExprNode <6:12> 1: int
+            IntConstExprNode <6:17> 1: int
       ReturnStmtNode <8:3>
         IntConstExprNode <8:10> 0: int
