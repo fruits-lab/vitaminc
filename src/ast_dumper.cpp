@@ -66,7 +66,7 @@ std::string GetUnaryOperator(UnaryOperator op) {
 }  // namespace
 
 void AstDumper::Visit(const DeclVarNode& decl) {
-  std::cout << indenter_.Indent() << "DeclNode <" << decl.loc << "> " << decl.id
+  std::cout << indenter_.Indent() << "DeclVarNode <" << decl.loc << "> " << decl.id
             << ": " << decl.type->ToString() << '\n';
 
   if (decl.init) {
@@ -76,9 +76,9 @@ void AstDumper::Visit(const DeclVarNode& decl) {
   }
 }
 
-void AstDumper::Visit(const DeclArrayNode& array_decl) {
-  std::cout << indenter_.Indent() << "DeclArrayNode <" << array_decl.loc << "> "
-            << array_decl.id << ": " << TypeToString(array_decl.type) << "["
+void AstDumper::Visit(const DeclArrNode& array_decl) {
+  std::cout << indenter_.Indent() << "DeclArrNode <" << array_decl.loc << "> "
+            << array_decl.id << ": " << array_decl.type->ToString() << "["
             << array_decl.count << "]" << '\n';
 }
 
@@ -256,9 +256,9 @@ void AstDumper::Visit(const ArgExprNode& arg_expr) {
   indenter_.DecreaseLevel();
 }
 
-void AstDumper::Visit(const ArraySubExprNode& array_expr) {
-  std::cout << indenter_.Indent() << "ArraySubExprNode<" << array_expr.loc << "> "
-            << TypeToString(array_expr.type) << '\n';
+void AstDumper::Visit(const ArrSubExprNode& array_expr) {
+  std::cout << indenter_.Indent() << "ArrSubExprNode<" << array_expr.loc << "> "
+            << array_expr.type->ToString() << '\n';
   indenter_.IncreaseLevel();
   array_expr.postfix_expr->Accept(*this);
   array_expr.index->Accept(*this);

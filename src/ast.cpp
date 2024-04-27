@@ -50,11 +50,11 @@ void DeclVarNode::Accept(ModifyingVisitor& v) {
   v.Visit(*this);
 }
 
-void DeclArrayNode::Accept(NonModifyingVisitor& v) const {
+void DeclArrNode::Accept(NonModifyingVisitor& v) const {
   v.Visit(*this);
 }
 
-void DeclArrayNode::Accept(ModifyingVisitor& v) {
+void DeclArrNode::Accept(ModifyingVisitor& v) {
   v.Visit(*this);
 }
 
@@ -236,11 +236,11 @@ void ArgExprNode::Accept(ModifyingVisitor& v) {
   v.Visit(*this);
 }
 
-void ArraySubExprNode::Accept(NonModifyingVisitor& v) const {
+void ArrSubExprNode::Accept(NonModifyingVisitor& v) const {
   v.Visit(*this);
 }
 
-void ArraySubExprNode::Accept(ModifyingVisitor& v) {
+void ArrSubExprNode::Accept(ModifyingVisitor& v) {
   v.Visit(*this);
 }
 

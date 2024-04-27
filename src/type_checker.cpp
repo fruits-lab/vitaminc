@@ -58,11 +58,11 @@ void TypeChecker::Visit(DeclVarNode& decl) {
   }
 }
 
-void TypeChecker::Visit(DeclArrayNode& array_decl) {
+void TypeChecker::Visit(DeclArrNode& array_decl) {
   if (env_.Probe(array_decl.id)) {
     // TODO: redefinition of 'id'
   } else {
-    auto symbol = std::make_unique<SymbolEntry>(array_decl.id, array_decl.type);
+    auto symbol = std::make_unique<SymbolEntry>(array_decl.id, array_decl.type->Clone());
     // TODO: May be file scope once we support global variables.
     env_.Add(std::move(symbol), ScopeKind::kBlock);
   }
@@ -299,10 +299,10 @@ void TypeChecker::Visit(ArgExprNode& arg_expr) {
   arg_expr.type = arg_expr.arg->type->Clone();
 }
 
-void TypeChecker::Visit(ArraySubExprNode& array_expr) {
+void TypeChecker::Visit(ArrSubExprNode& array_expr) {
   array_expr.postfix_expr->Accept(*this);
   array_expr.index->Accept(*this);
-  array_expr.type = array_expr.postfix_expr->type;
+  array_expr.type = array_expr.postfix_expr->type->Clone();
 }
 
 void TypeChecker::Visit(FuncCallExprNode& call_expr) {

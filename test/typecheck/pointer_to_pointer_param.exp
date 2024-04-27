@@ -13,14 +13,14 @@ ProgramNode <1:1>
               IdExprNode <2:18> y: int**
   FuncDefNode <5:5> main: int
     CompoundStmtNode <5:12>
-      DeclNode <6:7> a: int
+      DeclVarNode <6:7> a: int
         IntConstExprNode <6:11> 3: int
-      DeclNode <7:7> b: int
+      DeclVarNode <7:7> b: int
         IntConstExprNode <7:11> 5: int
-      DeclNode <8:8> c: int*
+      DeclVarNode <8:8> c: int*
         UnaryExprNode <8:12> int* &
           IdExprNode <8:13> a: int
-      DeclNode <9:8> d: int*
+      DeclVarNode <9:8> d: int*
         UnaryExprNode <9:12> int* &
           IdExprNode <9:13> b: int
       ReturnStmtNode <10:3>

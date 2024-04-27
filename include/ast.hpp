@@ -98,15 +98,15 @@ struct DeclVarNode : public DeclNode {
   std::unique_ptr<ExprNode> init;
 };
 
-struct DeclArrayNode : public DeclNode {
-  DeclArrayNode(Location loc, std::string id, Type type, std::size_t count)
-      : DeclNode{loc}, id{std::move(id)}, type{type}, count{count} {}
+struct DeclArrNode : public DeclNode {
+  DeclArrNode(Location loc, std::string id, std::unique_ptr<Type> type, std::size_t count)
+      : DeclNode{loc}, id{std::move(id)}, type{std::move(type)}, count{count} {}
 
   void Accept(NonModifyingVisitor&) const override;
   void Accept(ModifyingVisitor&) override;
 
   std::string id;
-  Type type;
+  std::unique_ptr<Type> type;
   std::size_t count;
 };
 
@@ -374,8 +374,8 @@ struct ArgExprNode : public ExprNode {
 };
 
 // @brief An array subscripting expression.
-struct ArraySubExprNode : public ExprNode {
-  ArraySubExprNode(Location loc, std::unique_ptr<ExprNode> postfix_expr,
+struct ArrSubExprNode : public ExprNode {
+  ArrSubExprNode(Location loc, std::unique_ptr<ExprNode> postfix_expr,
                    std::unique_ptr<ExprNode> index)
       : ExprNode{loc},
         postfix_expr{std::move(postfix_expr)},
