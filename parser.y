@@ -88,7 +88,7 @@
 %nterm <std::unique_ptr<ExprNode>> postfix_expr
 %nterm <std::unique_ptr<ExprNode>> primary_expr
 %nterm <std::unique_ptr<DeclNode>> decl
-%nterm <std::unique_ptr<DeclArrayNode>> array_decl
+%nterm <std::unique_ptr<DeclArrNode>> array_decl
 %nterm <std::unique_ptr<ArgExprNode>> arg
 %nterm <std::vector<std::unique_ptr<ArgExprNode>>> arg_list_opt arg_list
 %nterm <std::unique_ptr<FuncDefNode>> func_def
@@ -202,7 +202,7 @@ decl: type_specifier ID SEMICOLON { $$ = std::make_unique<DeclVarNode>(Loc(@2), 
 /* 6.7.6.2 Array declarator */
 /* 6.7.9 Initialization */
 /* the current object shall have array type and the expression shall be an integer constant expression. */
-array_decl : type_specifier ID LEFT_SQUARE NUM RIGHT_SQUARE SEMICOLON { $$ = std::make_unique<DeclArrayNode>(Loc(@2), $2, $1, $4); }
+array_decl : type_specifier ID LEFT_SQUARE NUM RIGHT_SQUARE SEMICOLON { $$ = std::make_unique<DeclArrNode>(Loc(@2), $2, $1, $4); }
     ;
 
 stmt: expr_opt SEMICOLON { $$ = std::make_unique<ExprStmtNode>(Loc(@1), $1); }
@@ -285,7 +285,7 @@ unary_expr: postfix_expr { $$ = $1; }
 /* 6.5.2 Postfix operators */
 postfix_expr: primary_expr { $$ = $1; }
   | postfix_expr LEFT_PAREN arg_list_opt RIGHT_PAREN { $$ = std::make_unique<FuncCallExprNode>(Loc(@1), $1, $3); }
-  | postfix_expr LEFT_SQUARE expr RIGHT_SQUARE { $$ = std::make_unique<ArraySubExprNode>(Loc(@1), $1, $3); }
+  | postfix_expr LEFT_SQUARE expr RIGHT_SQUARE { $$ = std::make_unique<ArrSubExprNode>(Loc(@1), $1, $3); }
   ;
 
 arg_list_opt: arg_list { $$ = $1; }

@@ -12,7 +12,7 @@ class TypeChecker : public ModifyingVisitor {
 
   void Visit(LoopInitNode&) override;
   void Visit(DeclVarNode&) override;
-  void Visit(DeclArrayNode&) override;
+  void Visit(DeclArrNode&) override;
   void Visit(ParamNode&) override;
   void Visit(FuncDefNode&) override;
   void Visit(CompoundStmtNode&) override;
@@ -33,7 +33,7 @@ class TypeChecker : public ModifyingVisitor {
   void Visit(IdExprNode&) override;
   void Visit(IntConstExprNode&) override;
   void Visit(ArgExprNode&) override;
-  void Visit(ArraySubExprNode&) override;
+  void Visit(ArrSubExprNode&) override;
   void Visit(FuncCallExprNode&) override;
   void Visit(UnaryExprNode&) override;
   void Visit(BinaryExprNode&) override;
