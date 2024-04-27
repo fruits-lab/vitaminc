@@ -1,7 +1,6 @@
 #ifndef AST_HPP_
 #define AST_HPP_
 
-#include <cstddef>
 #include <memory>
 #include <string>
 #include <utility>
@@ -375,18 +374,18 @@ struct ArgExprNode : public ExprNode {
   std::unique_ptr<ExprNode> arg;
 };
 
-// @brief An array subscripting expression.
+/// @brief An array subscripting expression.
 struct ArrSubExprNode : public ExprNode {
-  ArrSubExprNode(Location loc, std::unique_ptr<ExprNode> postfix_expr,
+  /// @param arr An expression that evaluates to the target array.
+  /// @param index An expression that evaluates to the subscription index.
+  ArrSubExprNode(Location loc, std::unique_ptr<ExprNode> arr,
                  std::unique_ptr<ExprNode> index)
-      : ExprNode{loc},
-        postfix_expr{std::move(postfix_expr)},
-        index{std::move(index)} {}
+      : ExprNode{loc}, arr{std::move(arr)}, index{std::move(index)} {}
 
   void Accept(NonModifyingVisitor&) const override;
   void Accept(ModifyingVisitor&) override;
 
-  std::unique_ptr<ExprNode> postfix_expr;
+  std::unique_ptr<ExprNode> arr;
   std::unique_ptr<ExprNode> index;
 };
 

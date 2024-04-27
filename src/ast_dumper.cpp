@@ -78,8 +78,7 @@ void AstDumper::Visit(const DeclVarNode& decl) {
 
 void AstDumper::Visit(const DeclArrNode& array_decl) {
   std::cout << indenter_.Indent() << "DeclArrNode <" << array_decl.loc << "> "
-            << array_decl.id << ": " << array_decl.type->ToString() << "["
-            << array_decl.type->GetLen() << "]" << '\n';
+            << array_decl.id << ": " << array_decl.type->ToString() << '\n';
 }
 
 void AstDumper::Visit(const ParamNode& parameter) {
@@ -256,12 +255,12 @@ void AstDumper::Visit(const ArgExprNode& arg_expr) {
   indenter_.DecreaseLevel();
 }
 
-void AstDumper::Visit(const ArrSubExprNode& array_expr) {
-  std::cout << indenter_.Indent() << "ArrSubExprNode<" << array_expr.loc << "> "
-            << array_expr.type->ToString() << '\n';
+void AstDumper::Visit(const ArrSubExprNode& arr_sub_expr) {
+  std::cout << indenter_.Indent() << "ArrSubExprNode <" << arr_sub_expr.loc
+            << "> " << arr_sub_expr.type->ToString() << '\n';
   indenter_.IncreaseLevel();
-  array_expr.postfix_expr->Accept(*this);
-  array_expr.index->Accept(*this);
+  arr_sub_expr.arr->Accept(*this);
+  arr_sub_expr.index->Accept(*this);
   indenter_.DecreaseLevel();
 }
 

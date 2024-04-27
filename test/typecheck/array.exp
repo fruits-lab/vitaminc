@@ -4,24 +4,24 @@ ProgramNode <1:1>
       DeclArrNode <2:7> a: int[3]
       ExprStmtNode <4:3>
         SimpleAssignmentExprNode <4:8> int
-          ArrSubExprNode<4:3> int
-            IdExprNode <4:3> a: int
+          ArrSubExprNode <4:3> int
+            IdExprNode <4:3> a: int[3]
             IntConstExprNode <4:5> 0: int
           IntConstExprNode <4:10> 1: int
       ExprStmtNode <5:3>
         SimpleAssignmentExprNode <5:8> int
-          ArrSubExprNode<5:3> int
-            IdExprNode <5:3> a: int
+          ArrSubExprNode <5:3> int
+            IdExprNode <5:3> a: int[3]
             IntConstExprNode <5:5> 1: int
           IntConstExprNode <5:10> 2: int
       ExprStmtNode <6:3>
         SimpleAssignmentExprNode <6:8> int
-          ArrSubExprNode<6:3> int
-            IdExprNode <6:3> a: int
+          ArrSubExprNode <6:3> int
+            IdExprNode <6:3> a: int[3]
             IntConstExprNode <6:5> 2: int
           BinaryExprNode <6:15> int +
-            ArrSubExprNode<6:10> int
-              IdExprNode <6:10> a: int
+            ArrSubExprNode <6:10> int
+              IdExprNode <6:10> a: int[3]
               IntConstExprNode <6:12> 1: int
             IntConstExprNode <6:17> 1: int
       ReturnStmtNode <8:3>

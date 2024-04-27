@@ -123,8 +123,8 @@ auto
 
 void QbeIrGenerator::Visit(const DeclVarNode& decl) {
   int id_num = NextLocalNum();
-  WriteInstr_("{} =l alloc{} {}", FuncScopeTemp{id_num}, decl.type->ToSize(),
-              decl.type->ToSize());
+  WriteInstr_("{} =l alloc{} {}", FuncScopeTemp{id_num}, decl.type->size(),
+              decl.type->size());
   if (decl.init) {
     decl.init->Accept(*this);
     int init_num = num_recorder.NumOfPrevExpr();
@@ -153,9 +153,8 @@ void QbeIrGenerator::Visit(const DeclVarNode& decl) {
 
 void QbeIrGenerator::Visit(const DeclArrNode& array_decl) {
   int id_num = NextLocalNum();
-  std::size_t elem_size = array_decl.type->ToSize();
-  WriteInstr_("{} =l alloc{} {}", FuncScopeTemp{id_num}, elem_size,
-              elem_size * array_decl.type->GetLen());
+  WriteInstr_("{} =l alloc{} {}", FuncScopeTemp{id_num},
+              array_decl.type->element_type().size(), array_decl.type->size());
   id_to_num[array_decl.id] = id_num;
 }
 
@@ -176,7 +175,7 @@ void QbeIrGenerator::AllocMemForParams_(
     int id_num = id_to_num.at(parameter->id);
     int reg_num = NextLocalNum();
     WriteInstr_("{} =l alloc{} {}", FuncScopeTemp{reg_num},
-                parameter->type->ToSize(), parameter->type->ToSize());
+                parameter->type->size(), parameter->type->size());
     if (parameter->type->IsPtr()) {
       WriteInstr_("storel {}, {}", FuncScopeTemp{id_num},
                   FuncScopeTemp{reg_num});
@@ -566,7 +565,7 @@ void QbeIrGenerator::Visit(const ArgExprNode& arg_expr) {
 }
 
 void QbeIrGenerator::Visit(const ArrSubExprNode& arr_sub_expr) {
-  arr_sub_expr.postfix_expr->Accept(*this);
+  arr_sub_expr.arr->Accept(*this);
   const int reg_num = num_recorder.NumOfPrevExpr();
   // address of the first element
   const int base_addr = reg_num_to_id_num.at(reg_num);
@@ -578,10 +577,12 @@ void QbeIrGenerator::Visit(const ArrSubExprNode& arr_sub_expr) {
   WriteInstr_("{} =l extsw {}", FuncScopeTemp{extended_num},
               FuncScopeTemp{index_num});
 
-  // TODO: figure out what mul 4 means, I think it is related to word addressing
+  // offset = index number * element size
+  // e.g. int a[3]
+  // a[1]'s offset = 1 * 4 (int size)
   const int offset = NextLocalNum();
   WriteInstr_("{} =l mul {}, {}", FuncScopeTemp{offset},
-              FuncScopeTemp{extended_num}, 4);
+              FuncScopeTemp{extended_num}, arr_sub_expr.arr->type->size());
 
   // res_addr = base_addr + offset
   const int res_addr_num = NextLocalNum();
