@@ -1,5 +1,6 @@
 #include "type.hpp"
 
+#include <cstddef>
 #include <memory>
 #include <string>
 
@@ -12,6 +13,14 @@ bool PrimType::IsEqual(const Type& that) const noexcept {
     return that_prim->prim_type_ == prim_type_;
   }
   return false;
+}
+
+std::size_t PrimType::ToSize() const {
+  switch (prim_type_) {
+    case PrimitiveType::kInt:
+    default:
+      return 4;
+  }
 }
 
 std::string PrimType::ToString() const {
@@ -34,6 +43,10 @@ bool PtrType::IsEqual(const Type& that) const noexcept {
   return false;
 }
 
+std::size_t PtrType::ToSize() const {
+  return size_;
+}
+
 std::string PtrType::ToString() const {
   return base_type_->ToString() + "*";
 }
@@ -49,6 +62,10 @@ bool ArrType::IsEqual(const Type& that) const noexcept {
     return that_prim->IsEqual(*base_type_);
   }
   return false;
+}
+
+std::size_t ArrType::ToSize() const {
+  return base_type_->ToSize();
 }
 
 std::string ArrType::ToString() const {

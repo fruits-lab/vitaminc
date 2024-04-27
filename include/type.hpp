@@ -31,6 +31,7 @@ class Type {
   /// @brief A convenience function to compare with a primitive type.
   bool IsEqual(PrimitiveType that) const noexcept;
 
+  virtual std::size_t ToSize() const = 0;
   virtual std::string ToString() const = 0;
   virtual std::unique_ptr<Type> Clone() const = 0;
 
@@ -56,6 +57,7 @@ class PrimType : public Type {
   }
 
   bool IsEqual(const Type& that) const noexcept override;
+  std::size_t ToSize() const override;
   std::string ToString() const override;
   std::unique_ptr<Type> Clone() const override;
 
@@ -78,11 +80,13 @@ class PtrType : public Type {
   }
 
   bool IsEqual(const Type& that) const noexcept override;
+  std::size_t ToSize() const override;
   std::string ToString() const override;
   std::unique_ptr<Type> Clone() const override;
 
  private:
   std::unique_ptr<Type> base_type_;
+  const std::size_t size_ = 8;
 };
 
 class ArrType : public Type {
@@ -100,6 +104,7 @@ class ArrType : public Type {
   }
 
   bool IsEqual(const Type& that) const noexcept override;
+  std::size_t ToSize() const override;
   std::string ToString() const override;
   std::unique_ptr<Type> Clone() const override;
 
