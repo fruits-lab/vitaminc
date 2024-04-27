@@ -62,7 +62,8 @@ void TypeChecker::Visit(DeclArrNode& array_decl) {
   if (env_.Probe(array_decl.id)) {
     // TODO: redefinition of 'id'
   } else {
-    auto symbol = std::make_unique<SymbolEntry>(array_decl.id, array_decl.type->Clone());
+    auto symbol =
+        std::make_unique<SymbolEntry>(array_decl.id, array_decl.type->Clone());
     // TODO: May be file scope once we support global variables.
     env_.Add(std::move(symbol), ScopeKind::kBlock);
   }

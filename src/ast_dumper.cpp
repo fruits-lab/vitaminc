@@ -66,8 +66,8 @@ std::string GetUnaryOperator(UnaryOperator op) {
 }  // namespace
 
 void AstDumper::Visit(const DeclVarNode& decl) {
-  std::cout << indenter_.Indent() << "DeclVarNode <" << decl.loc << "> " << decl.id
-            << ": " << decl.type->ToString() << '\n';
+  std::cout << indenter_.Indent() << "DeclVarNode <" << decl.loc << "> "
+            << decl.id << ": " << decl.type->ToString() << '\n';
 
   if (decl.init) {
     indenter_.IncreaseLevel();
