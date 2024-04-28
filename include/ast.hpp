@@ -101,14 +101,19 @@ struct DeclVarNode : public DeclNode {
 };
 
 struct DeclArrNode : public DeclNode {
-  DeclArrNode(Location loc, std::string id, std::unique_ptr<ArrType> type)
-      : DeclNode{loc}, id{std::move(id)}, type{std::move(type)} {}
+  DeclArrNode(Location loc, std::string id, std::unique_ptr<ArrType> type,
+              std::vector<std::unique_ptr<ExprNode>> init_list)
+      : DeclNode{loc},
+        id{std::move(id)},
+        type{std::move(type)},
+        init_list{std::move(init_list)} {}
 
   void Accept(NonModifyingVisitor&) const override;
   void Accept(ModifyingVisitor&) override;
 
   std::string id;
   std::unique_ptr<ArrType> type;
+  std::vector<std::unique_ptr<ExprNode>> init_list;
 };
 
 struct ParamNode : public AstNode {

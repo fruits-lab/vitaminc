@@ -89,6 +89,7 @@
 %nterm <std::unique_ptr<ExprNode>> primary_expr
 %nterm <std::unique_ptr<DeclNode>> decl
 %nterm <std::unique_ptr<DeclArrNode>> array_decl
+%nterm <std::vector<std::unique_ptr<ExprNode>>> initializer_opt init_list_opt init_list
 %nterm <std::unique_ptr<ArgExprNode>> arg
 %nterm <std::vector<std::unique_ptr<ArgExprNode>>> arg_list_opt arg_list
 %nterm <std::unique_ptr<FuncDefNode>> func_def
@@ -202,9 +203,28 @@ decl: type_specifier ID SEMICOLON { $$ = std::make_unique<DeclVarNode>(Loc(@2), 
 /* 6.7.6.2 Array declarator */
 /* 6.7.9 Initialization */
 /* the current object shall have array type and the expression shall be an integer constant expression. */
-array_decl : type_specifier ID LEFT_SQUARE NUM RIGHT_SQUARE SEMICOLON {
+array_decl : type_specifier ID LEFT_SQUARE NUM RIGHT_SQUARE initializer_opt SEMICOLON {
       auto arr_type = std::make_unique<ArrType>($1, $4);
-      $$ = std::make_unique<DeclArrNode>(Loc(@2), $2, std::move(arr_type));
+      $$ = std::make_unique<DeclArrNode>(Loc(@2), $2, std::move(arr_type), $6);
+    }
+    ;
+
+initializer_opt: ASSIGN LEFT_CURLY init_list_opt RIGHT_CURLY { $$ = $3; }
+    | epsilon { $$ = std::vector<std::unique_ptr<ExprNode>>{}; }
+    ;
+
+init_list_opt: init_list { $$ = $1; }
+    | epsilon { $$ = std::vector<std::unique_ptr<ExprNode>>{}; }
+    ;
+
+init_list: init_list COMMA expr {
+      auto init_list = $1;
+      init_list.push_back($3);
+      $$ = std::move(init_list);
+    }
+    | expr {
+      $$ = std::vector<std::unique_ptr<ExprNode>>{};
+      $$.push_back($1);
     }
     ;
 
