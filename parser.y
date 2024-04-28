@@ -81,12 +81,7 @@
 %token EOF 0
 
 %nterm <std::unique_ptr<Type>> type_specifier pointer_type
-%nterm <std::unique_ptr<ExprNode>> expr
-%nterm <std::unique_ptr<ExprNode>> assign_expr
-%nterm <std::unique_ptr<ExprNode>> expr_opt
-%nterm <std::unique_ptr<ExprNode>> unary_expr
-%nterm <std::unique_ptr<ExprNode>> postfix_expr
-%nterm <std::unique_ptr<ExprNode>> primary_expr
+%nterm <std::unique_ptr<ExprNode>> expr assign_expr expr_opt unary_expr postfix_expr primary_expr
 %nterm <std::unique_ptr<DeclNode>> decl
 %nterm <std::unique_ptr<DeclArrNode>> array_decl
 %nterm <std::vector<std::unique_ptr<ExprNode>>> initializer_opt init_list_opt init_list
