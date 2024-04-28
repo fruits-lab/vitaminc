@@ -581,8 +581,10 @@ void QbeIrGenerator::Visit(const ArrSubExprNode& arr_sub_expr) {
   // e.g. int a[3]
   // a[1]'s offset = 1 * 4 (int size)
   const int offset = NextLocalNum();
+  const auto* arr_type = dynamic_cast<ArrType*>((arr_sub_expr.arr->type).get());
+  assert(arr_type);
   WriteInstr_("{} =l mul {}, {}", FuncScopeTemp{offset},
-              FuncScopeTemp{extended_num}, arr_sub_expr.arr->type->size());
+              FuncScopeTemp{extended_num}, arr_type->element_type().size());
 
   // res_addr = base_addr + offset
   const int res_addr_num = NextLocalNum();
