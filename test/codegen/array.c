@@ -19,5 +19,10 @@ int main() {
   __builtin_print(d[2]);
   __builtin_print(d[3]);
 
+  int e[3] = {1};
+  __builtin_print(e[0]);
+  __builtin_print(e[1]);
+  __builtin_print(e[2]);
+
   return 0;
 }
