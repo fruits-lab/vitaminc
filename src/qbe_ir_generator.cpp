@@ -153,26 +153,33 @@ void QbeIrGenerator::Visit(const DeclVarNode& decl) {
 
 void QbeIrGenerator::Visit(const DeclArrNode& arr_decl) {
   int base_addr_num = NextLocalNum();
-  WriteInstr_("{} =l alloc{} {}", FuncScopeTemp{base_addr_num},
-              arr_decl.type->element_type().size(), arr_decl.type->size());
+  auto element_size = arr_decl.type->element_type().size();
+  WriteInstr_("{} =l alloc{} {}", FuncScopeTemp{base_addr_num}, element_size,
+              arr_decl.type->size());
   id_to_num[arr_decl.id] = base_addr_num;
 
-  for (auto i = std::size_t{0}, e = arr_decl.init_list.size(); i < e; ++i) {
-    auto& arr_init = arr_decl.init_list.at(i);
-    arr_init->Accept(*this);
+  for (auto i = std::size_t{0}, e = arr_decl.type->len(); i < e; ++i) {
+    if (i < arr_decl.init_list.size()) {
+      auto& arr_init = arr_decl.init_list.at(i);
+      arr_init->Accept(*this);
+    }
+
     const int offset = NextLocalNum();
-    WriteInstr_("{} =l extsw {}", FuncScopeTemp{offset},
-                i * arr_init->type->size());
+    WriteInstr_("{} =l extsw {}", FuncScopeTemp{offset}, i * element_size);
 
     // res_addr = base_addr + offset
     const int res_addr_num = NextLocalNum();
     WriteInstr_("{} =l add {}, {}", FuncScopeTemp{res_addr_num},
                 FuncScopeTemp{base_addr_num}, FuncScopeTemp{offset});
 
-    // store initial value to res_addr
-    int init_val_num = num_recorder.NumOfPrevExpr();
-    WriteInstr_("storew {}, {}", FuncScopeTemp{init_val_num},
-                FuncScopeTemp{res_addr_num});
+    if (i < arr_decl.init_list.size()) {
+      int init_val_num = num_recorder.NumOfPrevExpr();
+      WriteInstr_("storew {}, {}", FuncScopeTemp{init_val_num},
+                  FuncScopeTemp{res_addr_num});
+    } else {
+      // set remaining elements as 0
+      WriteInstr_("storew 0, {}", FuncScopeTemp{res_addr_num});
+    }
   }
 }
 
