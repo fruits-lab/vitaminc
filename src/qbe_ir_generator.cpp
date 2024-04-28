@@ -151,11 +151,29 @@ void QbeIrGenerator::Visit(const DeclVarNode& decl) {
   id_to_num[decl.id] = id_num;
 }
 
-void QbeIrGenerator::Visit(const DeclArrNode& array_decl) {
-  int id_num = NextLocalNum();
-  WriteInstr_("{} =l alloc{} {}", FuncScopeTemp{id_num},
-              array_decl.type->element_type().size(), array_decl.type->size());
-  id_to_num[array_decl.id] = id_num;
+void QbeIrGenerator::Visit(const DeclArrNode& arr_decl) {
+  int base_addr_num = NextLocalNum();
+  WriteInstr_("{} =l alloc{} {}", FuncScopeTemp{base_addr_num},
+              arr_decl.type->element_type().size(), arr_decl.type->size());
+  id_to_num[arr_decl.id] = base_addr_num;
+
+  for (auto i = std::size_t{0}, e = arr_decl.init_list.size(); i < e; ++i) {
+    auto& arr_init = arr_decl.init_list.at(i);
+    arr_init->Accept(*this);
+    const int offset = NextLocalNum();
+    WriteInstr_("{} =l extsw {}", FuncScopeTemp{offset},
+                i * arr_init->type->size());
+
+    // res_addr = base_addr + offset
+    const int res_addr_num = NextLocalNum();
+    WriteInstr_("{} =l add {}, {}", FuncScopeTemp{res_addr_num},
+                FuncScopeTemp{base_addr_num}, FuncScopeTemp{offset});
+
+    // store initial value to res_addr
+    int init_val_num = num_recorder.NumOfPrevExpr();
+    WriteInstr_("storew {}, {}", FuncScopeTemp{init_val_num},
+                FuncScopeTemp{res_addr_num});
+  }
 }
 
 void QbeIrGenerator::Visit(const ParamNode& parameter) {
