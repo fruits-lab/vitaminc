@@ -58,12 +58,19 @@ void TypeChecker::Visit(DeclVarNode& decl) {
   }
 }
 
-void TypeChecker::Visit(DeclArrNode& array_decl) {
-  if (env_.Probe(array_decl.id)) {
+void TypeChecker::Visit(DeclArrNode& arr_decl) {
+  if (env_.Probe(arr_decl.id)) {
     // TODO: redefinition of 'id'
   } else {
     auto symbol =
-        std::make_unique<SymbolEntry>(array_decl.id, array_decl.type->Clone());
+        std::make_unique<SymbolEntry>(arr_decl.id, arr_decl.type->Clone());
+
+    for (auto& init : arr_decl.init_list) {
+      init->Accept(*this);
+      if (!init->type->IsEqual(*symbol->expr_type)) {
+        // TODO: element unmatches array element type
+      }
+    }
     // TODO: May be file scope once we support global variables.
     env_.Add(std::move(symbol), ScopeKind::kBlock);
   }
