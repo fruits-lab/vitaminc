@@ -138,32 +138,13 @@ func_def_list_opt: func_def_list_opt func_def {
   | epsilon { $$ = std::vector<std::unique_ptr<FuncDefNode>>{}; }
   ;
 
-func_def: type_specifier ID LEFT_PAREN parameter_list_opt RIGHT_PAREN compound_stmt {
-    $$ = std::make_unique<FuncDefNode>(Loc(@2), $2, $4, $6, $1);
-  }
+/* 6.9.1 Function definitions */
+/* NOTE: The obsolete form of function definition is not supported,
+   e.g., `int max(a, b) int a, b; { return a > b ? a : b; }`. */
+func_def: declaration_specifiers declarator compound_stmt
   ;
 
-parameter_list_opt: parameter_list { $$ = $1; }
-  | epsilon { $$ = std::vector<std::unique_ptr<ParamNode>>{}; }
-  ;
-
-parameter_list: parameter_list COMMA parameter {
-    auto parameter_list = $1;
-    parameter_list.push_back($3);
-    $$ = std::move(parameter_list);
-  }
-  | parameter {
-    $$ = std::vector<std::unique_ptr<ParamNode>>{};
-    $$.push_back($1);
-  }
-  ;
-
-parameter: type_specifier ID {
-    $$ = std::make_unique<ParamNode>(Loc(@2), $2, $1);
-  }
-  ;
-
-  /* 6.8.2 Compound statement */
+/* 6.8.2 Compound statement */
 compound_stmt: LEFT_CURLY block_item_list_opt RIGHT_CURLY {
     $$ = std::make_unique<CompoundStmtNode>(Loc(@1), $2);
   }
