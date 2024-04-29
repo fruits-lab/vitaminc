@@ -190,39 +190,6 @@ block_item: decl { $$ = $1; }
   | stmt { $$ = $1; }
   ;
 
-decl: type_specifier ID SEMICOLON { $$ = std::make_unique<DeclVarNode>(Loc(@2), $2, $1); }
-    | type_specifier ID ASSIGN expr SEMICOLON { $$ = std::make_unique<DeclVarNode>(Loc(@2), $2, $1, $4); }
-    | array_decl { $$ = $1; }
-    ;
-
-/* 6.7.6.2 Array declarator */
-/* 6.7.9 Initialization */
-/* the current object shall have array type and the expression shall be an integer constant expression. */
-array_decl : type_specifier ID LEFT_SQUARE NUM RIGHT_SQUARE initializer_opt SEMICOLON {
-      auto arr_type = std::make_unique<ArrType>($1, $4);
-      $$ = std::make_unique<DeclArrNode>(Loc(@2), $2, std::move(arr_type), $6);
-    }
-    ;
-
-initializer_opt: ASSIGN LEFT_CURLY init_list_opt RIGHT_CURLY { $$ = $3; }
-    | epsilon { $$ = std::vector<std::unique_ptr<ExprNode>>{}; }
-    ;
-
-init_list_opt: init_list { $$ = $1; }
-    | epsilon { $$ = std::vector<std::unique_ptr<ExprNode>>{}; }
-    ;
-
-init_list: init_list COMMA expr {
-      auto init_list = $1;
-      init_list.push_back($3);
-      $$ = std::move(init_list);
-    }
-    | expr {
-      $$ = std::vector<std::unique_ptr<ExprNode>>{};
-      $$.push_back($1);
-    }
-    ;
-
 stmt: expr_opt SEMICOLON { $$ = std::make_unique<ExprStmtNode>(Loc(@1), $1); }
     | compound_stmt { $$ = $1; }
     | selection_stmt { $$ = $1; }
@@ -331,15 +298,129 @@ primary_expr: ID { $$ = std::make_unique<IdExprNode>(Loc(@1), $1); }
   | LEFT_PAREN expr RIGHT_PAREN { $$ = $2; }
   ;
 
+/* 6.7 Declarations */
+/* TODO: init declarator list */
+decl: declaration_specifiers init_declarator_opt SEMICOLON {
+    // Find the innermost type and replace it with the type specifier.
+    auto decl = $2;
+    // This is a handle to the type of the declarator.
+    std::unique_ptr<Type>* type = &(decl->type);
+    while (!(*type)->IsPrim()) {
+      if ((*type)->IsPtr()) {
+        type = &(static_cast<PtrType*>(type)->base_type);
+      } else if ((*type)->IsArr()) {
+        type = &(static_cast<ArrType*>(type)->element_type);
+      }
+    }
+    *type = $1;
+    $$ = decl;
+  }
+  ;
+
+/* A declaration specifier declares part of the type of a declarator. */
+/* TODO: storage class specifier, type qualifier, function specifier */
+declaration_specifiers: type_specifier declaration_specifiers
+  | type_specifier
+  ;
+
+init_declarator_opt: init_declarator
+  | epsilon
+  ;
+
+/* A init declarator is a declarator with an optional initializer. */
+init_declarator: declarator
+  | declarator ASSIGN initializer
+  ;
+
+
 /* 6.7.2 Type specifiers */
 /* TODO: support multiple data types */
-type_specifier: INT { $$ = std::make_unique<PrimType>(PrimitiveType::kInt); }
-  | pointer_type { $$ = $1; }
+type_specifier: INT
+  /* TODO: struct or union specifier */
+  /* TODO: enum specifier */
+  /* TODO: typedef name */
   ;
 
-pointer_type: type_specifier STAR { $$ = std::make_unique<PtrType>($1); }
+/* 6.7.5 Declarators */
+/* A declarator declares an identifier, and may be followed by a single
+   dimension of an array, or the parameters of a function.
+   Furthermore,
+   (1) if the declared identifier is a function, it doesn't contain the return type;
+   (2) if it's a pointer, it doesn't contain the base type;
+   (3) if it's an array, it doesn't contain the element type;
+   etc. */
+declarator: pointer_opt direct_declarator
   ;
 
+direct_declarator: ID
+  | LEFT_PAREN declarator RIGHT_PAREN
+  /* array */
+  | direct_declarator LEFT_SQUARE NUM RIGHT_SQUARE
+  /* function */
+  | direct_declarator LEFT_PAREN parameter_type_list_opt RIGHT_PAREN
+  /* TODO: identifier list */
+  /* The identifier may be a type name. */
+  /* TODO: direct declarator ( identifier list ) */
+  ;
+
+pointer_opt: pointer
+  | epsilon
+  ;
+
+pointer: STAR
+  | pointer STAR
+  ;
+
+parameter_type_list_opt: parameter_type_list
+  | epsilon
+  ;
+
+parameter_type_list: parameter_list
+  /* TODO: parameter list, ... */
+  ;
+
+parameter_list: parameter_declaration
+  | parameter_list COMMA parameter_declaration
+  ;
+
+parameter_declaration: declaration_specifiers declarator
+  /* Declare parameters without identifiers. */
+  | declaration_specifiers abstract_declarator_opt
+  ;
+
+abstract_declarator_opt: abstract_declarator
+  | epsilon
+  ;
+
+/* 6.7.6 Type names */
+/* NOTE: abstract means the declarator does not have an identifier */
+abstract_declarator: pointer
+  | pointer_opt direct_abstract_declarator
+  ;
+
+direct_abstract_declarator: LEFT_PAREN abstract_declarator RIGHT_PAREN
+  | direct_abstract_declarator_opt LEFT_SQUARE NUM RIGHT_SQUARE
+  | direct_abstract_declarator_opt LEFT_PAREN parameter_type_list_opt RIGHT_PAREN
+  ;
+
+direct_abstract_declarator_opt: direct_abstract_declarator
+  | epsilon
+  ;
+
+/* 6.7.8 Initialization */
+/* The current object shall have array type and the expression shall be an integer constant expression. */
+initializer: LEFT_CURLY initializer_list comma_opt RIGHT_CURLY
+  | expr
+  ;
+
+/* TODO: the initializer may be nested */
+initializer_list: expr
+  | initializer_list COMMA expr
+  ;
+
+comma_opt: COMMA
+  | epsilon
+  ;
 
 epsilon: %empty;
 %%
