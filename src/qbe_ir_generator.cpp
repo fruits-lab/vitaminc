@@ -153,12 +153,14 @@ void QbeIrGenerator::Visit(const DeclVarNode& decl) {
 
 void QbeIrGenerator::Visit(const DeclArrNode& arr_decl) {
   int base_addr_num = NextLocalNum();
-  auto element_size = arr_decl.type->element_type().size();
+  assert(arr_decl.type->IsArr());
+  const auto* arr_type = dynamic_cast<ArrType*>((arr_decl.type).get());
+  auto element_size = arr_type->element_type().size();
   WriteInstr_("{} =l alloc{} {}", FuncScopeTemp{base_addr_num}, element_size,
               arr_decl.type->size());
   id_to_num[arr_decl.id] = base_addr_num;
 
-  for (auto i = std::size_t{0}, e = arr_decl.type->len(); i < e; ++i) {
+  for (auto i = std::size_t{0}, e = arr_type->len(); i < e; ++i) {
     if (i < arr_decl.init_list.size()) {
       auto& arr_init = arr_decl.init_list.at(i);
       arr_init->Accept(*this);

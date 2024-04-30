@@ -60,13 +60,17 @@ struct StmtNode : public AstNode {
 /// @note This is an abstract class.
 struct DeclNode  // NOLINT(cppcoreguidelines-special-member-functions)
     : public AstNode {
-  using AstNode::AstNode;
+  DeclNode(Location loc, std::string id, std::unique_ptr<Type> type)
+      : AstNode{loc}, id{std::move(id)}, type{std::move(type)} {}
 
   void Accept(NonModifyingVisitor&) const override;
   void Accept(ModifyingVisitor&) override;
 
   /// @note To make the class abstract.
   ~DeclNode() override = 0;
+
+  std::string id;
+  std::unique_ptr<Type> type;
 };
 
 /// @note This is an abstract class.
@@ -87,32 +91,23 @@ struct ExprNode  // NOLINT(cppcoreguidelines-special-member-functions)
 struct DeclVarNode : public DeclNode {
   DeclVarNode(Location loc, std::string id, std::unique_ptr<Type> type,
               std::unique_ptr<ExprNode> init = {})
-      : DeclNode{loc},
-        id{std::move(id)},
-        type{std::move(type)},
-        init{std::move(init)} {}
+      : DeclNode{loc, std::move(id), std::move(type)}, init{std::move(init)} {}
 
   void Accept(NonModifyingVisitor&) const override;
   void Accept(ModifyingVisitor&) override;
 
-  std::string id;
-  std::unique_ptr<Type> type;
   std::unique_ptr<ExprNode> init;
 };
 
 struct DeclArrNode : public DeclNode {
   DeclArrNode(Location loc, std::string id, std::unique_ptr<ArrType> type,
               std::vector<std::unique_ptr<ExprNode>> init_list)
-      : DeclNode{loc},
-        id{std::move(id)},
-        type{std::move(type)},
+      : DeclNode{loc, std::move(id), std::move(type)},
         init_list{std::move(init_list)} {}
 
   void Accept(NonModifyingVisitor&) const override;
   void Accept(ModifyingVisitor&) override;
 
-  std::string id;
-  std::unique_ptr<ArrType> type;
   std::vector<std::unique_ptr<ExprNode>> init_list;
 };
 
