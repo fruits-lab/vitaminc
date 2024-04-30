@@ -126,7 +126,7 @@ struct FuncDefNode : public AstNode {
   FuncDefNode(Location loc, std::string id,
               std::vector<std::unique_ptr<ParamNode>> parameters,
               std::unique_ptr<CompoundStmtNode> body,
-              std::unique_ptr<Type> type)
+              std::unique_ptr<FuncType> type)
       : AstNode{loc},
         id{std::move(id)},
         parameters{std::move(parameters)},
@@ -139,7 +139,7 @@ struct FuncDefNode : public AstNode {
   std::string id;
   std::vector<std::unique_ptr<ParamNode>> parameters;
   std::unique_ptr<CompoundStmtNode> body;
-  std::unique_ptr<Type> type;
+  std::unique_ptr<FuncType> type;
 };
 
 /// @brief A loop initialization can be either a declaration or an expression.
