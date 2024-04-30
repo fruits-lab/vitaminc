@@ -1,5 +1,6 @@
 %{
 
+#include <cassert>
 #include <iostream>
 #include <memory>
 #include <utility>
@@ -10,6 +11,13 @@
 #include "operator.hpp"
 #include "type.hpp"
 
+namespace {
+/// @brief Resolved the innermost unknown type to the given type.
+/// @note If the type is a primitive type, the resolved type is returned.
+std::unique_ptr<Type> ResolveTypeAs(std::unique_ptr<Type> type,
+                                    std::unique_ptr<Type> resolved_type);
+}
+
 %}
 
 // Dependency code required for the value and location types;
@@ -17,6 +25,7 @@
 %code requires {
   #include <memory>
   #include <string>
+  #include <variant>
   #include <vector>
 
   #include "ast.hpp"
@@ -80,16 +89,20 @@
 %token INCR DECR
 %token EOF 0
 
-%nterm <std::unique_ptr<Type>> type_specifier pointer_type
 %nterm <std::unique_ptr<ExprNode>> expr assign_expr expr_opt unary_expr postfix_expr primary_expr
 %nterm <std::unique_ptr<DeclNode>> decl
-%nterm <std::unique_ptr<DeclArrNode>> array_decl
-%nterm <std::vector<std::unique_ptr<ExprNode>>> initializer_opt init_list_opt init_list
+// The followings also declare an identifier, however, their types are not yet fully resolved.
+%nterm <std::unique_ptr<DeclNode>> declarator direct_declarator init_declarator
+%nterm <std::unique_ptr<Type>> type_specifier
+// The followings also construct types, but they are not yet fully resolved.
+%nterm <std::unique_ptr<Type>> declaration_specifiers
+%nterm <std::vector<bool>> pointer_opt pointer
+// The initializer of a simple variable is an expression, whereas that of an array or complex object is a list of expressions.
+%nterm <std::variant<std::unique_ptr<ExprNode>, std::vector<std::unique_ptr<ExprNode>>>> initializer
+%nterm <std::vector<std::unique_ptr<ExprNode>>> initializer_list
 %nterm <std::unique_ptr<ArgExprNode>> arg
 %nterm <std::vector<std::unique_ptr<ArgExprNode>>> arg_list_opt arg_list
 %nterm <std::unique_ptr<FuncDefNode>> func_def
-%nterm <std::unique_ptr<ParamNode>> parameter
-%nterm <std::vector<std::unique_ptr<ParamNode>>> parameter_list_opt parameter_list
 %nterm <std::vector<std::unique_ptr<FuncDefNode>>> func_def_list_opt
 %nterm <std::unique_ptr<LoopInitNode>> loop_init
 %nterm <std::unique_ptr<StmtNode>> stmt jump_stmt selection_stmt labeled_stmt
@@ -141,7 +154,13 @@ func_def_list_opt: func_def_list_opt func_def {
 /* 6.9.1 Function definitions */
 /* NOTE: The obsolete form of function definition is not supported,
    e.g., `int max(a, b) int a, b; { return a > b ? a : b; }`. */
-func_def: declaration_specifiers declarator compound_stmt
+func_def: declaration_specifiers declarator compound_stmt {
+    // TODO: support function definition
+
+    // Hard-coded for main to be constructed.
+    auto params = std::vector<std::unique_ptr<ParamNode>>{};
+    $$ = std::make_unique<FuncDefNode>(Loc(@2), "main", std::move(params), $3, std::make_unique<PrimType>(PrimitiveType::kInt));
+  }
   ;
 
 /* 6.8.2 Compound statement */
@@ -281,42 +300,57 @@ primary_expr: ID { $$ = std::make_unique<IdExprNode>(Loc(@1), $1); }
 
 /* 6.7 Declarations */
 /* TODO: init declarator list */
-decl: declaration_specifiers init_declarator_opt SEMICOLON {
-    // Find the innermost type and replace it with the type specifier.
+/* TODO: If the init declarator doesn't present, e.g., `int;`, the declaration is still valid. */
+decl: declaration_specifiers init_declarator SEMICOLON {
     auto decl = $2;
-    // This is a handle to the type of the declarator.
-    std::unique_ptr<Type>* type = &(decl->type);
-    while (!(*type)->IsPrim()) {
-      if ((*type)->IsPtr()) {
-        type = &(static_cast<PtrType*>(type)->base_type);
-      } else if ((*type)->IsArr()) {
-        type = &(static_cast<ArrType*>(type)->element_type);
-      }
+    auto type = $1;
+    // Cast the decl to its dynamic type to access the type.
+    // XXX: Consider placing the type under the base class.
+    if (dynamic_cast<DeclVarNode*>(decl.get())) {
+      auto decl_var = static_cast<DeclVarNode*>(decl.get());
+      type = ResolveTypeAs(std::move(decl_var->type), std::move(type));
+      decl_var->type = std::move(type);
+    } else if (dynamic_cast<DeclArrNode*>(decl.get())) {
+      auto decl_arr = static_cast<DeclArrNode*>(decl.get());
+      type = ResolveTypeAs(std::move(decl_arr->type), std::move(type));
+      // Since the array declaration node holds a array type, we need to cast it.
+      decl_arr->type = std::unique_ptr<ArrType>(static_cast<ArrType*>(type.release()));
     }
-    *type = $1;
-    $$ = decl;
+    $$ = std::move(decl);
   }
   ;
 
 /* A declaration specifier declares part of the type of a declarator. */
 /* TODO: storage class specifier, type qualifier, function specifier */
-declaration_specifiers: type_specifier declaration_specifiers
-  | type_specifier
-  ;
-
-init_declarator_opt: init_declarator
-  | epsilon
+declaration_specifiers: type_specifier declaration_specifiers {
+    // The declaration specifier wraps the type specifier.
+    auto type = ResolveTypeAs($1, $2);
+    $$ = std::move(type);
+  }
+  | type_specifier { $$ = $1; }
   ;
 
 /* A init declarator is a declarator with an optional initializer. */
-init_declarator: declarator
-  | declarator ASSIGN initializer
+init_declarator: declarator { $$ = $1; }
+  | declarator ASSIGN initializer {
+    // NOTE: The parser crashes when initializing a variable with a list of expressions.
+    auto decl = $1;
+    auto init = $3;
+    if (std::holds_alternative<std::unique_ptr<ExprNode>>(init)) {
+      auto init_expr = std::move(std::get<std::unique_ptr<ExprNode>>(init));
+      static_cast<DeclVarNode*>(decl.get())->init = std::move(init_expr);
+    } else { // The initializer is a list of expressions.
+      auto init_expr_list = std::move(std::get<std::vector<std::unique_ptr<ExprNode>>>(init));
+      static_cast<DeclArrNode*>(decl.get())->init_list = std::move(init_expr_list);
+    }
+    $$ = std::move(decl);
+  }
   ;
 
 
 /* 6.7.2 Type specifiers */
 /* TODO: support multiple data types */
-type_specifier: INT
+type_specifier: INT { $$ = std::make_unique<PrimType>(PrimitiveType::kInt); }
   /* TODO: struct or union specifier */
   /* TODO: enum specifier */
   /* TODO: typedef name */
@@ -330,26 +364,76 @@ type_specifier: INT
    (2) if it's a pointer, it doesn't contain the base type;
    (3) if it's an array, it doesn't contain the element type;
    etc. */
-declarator: pointer_opt direct_declarator
+declarator: pointer_opt direct_declarator {
+    @$ = @2; // Set the location to the identifier.
+    auto declarator = $2;
+    for (auto is_pointer : $1) {
+      (void)is_pointer;
+      auto unknown_ptr_type = std::make_unique<PtrType>(std::make_unique<PrimType>(PrimitiveType::kUnknown));
+      // Cast the declarator to its dynamic type to access the type.
+      // XXX: Consider placing the type under the base class.
+      if (dynamic_cast<DeclVarNode*>(declarator.get())) {
+        auto decl_var = static_cast<DeclVarNode*>(declarator.get());
+        auto type = ResolveTypeAs(std::move(decl_var->type), std::move(unknown_ptr_type));
+        decl_var->type = std::move(type);
+      } else if (dynamic_cast<DeclArrNode*>(declarator.get())) {
+        auto decl_arr = static_cast<DeclArrNode*>(declarator.get());
+        auto type = ResolveTypeAs(std::move(decl_arr->type), std::move(unknown_ptr_type));
+        // Since the array declaration node holds a array type, we need to cast it.
+        decl_arr->type = std::unique_ptr<ArrType>(static_cast<ArrType*>(type.release()));
+      }
+    }
+    $$ = std::move(declarator);
+  }
   ;
 
-direct_declarator: ID
-  | LEFT_PAREN declarator RIGHT_PAREN
+direct_declarator: ID {
+    auto type = std::make_unique<PrimType>(PrimitiveType::kUnknown);
+    $$ = std::make_unique<DeclVarNode>(Loc(@1), $1, std::move(type));
+  }
+  | LEFT_PAREN declarator RIGHT_PAREN {
+    @$ = @2; // Set the location to the identifier.
+    $$ = $2;
+  }
   /* array */
-  | direct_declarator LEFT_SQUARE NUM RIGHT_SQUARE
+  | direct_declarator LEFT_SQUARE NUM RIGHT_SQUARE {
+    auto declarator = $1;
+    auto len = $3;
+    // Cast the declarator to its dynamic type to access the type.
+    // XXX: Consider placing the type under the base class.
+    if (dynamic_cast<DeclVarNode*>(declarator.get())) {
+      // If the declarator is not yet a array declarator, we need to construct one.
+      auto decl_var = static_cast<DeclVarNode*>(declarator.get());
+      auto type = std::make_unique<ArrType>(std::move(decl_var->type), len);
+      $$ = std::make_unique<DeclArrNode>(Loc(@1), decl_var->id, std::move(type), /* init list */ std::vector<std::unique_ptr<ExprNode>>{});
+    } else if (dynamic_cast<DeclArrNode*>(declarator.get())) {
+      auto decl_arr = static_cast<DeclArrNode*>(declarator.get());
+      auto type = std::make_unique<ArrType>(std::move(decl_arr->type), len);
+      decl_arr->type = std::move(type);
+      $$ = std::move(declarator);
+    }
+  }
   /* function */
-  | direct_declarator LEFT_PAREN parameter_type_list_opt RIGHT_PAREN
+  | direct_declarator LEFT_PAREN parameter_type_list_opt RIGHT_PAREN {
+    // TODO
+    $$ = $1;
+  }
   /* TODO: identifier list */
   /* The identifier may be a type name. */
   /* TODO: direct declarator ( identifier list ) */
   ;
 
-pointer_opt: pointer
-  | epsilon
+pointer_opt: pointer { $$ = $1; }
+  | epsilon { $$ = std::vector<bool>{}; }
   ;
 
-pointer: STAR
-  | pointer STAR
+/* A pointer is a sequence of one or more '*'s. */
+pointer: STAR { $$ = std::vector<bool>{true}; }
+  | pointer STAR {
+    auto pointer = $1;
+    pointer.push_back(true);
+    $$ = std::move(pointer);
+  }
   ;
 
 parameter_type_list_opt: parameter_type_list
@@ -390,13 +474,20 @@ direct_abstract_declarator_opt: direct_abstract_declarator
 
 /* 6.7.8 Initialization */
 /* The current object shall have array type and the expression shall be an integer constant expression. */
-initializer: LEFT_CURLY initializer_list comma_opt RIGHT_CURLY
-  | expr
+initializer: LEFT_CURLY initializer_list comma_opt RIGHT_CURLY { $$ = $2; }
+  | expr { $$ = $1; }
   ;
 
 /* TODO: the initializer may be nested */
-initializer_list: expr
-  | initializer_list COMMA expr
+initializer_list: expr {
+    $$ = std::vector<std::unique_ptr<ExprNode>>{};
+    $$.push_back($1);
+  }
+  | initializer_list COMMA expr {
+    auto initializer_list = $1;
+    initializer_list.push_back($3);
+    $$ = std::move(initializer_list);
+  }
   ;
 
 comma_opt: COMMA
@@ -408,4 +499,29 @@ epsilon: %empty;
 
 void yy::parser::error(const yy::location& loc, const std::string& err) {
   std::cerr << loc << ": " << err << std::endl;
+}
+
+namespace {
+
+std::unique_ptr<Type> ResolveTypeAs(std::unique_ptr<Type> type,
+                                    std::unique_ptr<Type> resolved_type) {
+  // Base case: this type itself is the unknown type to resolve.
+  if (type->IsPrim()) {
+    assert(type->IsEqual(PrimitiveType::kUnknown));
+    return resolved_type;
+  }
+  // Since we cannot change the internal state of a type, we construct a new one.
+  if (type->IsPtr()) {
+    auto ptr_type = static_cast<PtrType*>(type.get());
+    auto _type = ResolveTypeAs(ptr_type->base_type().Clone(), std::move(resolved_type));
+    return std::make_unique<PtrType>(std::move(_type));
+  }
+  if (type->IsArr()) {
+    auto arr_type = static_cast<ArrType*>(type.get());
+    auto _type = ResolveTypeAs(arr_type->element_type().Clone(), std::move(resolved_type));
+    return std::make_unique<ArrType>(std::move(_type), arr_type->len());
+  }
+  return nullptr;
+}
+
 }
