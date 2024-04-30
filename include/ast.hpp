@@ -111,35 +111,27 @@ struct DeclArrNode : public DeclNode {
   std::vector<std::unique_ptr<ExprNode>> init_list;
 };
 
-struct ParamNode : public AstNode {
-  ParamNode(Location loc, std::string id, std::unique_ptr<Type> type)
-      : AstNode{loc}, id{std::move(id)}, type{std::move(type)} {}
+struct ParamNode : public DeclNode {
+  using DeclNode::DeclNode;
 
   void Accept(NonModifyingVisitor&) const override;
   void Accept(ModifyingVisitor&) override;
-
-  std::string id;
-  std::unique_ptr<Type> type;
 };
 
-struct FuncDefNode : public AstNode {
+struct FuncDefNode : public DeclNode {
   FuncDefNode(Location loc, std::string id,
               std::vector<std::unique_ptr<ParamNode>> parameters,
               std::unique_ptr<CompoundStmtNode> body,
               std::unique_ptr<FuncType> type)
-      : AstNode{loc},
-        id{std::move(id)},
+      : DeclNode{loc, std::move(id), std::move(type)},
         parameters{std::move(parameters)},
-        body{std::move(body)},
-        type{std::move(type)} {}
+        body{std::move(body)} {}
 
   void Accept(NonModifyingVisitor&) const override;
   void Accept(ModifyingVisitor&) override;
 
-  std::string id;
   std::vector<std::unique_ptr<ParamNode>> parameters;
   std::unique_ptr<CompoundStmtNode> body;
-  std::unique_ptr<FuncType> type;
 };
 
 /// @brief A loop initialization can be either a declaration or an expression.
