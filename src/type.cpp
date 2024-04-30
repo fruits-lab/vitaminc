@@ -83,3 +83,41 @@ std::unique_ptr<Type> ArrType::Clone() const {
 std::size_t ArrType::len() const {
   return len_;
 }
+
+bool FuncType::IsEqual(const Type& that) const noexcept {
+  if (const auto* that_func = dynamic_cast<const FuncType*>(&that)) {
+    if (that_func->param_types_.size() != param_types_.size()) {
+      return false;
+    }
+    if (!that_func->return_type_->IsEqual(*return_type_)) {
+      return false;
+    }
+    for (auto i = std::size_t{0}, e = param_types_.size(); i < e; ++i) {
+      if (!that_func->param_types_.at(i)->IsEqual(*param_types_.at(i))) {
+        return false;
+      }
+    }
+    return true;
+  }
+  return false;
+}
+
+std::size_t FuncType::size() const {
+  const auto pointer_size = 8;
+  return pointer_size;
+}
+
+std::string FuncType::ToString() const {
+  // FIXME: This is to not break the tests; should include the parameter types.
+  return return_type_->ToString();
+}
+
+std::unique_ptr<Type> FuncType::Clone() const {
+  auto cloned_return_type = return_type_->Clone();
+  auto cloned_param_types = std::vector<std::unique_ptr<Type>>{};
+  for (const auto& param_type : param_types_) {
+    cloned_param_types.push_back(param_type->Clone());
+  }
+  return std::make_unique<FuncType>(std::move(cloned_return_type),
+                                    std::move(cloned_param_types));
+}

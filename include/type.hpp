@@ -6,6 +6,7 @@
 #include <memory>
 #include <string>
 #include <utility>
+#include <vector>
 
 /// @note C has a lots of primitive type. We might need to use classes to
 /// implement type coercion rules.
@@ -24,6 +25,9 @@ class Type {
     return false;
   }
   virtual bool IsArr() const noexcept {
+    return false;
+  }
+  virtual bool IsFunc() const noexcept {
     return false;
   }
 
@@ -114,6 +118,39 @@ class ArrType : public Type {
  private:
   std::unique_ptr<Type> element_type_;
   std::size_t len_;
+};
+
+class FuncType : public Type {
+ public:
+  FuncType(std::unique_ptr<Type> return_type,
+           std::vector<std::unique_ptr<Type>> param_types)
+      : return_type_{std::move(return_type)},
+        param_types_{std::move(param_types)} {}
+
+  const Type& return_type()  // NOLINT(readability-identifier-naming)
+      const noexcept {
+    return *return_type_;
+  }
+
+  // XXX: Consider exposing iterators for constness.
+  const std::vector<std::unique_ptr<Type>>&
+  param_types()  // NOLINT(readability-identifier-naming)
+      const noexcept {
+    return param_types_;
+  }
+
+  bool IsFunc() const noexcept override {
+    return true;
+  }
+
+  bool IsEqual(const Type& that) const noexcept override;
+  std::size_t size() const override;
+  std::string ToString() const override;
+  std::unique_ptr<Type> Clone() const override;
+
+ private:
+  std::unique_ptr<Type> return_type_;
+  std::vector<std::unique_ptr<Type>> param_types_;
 };
 
 #endif  // TYPE_HPP_
