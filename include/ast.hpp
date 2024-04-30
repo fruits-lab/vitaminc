@@ -100,7 +100,7 @@ struct DeclVarNode : public DeclNode {
 };
 
 struct DeclArrNode : public DeclNode {
-  DeclArrNode(Location loc, std::string id, std::unique_ptr<ArrType> type,
+  DeclArrNode(Location loc, std::string id, std::unique_ptr<Type> type,
               std::vector<std::unique_ptr<ExprNode>> init_list)
       : DeclNode{loc, std::move(id), std::move(type)},
         init_list{std::move(init_list)} {}
@@ -122,7 +122,7 @@ struct FuncDefNode : public DeclNode {
   FuncDefNode(Location loc, std::string id,
               std::vector<std::unique_ptr<ParamNode>> parameters,
               std::unique_ptr<CompoundStmtNode> body,
-              std::unique_ptr<FuncType> type)
+              std::unique_ptr<Type> type)
       : DeclNode{loc, std::move(id), std::move(type)},
         parameters{std::move(parameters)},
         body{std::move(body)} {}
