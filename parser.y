@@ -98,7 +98,8 @@ std::unique_ptr<Type> ResolveTypeAs(std::unique_ptr<Type> type,
 %nterm <std::unique_ptr<Type>> type_specifier
 // The followings also construct types, but they are not yet fully resolved.
 %nterm <std::unique_ptr<Type>> declaration_specifiers
-%nterm <std::vector<bool>> pointer_opt pointer
+// The number of '*'s.
+%nterm <int> pointer_opt pointer
 // The initializer of a simple variable is an expression, whereas that of an array or complex object is a list of expressions.
 %nterm <std::variant<std::unique_ptr<ExprNode>, std::vector<std::unique_ptr<ExprNode>>>> initializer
 %nterm <std::vector<std::unique_ptr<ExprNode>>> initializer_list
@@ -314,19 +315,7 @@ primary_expr: ID { $$ = std::make_unique<IdExprNode>(Loc(@1), $1); }
 /* TODO: If the init declarator doesn't present, e.g., `int;`, the declaration is still valid. */
 decl: declaration_specifiers init_declarator SEMICOLON {
     auto decl = $2;
-    auto type = $1;
-    // Cast the decl to its dynamic type to access the type.
-    // XXX: Consider placing the type under the base class.
-    if (dynamic_cast<DeclVarNode*>(decl.get())) {
-      auto decl_var = static_cast<DeclVarNode*>(decl.get());
-      type = ResolveTypeAs(std::move(decl_var->type), std::move(type));
-      decl_var->type = std::move(type);
-    } else if (dynamic_cast<DeclArrNode*>(decl.get())) {
-      auto decl_arr = static_cast<DeclArrNode*>(decl.get());
-      type = ResolveTypeAs(std::move(decl_arr->type), std::move(type));
-      // Since the array declaration node holds a array type, we need to cast it.
-      decl_arr->type = std::unique_ptr<ArrType>(static_cast<ArrType*>(type.release()));
-    }
+    decl->type = ResolveTypeAs(std::move(decl->type), $1);
     $$ = std::move(decl);
   }
   ;
@@ -335,8 +324,7 @@ decl: declaration_specifiers init_declarator SEMICOLON {
 /* TODO: storage class specifier, type qualifier, function specifier */
 declaration_specifiers: type_specifier declaration_specifiers {
     // The declaration specifier wraps the type specifier.
-    auto type = ResolveTypeAs($1, $2);
-    $$ = std::move(type);
+    $$ = ResolveTypeAs($1, $2);
   }
   | type_specifier { $$ = $1; }
   ;
@@ -348,11 +336,15 @@ init_declarator: declarator { $$ = $1; }
     auto decl = $1;
     auto init = $3;
     if (std::holds_alternative<std::unique_ptr<ExprNode>>(init)) {
+      auto* var_decl = dynamic_cast<DeclVarNode*>(decl.get());
+      assert(var_decl);
       auto init_expr = std::move(std::get<std::unique_ptr<ExprNode>>(init));
-      static_cast<DeclVarNode*>(decl.get())->init = std::move(init_expr);
+      var_decl->init = std::move(init_expr);
     } else { // The initializer is a list of expressions.
+      auto* arr_decl = dynamic_cast<DeclArrNode*>(decl.get());
+      assert(arr_decl);
       auto init_expr_list = std::move(std::get<std::vector<std::unique_ptr<ExprNode>>>(init));
-      static_cast<DeclArrNode*>(decl.get())->init_list = std::move(init_expr_list);
+      arr_decl->init_list = std::move(init_expr_list);
     }
     $$ = std::move(decl);
   }
@@ -378,21 +370,9 @@ type_specifier: INT { $$ = std::make_unique<PrimType>(PrimitiveType::kInt); }
 declarator: pointer_opt direct_declarator {
     @$ = @2; // Set the location to the identifier.
     auto declarator = $2;
-    for (auto is_pointer : $1) {
-      (void)is_pointer;
+    for (int i = 0, e = $1; i < e; ++i) {
       auto unknown_ptr_type = std::make_unique<PtrType>(std::make_unique<PrimType>(PrimitiveType::kUnknown));
-      // Cast the declarator to its dynamic type to access the type.
-      // XXX: Consider placing the type under the base class.
-      if (dynamic_cast<DeclVarNode*>(declarator.get())) {
-        auto decl_var = static_cast<DeclVarNode*>(declarator.get());
-        auto type = ResolveTypeAs(std::move(decl_var->type), std::move(unknown_ptr_type));
-        decl_var->type = std::move(type);
-      } else if (dynamic_cast<DeclArrNode*>(declarator.get())) {
-        auto decl_arr = static_cast<DeclArrNode*>(declarator.get());
-        auto type = ResolveTypeAs(std::move(decl_arr->type), std::move(unknown_ptr_type));
-        // Since the array declaration node holds a array type, we need to cast it.
-        decl_arr->type = std::unique_ptr<ArrType>(static_cast<ArrType*>(type.release()));
-      }
+      declarator->type = ResolveTypeAs(std::move(declarator->type), std::move(unknown_ptr_type));
     }
     $$ = std::move(declarator);
   }
@@ -409,18 +389,12 @@ direct_declarator: ID {
   /* array */
   | direct_declarator LEFT_SQUARE NUM RIGHT_SQUARE {
     auto declarator = $1;
-    auto len = $3;
-    // Cast the declarator to its dynamic type to access the type.
-    // XXX: Consider placing the type under the base class.
-    if (dynamic_cast<DeclVarNode*>(declarator.get())) {
+    auto type = std::make_unique<ArrType>(std::move(declarator->type), $3);
+    if (!dynamic_cast<DeclArrNode*>(declarator.get())) {
       // If the declarator is not yet a array declarator, we need to construct one.
-      auto decl_var = static_cast<DeclVarNode*>(declarator.get());
-      auto type = std::make_unique<ArrType>(std::move(decl_var->type), len);
-      $$ = std::make_unique<DeclArrNode>(Loc(@1), decl_var->id, std::move(type), /* init list */ std::vector<std::unique_ptr<ExprNode>>{});
-    } else if (dynamic_cast<DeclArrNode*>(declarator.get())) {
-      auto decl_arr = static_cast<DeclArrNode*>(declarator.get());
-      auto type = std::make_unique<ArrType>(std::move(decl_arr->type), len);
-      decl_arr->type = std::move(type);
+      $$ = std::make_unique<DeclArrNode>(Loc(@1), declarator->id, std::move(type), /* init list */ std::vector<std::unique_ptr<ExprNode>>{});
+    } else {
+      declarator->type = std::move(type);
       $$ = std::move(declarator);
     }
   }
@@ -433,7 +407,7 @@ direct_declarator: ID {
       param_types.push_back(param->type->Clone());
     }
     auto type = std::make_unique<FuncType>(/* return */ std::move(decl->type), std::move(param_types));
-    $$ = std::make_unique<FuncDefNode>(Loc(@1), decl->id, std::move(params), nullptr, std::move(type));
+    $$ = std::make_unique<FuncDefNode>(Loc(@1), std::move(decl->id), std::move(params), nullptr, std::move(type));
   }
   /* TODO: identifier list */
   /* The identifier may be a type name. */
@@ -441,16 +415,12 @@ direct_declarator: ID {
   ;
 
 pointer_opt: pointer { $$ = $1; }
-  | epsilon { $$ = std::vector<bool>{}; }
+  | epsilon { $$ = 0; }
   ;
 
 /* A pointer is a sequence of one or more '*'s. */
-pointer: STAR { $$ = std::vector<bool>{true}; }
-  | pointer STAR {
-    auto pointer = $1;
-    pointer.push_back(true);
-    $$ = std::move(pointer);
-  }
+pointer: STAR { $$ = 1; }
+  | pointer STAR { $$ = $1 + 1; }
   ;
 
 parameter_type_list_opt: parameter_type_list { $$ = $1; }
@@ -474,25 +444,12 @@ parameter_list: parameter_declaration {
 
 parameter_declaration: declaration_specifiers declarator {
     auto decl = $2;
-    auto type = $1;
-    // Cast the decl to its dynamic type to access the type.
-    // XXX: Consider placing the type under the base class.
-    if (dynamic_cast<DeclVarNode*>(decl.get())) {
-      auto decl_var = static_cast<DeclVarNode*>(decl.get());
-      type = ResolveTypeAs(std::move(decl_var->type), std::move(type));
-      decl_var->type = std::move(type);
-      $$ = std::make_unique<ParamNode>(Loc(@2), decl_var->id, std::move(decl_var->type));
-    } else if (dynamic_cast<DeclArrNode*>(decl.get())) {
-      auto decl_arr = static_cast<DeclArrNode*>(decl.get());
-      type = ResolveTypeAs(std::move(decl_arr->type), std::move(type));
-      // Since the array declaration node holds a array type, we need to cast it.
-      decl_arr->type = std::unique_ptr<ArrType>(static_cast<ArrType*>(type.release()));
-      $$ = std::make_unique<ParamNode>(Loc(@2), decl_arr->id, std::move(decl_arr->type));
-    }
+    auto resolved_type = ResolveTypeAs(std::move(decl->type), $1);
+    $$ = std::make_unique<ParamNode>(Loc(@2), std::move(decl->id), std::move(resolved_type));
   }
   /* Declare parameters without identifiers. */
   | declaration_specifiers abstract_declarator_opt {
-    // TODO
+    // TODO: for type names
     $$ = nullptr;
   }
   ;
@@ -557,13 +514,13 @@ std::unique_ptr<Type> ResolveTypeAs(std::unique_ptr<Type> type,
   // Since we cannot change the internal state of a type, we construct a new one.
   if (type->IsPtr()) {
     auto ptr_type = static_cast<PtrType*>(type.get());
-    auto _type = ResolveTypeAs(ptr_type->base_type().Clone(), std::move(resolved_type));
-    return std::make_unique<PtrType>(std::move(_type));
+    auto type_ = ResolveTypeAs(ptr_type->base_type().Clone(), std::move(resolved_type));
+    return std::make_unique<PtrType>(std::move(type_));
   }
   if (type->IsArr()) {
     auto arr_type = static_cast<ArrType*>(type.get());
-    auto _type = ResolveTypeAs(arr_type->element_type().Clone(), std::move(resolved_type));
-    return std::make_unique<ArrType>(std::move(_type), arr_type->len());
+    auto type_ = ResolveTypeAs(arr_type->element_type().Clone(), std::move(resolved_type));
+    return std::make_unique<ArrType>(std::move(type_), arr_type->len());
   }
   return nullptr;
 }
