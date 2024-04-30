@@ -91,6 +91,8 @@ std::unique_ptr<Type> ResolveTypeAs(std::unique_ptr<Type> type,
 
 %nterm <std::unique_ptr<ExprNode>> expr assign_expr expr_opt unary_expr postfix_expr primary_expr
 %nterm <std::unique_ptr<DeclNode>> decl
+%nterm <std::unique_ptr<ParamNode>> parameter_declaration
+%nterm <std::vector<std::unique_ptr<ParamNode>>> parameter_type_list_opt parameter_type_list parameter_list
 // The followings also declare an identifier, however, their types are not yet fully resolved.
 %nterm <std::unique_ptr<DeclNode>> declarator direct_declarator init_declarator
 %nterm <std::unique_ptr<Type>> type_specifier
@@ -155,11 +157,20 @@ func_def_list_opt: func_def_list_opt func_def {
 /* NOTE: The obsolete form of function definition is not supported,
    e.g., `int max(a, b) int a, b; { return a > b ? a : b; }`. */
 func_def: declaration_specifiers declarator compound_stmt {
-    // TODO: support function definition
-
-    // Hard-coded for main to be constructed.
-    auto params = std::vector<std::unique_ptr<ParamNode>>{};
-    $$ = std::make_unique<FuncDefNode>(Loc(@2), "main", std::move(params), $3, std::make_unique<PrimType>(PrimitiveType::kInt));
+    // The declarator shall already be a function declarator.
+    // We resolve its return type with the declaration specifiers and set the body.
+    auto func_def = $2;
+    assert(dynamic_cast<FuncDefNode*>(func_def.get()));
+    assert(func_def->type->IsFunc());
+    const auto* func_type = static_cast<FuncType*>(func_def->type.get());
+    auto resolved_return_type = ResolveTypeAs(func_type->return_type().Clone(), $1);
+    auto param_types = std::vector<std::unique_ptr<Type>>{};
+    for (auto& param : func_type->param_types()) {
+      param_types.push_back(param->Clone());
+    }
+    func_def->type = std::make_unique<FuncType>(std::move(resolved_return_type), std::move(param_types));
+    static_cast<FuncDefNode*>(func_def.get())->body = $3;
+    $$ = std::unique_ptr<FuncDefNode>(static_cast<FuncDefNode*>(func_def.release()));
   }
   ;
 
@@ -415,8 +426,14 @@ direct_declarator: ID {
   }
   /* function */
   | direct_declarator LEFT_PAREN parameter_type_list_opt RIGHT_PAREN {
-    // TODO
-    $$ = $1;
+    auto decl = $1;
+    auto params = $3;
+    auto param_types = std::vector<std::unique_ptr<Type>>{};
+    for (auto& param : params) {
+      param_types.push_back(param->type->Clone());
+    }
+    auto type = std::make_unique<FuncType>(/* return */ std::move(decl->type), std::move(param_types));
+    $$ = std::make_unique<FuncDefNode>(Loc(@1), decl->id, std::move(params), nullptr, std::move(type));
   }
   /* TODO: identifier list */
   /* The identifier may be a type name. */
@@ -436,21 +453,48 @@ pointer: STAR { $$ = std::vector<bool>{true}; }
   }
   ;
 
-parameter_type_list_opt: parameter_type_list
-  | epsilon
+parameter_type_list_opt: parameter_type_list { $$ = $1; }
+  | epsilon { $$ = std::vector<std::unique_ptr<ParamNode>>{}; }
   ;
 
-parameter_type_list: parameter_list
+parameter_type_list: parameter_list { $$ = $1; }
   /* TODO: parameter list, ... */
   ;
 
-parameter_list: parameter_declaration
-  | parameter_list COMMA parameter_declaration
+parameter_list: parameter_declaration {
+    $$ = std::vector<std::unique_ptr<ParamNode>>{};
+    $$.push_back($1);
+  }
+  | parameter_list COMMA parameter_declaration {
+    auto parameter_list = $1;
+    parameter_list.push_back($3);
+    $$ = std::move(parameter_list);
+  }
   ;
 
-parameter_declaration: declaration_specifiers declarator
+parameter_declaration: declaration_specifiers declarator {
+    auto decl = $2;
+    auto type = $1;
+    // Cast the decl to its dynamic type to access the type.
+    // XXX: Consider placing the type under the base class.
+    if (dynamic_cast<DeclVarNode*>(decl.get())) {
+      auto decl_var = static_cast<DeclVarNode*>(decl.get());
+      type = ResolveTypeAs(std::move(decl_var->type), std::move(type));
+      decl_var->type = std::move(type);
+      $$ = std::make_unique<ParamNode>(Loc(@2), decl_var->id, std::move(decl_var->type));
+    } else if (dynamic_cast<DeclArrNode*>(decl.get())) {
+      auto decl_arr = static_cast<DeclArrNode*>(decl.get());
+      type = ResolveTypeAs(std::move(decl_arr->type), std::move(type));
+      // Since the array declaration node holds a array type, we need to cast it.
+      decl_arr->type = std::unique_ptr<ArrType>(static_cast<ArrType*>(type.release()));
+      $$ = std::make_unique<ParamNode>(Loc(@2), decl_arr->id, std::move(decl_arr->type));
+    }
+  }
   /* Declare parameters without identifiers. */
-  | declaration_specifiers abstract_declarator_opt
+  | declaration_specifiers abstract_declarator_opt {
+    // TODO
+    $$ = nullptr;
+  }
   ;
 
 abstract_declarator_opt: abstract_declarator
