@@ -12,10 +12,17 @@
 #include "type.hpp"
 
 namespace {
-/// @brief Resolved the innermost unknown type to the given type.
-/// @note If the type is a primitive type, the resolved type is returned.
-std::unique_ptr<Type> ResolveTypeAs(std::unique_ptr<Type> type,
-                                    std::unique_ptr<Type> resolved_type);
+/// @brief Resolves `unknown_type` with `resolved_type`, forming a new type with
+/// `resolved_type` as the inner type and `unknown_type` as the outer type,
+/// wrapping `resolved_type`.
+/// @param resolved_type The type usually already resolved, to be wrapped by
+/// `unknown_type`.
+/// @param unknown_type The type to be resolved. It's innermost type
+/// must be the unknown type.
+/// @example If `unknown_type` is `unknown* []` (outer) and `resolved_type` is
+/// `int` (inner), the resolved type is `int* []` (inner outer).
+std::unique_ptr<Type> ResolveType(std::unique_ptr<Type> resolved_type,
+                                  std::unique_ptr<Type> unknown_type);
 }
 
 %}
@@ -164,7 +171,7 @@ func_def: declaration_specifiers declarator compound_stmt {
     assert(dynamic_cast<FuncDefNode*>(func_def.get()));
     assert(func_def->type->IsFunc());
     const auto* func_type = static_cast<FuncType*>(func_def->type.get());
-    auto resolved_return_type = ResolveTypeAs(func_type->return_type().Clone(), $1);
+    auto resolved_return_type = ResolveType($1, func_type->return_type().Clone());
     auto param_types = std::vector<std::unique_ptr<Type>>{};
     for (auto& param : func_type->param_types()) {
       param_types.push_back(param->Clone());
@@ -315,7 +322,7 @@ primary_expr: ID { $$ = std::make_unique<IdExprNode>(Loc(@1), $1); }
 /* TODO: If the init declarator doesn't present, e.g., `int;`, the declaration is still valid. */
 decl: declaration_specifiers init_declarator SEMICOLON {
     auto decl = $2;
-    decl->type = ResolveTypeAs(std::move(decl->type), $1);
+    decl->type = ResolveType($1, std::move(decl->type));
     $$ = std::move(decl);
   }
   ;
@@ -323,8 +330,8 @@ decl: declaration_specifiers init_declarator SEMICOLON {
 /* A declaration specifier declares part of the type of a declarator. */
 /* TODO: storage class specifier, type qualifier, function specifier */
 declaration_specifiers: type_specifier declaration_specifiers {
-    // The declaration specifier wraps the type specifier.
-    $$ = ResolveTypeAs($1, $2);
+    // Leave unimplemented; useless without support of other specifiers.
+    $$ = nullptr;
   }
   | type_specifier { $$ = $1; }
   ;
@@ -372,7 +379,7 @@ declarator: pointer_opt direct_declarator {
     auto declarator = $2;
     for (int i = 0, e = $1; i < e; ++i) {
       auto unknown_ptr_type = std::make_unique<PtrType>(std::make_unique<PrimType>(PrimitiveType::kUnknown));
-      declarator->type = ResolveTypeAs(std::move(declarator->type), std::move(unknown_ptr_type));
+      declarator->type = ResolveType(std::move(unknown_ptr_type), std::move(declarator->type));
     }
     $$ = std::move(declarator);
   }
@@ -444,7 +451,7 @@ parameter_list: parameter_declaration {
 
 parameter_declaration: declaration_specifiers declarator {
     auto decl = $2;
-    auto resolved_type = ResolveTypeAs(std::move(decl->type), $1);
+    auto resolved_type = ResolveType($1, std::move(decl->type));
     $$ = std::make_unique<ParamNode>(Loc(@2), std::move(decl->id), std::move(resolved_type));
   }
   /* Declare parameters without identifiers. */
@@ -504,23 +511,23 @@ void yy::parser::error(const yy::location& loc, const std::string& err) {
 
 namespace {
 
-std::unique_ptr<Type> ResolveTypeAs(std::unique_ptr<Type> type,
-                                    std::unique_ptr<Type> resolved_type) {
+std::unique_ptr<Type> ResolveType(std::unique_ptr<Type> resolved_type,
+                                  std::unique_ptr<Type> unknown_type) {
   // Base case: this type itself is the unknown type to resolve.
-  if (type->IsPrim()) {
-    assert(type->IsEqual(PrimitiveType::kUnknown));
+  if (unknown_type->IsPrim()) {
+    assert(unknown_type->IsEqual(PrimitiveType::kUnknown));
     return resolved_type;
   }
   // Since we cannot change the internal state of a type, we construct a new one.
-  if (type->IsPtr()) {
-    auto ptr_type = static_cast<PtrType*>(type.get());
-    auto type_ = ResolveTypeAs(ptr_type->base_type().Clone(), std::move(resolved_type));
-    return std::make_unique<PtrType>(std::move(type_));
+  if (unknown_type->IsPtr()) {
+    auto ptr_type = static_cast<PtrType*>(unknown_type.get());
+    resolved_type = ResolveType(std::move(resolved_type), ptr_type->base_type().Clone());
+    return std::make_unique<PtrType>(std::move(resolved_type));
   }
-  if (type->IsArr()) {
-    auto arr_type = static_cast<ArrType*>(type.get());
-    auto type_ = ResolveTypeAs(arr_type->element_type().Clone(), std::move(resolved_type));
-    return std::make_unique<ArrType>(std::move(type_), arr_type->len());
+  if (unknown_type->IsArr()) {
+    auto arr_type = static_cast<ArrType*>(unknown_type.get());
+    resolved_type = ResolveType(std::move(resolved_type), arr_type->element_type().Clone());
+    return std::make_unique<ArrType>(std::move(resolved_type), arr_type->len());
   }
   return nullptr;
 }
