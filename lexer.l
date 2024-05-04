@@ -58,8 +58,15 @@ integer [0-9]+
 "%" { return yy::parser::make_MOD(yylloc); }
 "&" { return yy::parser::make_AMPERSAND(yylloc); }
 "!" { return yy::parser::make_EXCLAMATION(yylloc); }
+"?" { return yy::parser::make_QUESTION(yylloc); }
+"^" { return yy::parser::make_XOR(yylloc); }
+"|" { return yy::parser::make_OR(yylloc); }
+"||" { return yy::parser::make_LOGIC_OR(yylloc); }
+"&&" { return yy::parser::make_LOGIC_AND(yylloc); }
 "~" { return yy::parser::make_TILDE(yylloc); }
 "=" { return yy::parser::make_ASSIGN(yylloc); }
+"<<" { return yy::parser::make_SHIFT_LEFT(yylloc); }
+">>" { return yy::parser::make_SHIFT_RIGHT(yylloc); }
 "<" { return yy::parser::make_LT(yylloc); }
 ">" { return yy::parser::make_GT(yylloc); }
 "--" { return yy::parser::make_DECR(yylloc); }
