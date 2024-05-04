@@ -3,6 +3,8 @@
 #include <cstddef>
 #include <memory>
 #include <string>
+#include <utility>
+#include <vector>
 
 bool Type::IsEqual(PrimitiveType that) const noexcept {
   return IsEqual(PrimType{that});

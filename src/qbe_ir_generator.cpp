@@ -17,6 +17,7 @@
 #include "ast.hpp"
 #include "operator.hpp"
 #include "qbe/sigil.hpp"
+#include "type.hpp"
 
 // Since compiler-generated sigils are used more frequently, we include them
 // directly.
