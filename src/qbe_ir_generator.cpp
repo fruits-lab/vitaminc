@@ -663,7 +663,30 @@ void QbeIrGenerator::Visit(const FuncCallExprNode& call_expr) {
   num_recorder.Record(res_num);
 }
 
-void QbeIrGenerator::Visit(const PostfixArithExprNode& postfix_expr) {}
+void QbeIrGenerator::Visit(const PostfixArithExprNode& postfix_expr) {
+  // The result of the postfix ++ operator is the value of the operand. As a
+  // side effect, the value of the operand object is incremented ( that is, the
+  // value 1 of the appropriate type is added to it).
+  // The postfix -- operator is analogous to the postfix ++ operator, except
+  // that the value of the operand is decremented (that is, the value 1 of the
+  // appropriate type is subtracted from it).
+  postfix_expr.operand->Accept(*this);
+  const int expr_num = num_recorder.NumOfPrevExpr();
+  num_recorder.Record(expr_num);
+
+  const int res_num = NextLocalNum();
+  const auto arith_op = postfix_expr.op == PostfixOperator::kIncr
+                            ? BinaryOperator::kAdd
+                            : BinaryOperator::kSub;
+
+  // TODO: support pointer arithmetic
+  WriteInstr_("{} =w {} {}, 1", FuncScopeTemp{res_num},
+              GetBinaryOperator(arith_op), FuncScopeTemp{expr_num});
+  const auto* id_expr = dynamic_cast<IdExprNode*>((postfix_expr.operand).get());
+  assert(id_expr);
+  WriteInstr_("storew {}, {}", FuncScopeTemp{res_num},
+              FuncScopeTemp{id_to_num.at(id_expr->id)});
+}
 
 void QbeIrGenerator::Visit(const UnaryExprNode& unary_expr) {
   unary_expr.operand->Accept(*this);
