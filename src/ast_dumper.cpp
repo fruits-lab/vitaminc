@@ -63,6 +63,17 @@ std::string GetUnaryOperator(UnaryOperator op) {
   }
 }
 
+std::string GetPostfixOperator(PostfixOperator op) {
+  switch (op) {
+    case PostfixOperator::kIncr:
+      return "++";
+    case PostfixOperator::kDecr:
+      return "--";
+    default:
+      return "Unknown";
+  }
+}
+
 }  // namespace
 
 void AstDumper::Visit(const DeclVarNode& decl) {
@@ -278,6 +289,15 @@ void AstDumper::Visit(const FuncCallExprNode& call_expr) {
   for (const auto& arg : call_expr.args) {
     arg->Accept(*this);
   }
+  indenter_.DecreaseLevel();
+}
+
+void AstDumper::Visit(const PostfixArithExprNode& postfix_expr) {
+  std::cout << indenter_.Indent() << "PostfixArithExprNode <"
+            << postfix_expr.loc << "> " << postfix_expr.type->ToString() << " "
+            << GetPostfixOperator(postfix_expr.op) << '\n';
+  indenter_.IncreaseLevel();
+  postfix_expr.operand->Accept(*this);
   indenter_.DecreaseLevel();
 }
 

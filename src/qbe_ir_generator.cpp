@@ -663,6 +663,8 @@ void QbeIrGenerator::Visit(const FuncCallExprNode& call_expr) {
   num_recorder.Record(res_num);
 }
 
+void QbeIrGenerator::Visit(const PostfixArithExprNode& postfix_expr) {}
+
 void QbeIrGenerator::Visit(const UnaryExprNode& unary_expr) {
   unary_expr.operand->Accept(*this);
   switch (unary_expr.op) {

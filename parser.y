@@ -290,6 +290,9 @@ unary_expr: postfix_expr { $$ = $1; }
 postfix_expr: primary_expr { $$ = $1; }
   | postfix_expr LEFT_PAREN arg_list_opt RIGHT_PAREN { $$ = std::make_unique<FuncCallExprNode>(Loc(@1), $1, $3); }
   | postfix_expr LEFT_SQUARE expr RIGHT_SQUARE { $$ = std::make_unique<ArrSubExprNode>(Loc(@1), $1, $3); }
+  /* 6.5.2.4 Postfix increment and decrement operators */
+  | postfix_expr INCR { $$ = std::make_unique<PostfixArithExprNode>(Loc(@1), PostfixOperator::kIncr, $1); }
+  | postfix_expr DECR { $$ = std::make_unique<PostfixArithExprNode>(Loc(@1), PostfixOperator::kDecr, $1); }
   ;
 
 arg_list_opt: arg_list { $$ = $1; }

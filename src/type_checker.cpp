@@ -339,6 +339,18 @@ void TypeChecker::Visit(FuncCallExprNode& call_expr) {
   }
 }
 
+void TypeChecker::Visit(PostfixArithExprNode& postfix_expr) {
+  postfix_expr.operand->Accept(*this);
+  // NOTE: The operand of the postfix increment or decrement operator shall
+  // have atomic, qualified, or unqualified real or pointer type, and shall
+  // be a modifiable lvalue.
+  const auto* id_expr = dynamic_cast<IdExprNode*>((postfix_expr.operand).get());
+  if (!id_expr || !env_.LookUp(id_expr->id)) {
+    // TODO: lvalue required for postfix increment
+  }
+  postfix_expr.type = postfix_expr.operand->type->Clone();
+}
+
 void TypeChecker::Visit(UnaryExprNode& unary_expr) {
   unary_expr.operand->Accept(*this);
   switch (unary_expr.op) {

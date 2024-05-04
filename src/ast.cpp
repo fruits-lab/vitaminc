@@ -252,6 +252,14 @@ void FuncCallExprNode::Accept(ModifyingVisitor& v) {
   v.Visit(*this);
 }
 
+void PostfixArithExprNode::Accept(NonModifyingVisitor& v) const {
+  v.Visit(*this);
+}
+
+void PostfixArithExprNode::Accept(ModifyingVisitor& v) {
+  v.Visit(*this);
+}
+
 void UnaryExprNode::Accept(NonModifyingVisitor& v) const {
   v.Visit(*this);
 }

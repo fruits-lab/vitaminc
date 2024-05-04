@@ -393,6 +393,19 @@ struct FuncCallExprNode : public ExprNode {
   std::vector<std::unique_ptr<ArgExprNode>> args;
 };
 
+/// @brief A postfix arithmetic expression.
+struct PostfixArithExprNode : public ExprNode {
+  PostfixArithExprNode(Location loc, PostfixOperator op,
+                       std::unique_ptr<ExprNode> operand)
+      : ExprNode{loc}, op{op}, operand{std::move(operand)} {}
+
+  void Accept(NonModifyingVisitor&) const override;
+  void Accept(ModifyingVisitor&) override;
+
+  PostfixOperator op;
+  std::unique_ptr<ExprNode> operand;
+};
+
 struct UnaryExprNode : public ExprNode {
   UnaryExprNode(Location loc, UnaryOperator op,
                 std::unique_ptr<ExprNode> operand)
