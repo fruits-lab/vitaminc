@@ -78,7 +78,7 @@ std::unique_ptr<Type> ResolveType(std::unique_ptr<Type> resolved_type,
 %define api.location.file none
 
 %token MINUS PLUS STAR DIV MOD ASSIGN
-%token EXCLAMATION TILDE AMPERSAND
+%token EXCLAMATION TILDE AMPERSAND QUESTION
 %token COMMA SEMICOLON COLON
 // (), {}, []
 %token LEFT_PAREN RIGHT_PAREN LEFT_CURLY RIGHT_CURLY LEFT_SQUARE RIGHT_SQUARE
@@ -94,9 +94,13 @@ std::unique_ptr<Type> ResolveType(std::unique_ptr<Type> resolved_type,
 %token GOTO
 // increment (INCR: ++) and decrement (DECR: --)
 %token INCR DECR
+%token LOGIC_OR LOGIC_AND OR XOR
+%token SHIFT_LEFT SHIFT_RIGHT
 %token EOF 0
 
 %nterm <std::unique_ptr<ExprNode>> expr assign_expr expr_opt unary_expr postfix_expr primary_expr
+%nterm <std::unique_ptr<ExprNode>> const_expr cond_expr logic_or_expr logic_and_expr inclusive_or_expr exclusive_or_expr
+%nterm <std::unique_ptr<ExprNode>> and_expr eq_expr relational_expr shift_expr add_expr mul_expr cast_expr
 %nterm <std::unique_ptr<DeclNode>> decl
 %nterm <std::unique_ptr<ParamNode>> parameter_declaration
 %nterm <std::vector<std::unique_ptr<ParamNode>>> parameter_type_list_opt parameter_type_list parameter_list
@@ -119,12 +123,6 @@ std::unique_ptr<Type> ResolveType(std::unique_ptr<Type> resolved_type,
 %nterm <std::unique_ptr<CompoundStmtNode>> compound_stmt
 %nterm <std::vector<CompoundStmtNode::Item>> block_item_list block_item_list_opt
 %nterm <CompoundStmtNode::Item> block_item
-
-%precedence ASSIGN
-%left EQ NE
-%left LT GT LE GE
-%left PLUS MINUS
-%left STAR DIV MOD
 
 // Resolve the ambiguity in the "dangling-else" grammar.
 // Example: IF LEFT_PAREN expr RIGHT_PAREN IF LEFT_PAREN expr RIGHT_PAREN stmt • ELSE stmt
@@ -222,7 +220,7 @@ stmt: expr_opt SEMICOLON { $$ = std::make_unique<ExprStmtNode>(Loc(@1), $1); }
 /* 6.8.1 Labeled statements */
 labeled_stmt: ID COLON stmt { $$ = std::make_unique<IdLabeledStmtNode>(Loc(@1), $1, $3); }
     /* TODO: constant expression */
-    | CASE expr COLON stmt { $$ = std::make_unique<CaseStmtNode>(Loc(@1), $2, $4); }
+    | CASE const_expr COLON stmt { $$ = std::make_unique<CaseStmtNode>(Loc(@1), $2, $4); }
     | DEFAULT COLON stmt { $$ = std::make_unique<DefaultStmtNode>(Loc(@1), $3); }
     ;
 
@@ -247,30 +245,24 @@ expr_opt: expr { $$ = $1; }
     | epsilon { $$ = std::make_unique<NullExprNode>(Loc(@1)); }
     ;
 
-expr: unary_expr { $$ = $1; }
-  /* additive 6.5.6 */
-  | expr PLUS expr { $$ = std::make_unique<BinaryExprNode>(Loc(@2), BinaryOperator::kAdd, $1, $3); }
-  | expr MINUS expr { $$ = std::make_unique<BinaryExprNode>(Loc(@2), BinaryOperator::kSub, $1, $3); }
-  /* multiplicative 6.5.5 */
-  | expr STAR expr { $$ = std::make_unique<BinaryExprNode>(Loc(@2), BinaryOperator::kMul, $1, $3); }
-  | expr DIV expr { $$ = std::make_unique<BinaryExprNode>(Loc(@2), BinaryOperator::kDiv, $1, $3); }
-  | expr MOD expr { $$ = std::make_unique<BinaryExprNode>(Loc(@2), BinaryOperator::kMod, $1, $3); }
-  /* relational 6.5.8 */
-  | expr GT expr { $$ = std::make_unique<BinaryExprNode>(Loc(@2), BinaryOperator::kGt, $1, $3); }
-  | expr LT expr { $$ = std::make_unique<BinaryExprNode>(Loc(@2), BinaryOperator::kLt, $1, $3); }
-  | expr GE expr { $$ = std::make_unique<BinaryExprNode>(Loc(@2), BinaryOperator::kGte, $1, $3); }
-  | expr LE expr { $$ = std::make_unique<BinaryExprNode>(Loc(@2), BinaryOperator::kLte, $1, $3); }
-  /* equality 6.5.9 */
-  | expr EQ expr { $$ = std::make_unique<BinaryExprNode>(Loc(@2), BinaryOperator::kEq, $1, $3); }
-  | expr NE expr { $$ = std::make_unique<BinaryExprNode>(Loc(@2), BinaryOperator::kNeq, $1, $3); }
-  | assign_expr { $$ = $1; }
+/* 6.5 Expressions */
+/* TODO: implement "expr , assign_expr" */
+expr: assign_expr { $$ = $1; }
+    ;
+
+/* 6.5.1 Primary expressions */
+primary_expr: ID { $$ = std::make_unique<IdExprNode>(Loc(@1), $1); }
+  | NUM { $$ = std::make_unique<IntConstExprNode>(Loc(@1), $1); }
+  | LEFT_PAREN expr RIGHT_PAREN { $$ = $2; }
   ;
 
-/* assignment 6.5.16 */
-/* TODO: support multiple assignment operators */
-assign_expr: unary_expr ASSIGN expr {
-    $$ = std::make_unique<SimpleAssignmentExprNode>(Loc(@2), $1, $3);
-  }
+/* 6.5.2 Postfix operators */
+postfix_expr: primary_expr { $$ = $1; }
+  | postfix_expr LEFT_PAREN arg_list_opt RIGHT_PAREN { $$ = std::make_unique<FuncCallExprNode>(Loc(@1), $1, $3); }
+  | postfix_expr LEFT_SQUARE expr RIGHT_SQUARE { $$ = std::make_unique<ArrSubExprNode>(Loc(@1), $1, $3); }
+  /* 6.5.2.4 Postfix increment and decrement operators */
+  | postfix_expr INCR { $$ = std::make_unique<PostfixArithExprNode>(Loc(@1), PostfixOperator::kIncr, $1); }
+  | postfix_expr DECR { $$ = std::make_unique<PostfixArithExprNode>(Loc(@1), PostfixOperator::kDecr, $1); }
   ;
 
 /* 6.5.3 Unary operators */
@@ -286,13 +278,82 @@ unary_expr: postfix_expr { $$ = $1; }
   /* TODO: sizeof */
   ;
 
-/* 6.5.2 Postfix operators */
-postfix_expr: primary_expr { $$ = $1; }
-  | postfix_expr LEFT_PAREN arg_list_opt RIGHT_PAREN { $$ = std::make_unique<FuncCallExprNode>(Loc(@1), $1, $3); }
-  | postfix_expr LEFT_SQUARE expr RIGHT_SQUARE { $$ = std::make_unique<ArrSubExprNode>(Loc(@1), $1, $3); }
-  /* 6.5.2.4 Postfix increment and decrement operators */
-  | postfix_expr INCR { $$ = std::make_unique<PostfixArithExprNode>(Loc(@1), PostfixOperator::kIncr, $1); }
-  | postfix_expr DECR { $$ = std::make_unique<PostfixArithExprNode>(Loc(@1), PostfixOperator::kDecr, $1); }
+/* 6.5.4 Cast operators*/
+/* TODO: cast type */
+cast_expr: unary_expr { $$ = $1; }
+  ;
+
+/* 6.5.5 Multiplicative operators */
+mul_expr: cast_expr { $$ = $1; }
+  | mul_expr STAR cast_expr { $$ = std::make_unique<BinaryExprNode>(Loc(@2), BinaryOperator::kMul, $1, $3); }
+  | mul_expr DIV cast_expr { $$ = std::make_unique<BinaryExprNode>(Loc(@2), BinaryOperator::kDiv, $1, $3); }
+  | mul_expr MOD cast_expr { $$ = std::make_unique<BinaryExprNode>(Loc(@2), BinaryOperator::kMod, $1, $3); }
+  ;
+
+/* 6.5.6 Additive operators */
+add_expr: mul_expr { $$ = $1; }
+  | add_expr PLUS mul_expr { $$ = std::make_unique<BinaryExprNode>(Loc(@2), BinaryOperator::kAdd, $1, $3); }
+  | add_expr MINUS mul_expr { $$ = std::make_unique<BinaryExprNode>(Loc(@2), BinaryOperator::kSub, $1, $3); }
+  ;
+
+/* 6.5.7 Bitwise shift operators */
+shift_expr: add_expr { $$ = $1; }
+  | shift_expr SHIFT_LEFT add_expr
+  | shift_expr SHIFT_RIGHT add_expr
+  ;
+
+/* 6.5.8 Relational operators */
+relational_expr: shift_expr { $$ = $1; }
+  | relational_expr GT shift_expr { $$ = std::make_unique<BinaryExprNode>(Loc(@2), BinaryOperator::kGt, $1, $3); }
+  | relational_expr LT shift_expr { $$ = std::make_unique<BinaryExprNode>(Loc(@2), BinaryOperator::kLt, $1, $3); }
+  | relational_expr GE shift_expr { $$ = std::make_unique<BinaryExprNode>(Loc(@2), BinaryOperator::kGte, $1, $3); }
+  | relational_expr LE shift_expr { $$ = std::make_unique<BinaryExprNode>(Loc(@2), BinaryOperator::kLte, $1, $3); }
+  ;
+
+/* 6.5.9 Equality operators */
+eq_expr: relational_expr { $$ = $1; }
+  | eq_expr EQ relational_expr { $$ = std::make_unique<BinaryExprNode>(Loc(@2), BinaryOperator::kEq, $1, $3); }
+  | eq_expr NE relational_expr { $$ = std::make_unique<BinaryExprNode>(Loc(@2), BinaryOperator::kNeq, $1, $3); }
+  ;
+
+/* 6.5.10 Bitwise AND operators */
+and_expr: eq_expr
+  | and_expr AMPERSAND eq_expr
+  ;
+
+/* 6.5.11 Bitwise exclusive OR operators */
+exclusive_or_expr: and_expr
+  | exclusive_or_expr XOR and_expr
+  ;
+
+/* 6.5.12 Bitwise inclusive OR operators */
+inclusive_or_expr: exclusive_or_expr
+  | inclusive_or_expr OR exclusive_or_expr
+  ;
+
+/* 6.5.13 Logical AND operators */
+logic_and_expr: inclusive_or_expr
+  | logic_and_expr LOGIC_AND inclusive_or_expr
+  ;
+
+/* 6.5.14 Logical OR operators */
+logic_or_expr: logic_and_expr
+  | logic_or_expr LOGIC_OR logic_and_expr
+  ;
+
+/* 6.5.15 Conditional operators */
+cond_expr: logic_or_expr
+  | logic_or_expr QUESTION expr : cond_expr
+  ;
+
+/* 6.5.16 Assignment operators */
+/* TODO: support multiple assignment operators */
+assign_expr: cond_expr { $$ = $1; }
+  | unary_expr ASSIGN expr { $$ = std::make_unique<SimpleAssignmentExprNode>(Loc(@2), $1, $3); }
+  ;
+
+/* 6.6 Constant Expressions*/
+const_expr: cond_expr { $$ = $1; }
   ;
 
 arg_list_opt: arg_list { $$ = $1; }
@@ -313,11 +374,6 @@ arg_list: arg_list COMMA arg {
 arg: expr {
     $$ = std::make_unique<ArgExprNode>(Loc(@1), $1);
   }
-  ;
-
-primary_expr: ID { $$ = std::make_unique<IdExprNode>(Loc(@1), $1); }
-  | NUM { $$ = std::make_unique<IntConstExprNode>(Loc(@1), $1); }
-  | LEFT_PAREN expr RIGHT_PAREN { $$ = $2; }
   ;
 
 /* 6.7 Declarations */
