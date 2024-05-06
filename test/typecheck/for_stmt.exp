@@ -1,5 +1,5 @@
 ProgramNode <1:1>
-  FuncDefNode <1:5> main: int
+  FuncDefNode <1:5> main: int ()
     CompoundStmtNode <1:12>
       DeclVarNode <2:7> j: int
         IntConstExprNode <2:11> 0: int

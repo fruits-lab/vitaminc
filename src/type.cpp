@@ -110,8 +110,15 @@ std::size_t FuncType::size() const {
 }
 
 std::string FuncType::ToString() const {
-  // FIXME: This is to not break the tests; should include the parameter types.
-  return return_type_->ToString();
+  auto str = return_type_->ToString() + " (";
+  for (auto i = std::size_t{0}, e = param_types_.size(); i < e; ++i) {
+    str += param_types_.at(i)->ToString();
+    if (i < e - 1) {
+      str += ", ";
+    }
+  }
+  str += ")";
+  return str;
 }
 
 std::unique_ptr<Type> FuncType::Clone() const {

@@ -1,10 +1,10 @@
 ProgramNode <1:1>
-  FuncDefNode <1:5> five: int
+  FuncDefNode <1:5> five: int ()
     CompoundStmtNode <1:12>
       ReturnStmtNode <2:3>
         IntConstExprNode <2:10> 5: int
-  FuncDefNode <5:5> main: int
+  FuncDefNode <5:5> main: int ()
     CompoundStmtNode <5:12>
       ReturnStmtNode <6:3>
-        FuncCallExprNode <6:10> int
-          IdExprNode <6:10> five: int
+        FuncCallExprNode <6:10> int ()
+          IdExprNode <6:10> five: int ()

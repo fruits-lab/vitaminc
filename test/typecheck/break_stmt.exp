@@ -1,5 +1,5 @@
 ProgramNode <1:1>
-  FuncDefNode <1:5> main: int
+  FuncDefNode <1:5> main: int ()
     CompoundStmtNode <1:12>
       ForStmtNode <2:3>
         LoopInitNode <2:8>
