@@ -106,6 +106,8 @@ std::unique_ptr<Type> ResolveType(std::unique_ptr<Type> resolved_type,
 %nterm <std::vector<std::unique_ptr<ParamNode>>> parameter_type_list_opt parameter_type_list parameter_list
 // The followings also declare an identifier, however, their types are not yet fully resolved.
 %nterm <std::unique_ptr<DeclNode>> declarator direct_declarator init_declarator
+// The abstract declarator is a declarator without an identifier, which are actually types.
+%nterm <std::unique_ptr<Type>> abstract_declarator_opt abstract_declarator direct_abstract_declarator_opt direct_abstract_declarator
 %nterm <std::unique_ptr<Type>> type_specifier
 // The followings also construct types, but they are not yet fully resolved.
 %nterm <std::unique_ptr<Type>> declaration_specifiers
@@ -469,11 +471,19 @@ direct_declarator: ID {
     auto decl = $1;
     auto params = $3;
     auto param_types = std::vector<std::unique_ptr<Type>>{};
-    for (auto& param : params) {
+    for (const auto& param : params) {
       param_types.push_back(param->type->Clone());
     }
-    auto type = std::make_unique<FuncType>(/* return */ std::move(decl->type), std::move(param_types));
-    $$ = std::make_unique<FuncDefNode>(Loc(@1), std::move(decl->id), std::move(params), nullptr, std::move(type));
+    // The return type is unknown at this point.
+    auto return_type = std::make_unique<PrimType>(PrimitiveType::kUnknown);
+    auto type = std::make_unique<FuncType>(std::move(return_type), std::move(param_types));
+    // If the direct declarator has a pointer type, this is a declaration of a function pointer, not a function.
+    if (decl->type->IsPtr()) {
+      decl->type = ResolveType(std::move(type), std::move(decl->type));
+      $$ = std::move(decl);
+    } else {
+      $$ = std::make_unique<FuncDefNode>(Loc(@1), std::move(decl->id), std::move(params), /* body */ nullptr, std::move(type));
+    }
   }
   /* TODO: identifier list */
   /* The identifier may be a type name. */
@@ -515,28 +525,54 @@ parameter_declaration: declaration_specifiers declarator {
   }
   /* Declare parameters without identifiers. */
   | declaration_specifiers abstract_declarator_opt {
-    // TODO: for type names
-    $$ = nullptr;
+    // XXX: The identifier is empty.
+    $$ = std::make_unique<ParamNode>(Loc(@1), /* id */ "", ResolveType($1, $2));
   }
   ;
 
-abstract_declarator_opt: abstract_declarator
-  | epsilon
+abstract_declarator_opt: abstract_declarator { $$ = $1; }
+  | epsilon { $$ = std::make_unique<PrimType>(PrimitiveType::kUnknown); }
   ;
 
 /* 6.7.6 Type names */
 /* NOTE: abstract means the declarator does not have an identifier */
-abstract_declarator: pointer
-  | pointer_opt direct_abstract_declarator
+abstract_declarator: pointer {
+    std::unique_ptr<Type> type = std::make_unique<PrimType>(PrimitiveType::kUnknown);
+    for (int i = 0, e = $1; i < e; ++i) {
+      type = std::make_unique<PtrType>(std::move(type)); 
+    }     
+    $$ = std::move(type);
+  }
+  | pointer_opt direct_abstract_declarator {
+    @$ = @2; // Set the location to the identifier.
+    auto type = $2;
+    for (int i = 0, e = $1; i < e; ++i) {
+      auto unknown_ptr_type = std::make_unique<PtrType>(std::move(type));
+      type = ResolveType(std::move(unknown_ptr_type), std::make_unique<PrimType>(PrimitiveType::kUnknown));
+    }
+    $$ = std::move(type);
+  }
   ;
 
-direct_abstract_declarator: LEFT_PAREN abstract_declarator RIGHT_PAREN
-  | direct_abstract_declarator_opt LEFT_SQUARE NUM RIGHT_SQUARE
-  | direct_abstract_declarator_opt LEFT_PAREN parameter_type_list_opt RIGHT_PAREN
+direct_abstract_declarator: LEFT_PAREN abstract_declarator RIGHT_PAREN {
+    @$ = @2;
+    $$ = $2;
+  }
+  | direct_abstract_declarator_opt LEFT_SQUARE NUM RIGHT_SQUARE {
+    $$ = std::make_unique<ArrType>($1, $3);
+  }
+  | direct_abstract_declarator_opt LEFT_PAREN parameter_type_list_opt RIGHT_PAREN {
+    auto params = $3;
+    auto param_types = std::vector<std::unique_ptr<Type>>{};
+    for (const auto& param : params) {
+      param_types.push_back(param->type->Clone());
+    }
+    $$ = std::make_unique<FuncType>($1, std::move(param_types));
+  }
   ;
 
-direct_abstract_declarator_opt: direct_abstract_declarator
-  | epsilon
+direct_abstract_declarator_opt: direct_abstract_declarator { $$ = $1; }
+  | epsilon { $$ = std::make_unique<PrimType>(PrimitiveType::kUnknown); }
   ;
 
 /* 6.7.8 Initialization */
@@ -588,6 +624,17 @@ std::unique_ptr<Type> ResolveType(std::unique_ptr<Type> resolved_type,
     resolved_type = ResolveType(std::move(resolved_type), arr_type->element_type().Clone());
     return std::make_unique<ArrType>(std::move(resolved_type), arr_type->len());
   }
+  if (unknown_type->IsFunc()) {
+    // NOTE: Due to the structure of the grammar, the return type of a function is to be resolved.
+    auto func_type = static_cast<FuncType*>(unknown_type.get());
+    resolved_type = ResolveType(std::move(resolved_type), func_type->return_type().Clone());
+    auto param_types = std::vector<std::unique_ptr<Type>>{};
+    for (const auto& param : func_type->param_types()) {
+      param_types.push_back(param->Clone());
+    }
+    return std::make_unique<FuncType>(std::move(resolved_type), std::move(param_types));
+  }
+  assert(false);
   return nullptr;
 }
 
