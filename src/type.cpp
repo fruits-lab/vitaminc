@@ -50,6 +50,20 @@ std::size_t PtrType::size() const {
 }
 
 std::string PtrType::ToString() const {
+  // For function pointer types, the '*' is placed between the return type and
+  // the parameter list.
+  if (const auto* base_func = dynamic_cast<const FuncType*>(base_type_.get())) {
+    auto str = base_func->return_type().ToString() + " (*)(";
+    for (auto i = std::size_t{0}, e = base_func->param_types().size(); i < e;
+         ++i) {
+      str += base_func->param_types().at(i)->ToString();
+      if (i < e - 1) {
+        str += ", ";
+      }
+    }
+    str += ")";
+    return str;
+  }
   return base_type_->ToString() + "*";
 }
 
