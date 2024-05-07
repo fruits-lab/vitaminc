@@ -5,17 +5,15 @@
 #include <memory>
 #include <string>
 #include <utility>
-#include <vector>
 
 #include "type.hpp"
 
 struct SymbolEntry {
   std::string id;
-  std::unique_ptr<Type> expr_type;
-  std::vector<std::unique_ptr<Type>> param_types{};
+  std::unique_ptr<Type> type;
 
   SymbolEntry(std::string id, std::unique_ptr<Type> expr_type)
-      : id{std::move(id)}, expr_type{std::move(expr_type)} {}
+      : id{std::move(id)}, type{std::move(expr_type)} {}
 };
 
 class SymbolTable {
