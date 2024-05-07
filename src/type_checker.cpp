@@ -323,11 +323,32 @@ void TypeChecker::Visit(ArrSubExprNode& arr_sub_expr) {
 void TypeChecker::Visit(FuncCallExprNode& call_expr) {
   call_expr.func_expr->Accept(*this);
 
-  const auto* id_expr = dynamic_cast<IdExprNode*>((call_expr.func_expr).get());
-  assert(id_expr);
-  auto func_def = env_.LookUp(id_expr->id);
-  auto* func_type = dynamic_cast<FuncType*>(func_def->type.get());
+  // The function expression should have a function type or a pointer to a
+  // function type.
+  // NOTE: Using shared pointer to avoid additional casting on raw pointer.
+  auto func_type = std::shared_ptr<FuncType>{};
+  if (call_expr.func_expr->type->IsFunc()) {
+    func_type = std::dynamic_pointer_cast<FuncType>(
+        std::shared_ptr<Type>{call_expr.func_expr->type->Clone()});
+    // In case that the expression is a function type, it should be an
+    // identifier expression of a declared identifier (function).
+    const auto* id_expr =
+        dynamic_cast<IdExprNode*>((call_expr.func_expr).get());
+    if (!id_expr || !env_.LookUp(id_expr->id)) {
+      // TODO: use of undeclared identifier 'id'
+      assert(false);
+    }
+  } else if (const auto* ptr_type =
+                 dynamic_cast<PtrType*>((call_expr.func_expr->type).get());
+             ptr_type->base_type().IsFunc()) {
+    func_type = std::dynamic_pointer_cast<FuncType>(
+        std::shared_ptr<Type>{ptr_type->base_type().Clone()});
+  } else {
+    // TODO: called object type 'type' is not a function or function pointer
+    assert(false);
+  }
   call_expr.type = func_type->return_type().Clone();
+
   auto& param_types = func_type->param_types();
   auto& args = call_expr.args;
   if (param_types.size() != args.size()) {

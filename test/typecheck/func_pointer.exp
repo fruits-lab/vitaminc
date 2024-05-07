@@ -10,5 +10,12 @@ ProgramNode <1:1>
   FuncDefNode <5:5> main: int ()
     CompoundStmtNode <5:12>
       DeclVarNode <6:9> p: int (*)(int, int)
-      ReturnStmtNode <7:3>
-        IntConstExprNode <7:10> 0: int
+      DeclVarNode <7:7> c: int
+        FuncCallExprNode <7:11> int
+          IdExprNode <7:11> p: int (*)(int, int)
+          ArgExprNode <7:13> int
+            IntConstExprNode <7:13> 2: int
+          ArgExprNode <7:16> int
+            IntConstExprNode <7:16> 3: int
+      ReturnStmtNode <8:3>
+        IntConstExprNode <8:10> 0: int
