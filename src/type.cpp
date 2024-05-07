@@ -118,6 +118,14 @@ bool FuncType::IsEqual(const Type& that) const noexcept {
   return false;
 }
 
+bool FuncType::ConvertibleHook_(const Type& that) const noexcept {
+  // A function type can be implicitly converted to a pointer to the function.
+  if (const auto* that_ptr = dynamic_cast<const PtrType*>(&that)) {
+    return this->IsConvertibleTo(that_ptr->base_type());
+  }
+  return false;
+}
+
 std::size_t FuncType::size() const {
   const auto pointer_size = 8;
   return pointer_size;
