@@ -147,8 +147,12 @@ void TypeChecker::InstallBuiltins_(ScopeStack& env) {
   // The supported builtins are:
   // - int __builtin_print(int)
 
+  auto param_types = std::vector<std::unique_ptr<Type>>{};
+  param_types.emplace_back(std::make_unique<PrimType>(PrimitiveType::kInt));
   auto symbol = std::make_unique<SymbolEntry>(
-      "__builtin_print", std::make_unique<PrimType>(PrimitiveType::kInt));
+      "__builtin_print", std::make_unique<FuncType>(
+                             std::make_unique<PrimType>(PrimitiveType::kInt),
+                             std::move(param_types)));
   symbol->param_types.emplace_back(
       std::make_unique<PrimType>(PrimitiveType::kInt));
   env.Add(std::move(symbol), ScopeKind::kFile);
@@ -320,12 +324,13 @@ void TypeChecker::Visit(ArrSubExprNode& arr_sub_expr) {
 
 void TypeChecker::Visit(FuncCallExprNode& call_expr) {
   call_expr.func_expr->Accept(*this);
-  call_expr.type = call_expr.func_expr->type->Clone();
 
   const auto* id_expr = dynamic_cast<IdExprNode*>((call_expr.func_expr).get());
   assert(id_expr);
   auto func_def = env_.LookUp(id_expr->id);
-  auto& param_types = func_def->param_types;
+  auto* func_type = dynamic_cast<FuncType*>(func_def->type.get());
+  call_expr.type = func_type->return_type().Clone();
+  auto& param_types = func_type->param_types();
   auto& args = call_expr.args;
   if (param_types.size() != args.size()) {
     // TODO: argument size doesn't match

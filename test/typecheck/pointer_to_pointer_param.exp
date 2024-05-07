@@ -24,7 +24,7 @@ ProgramNode <1:1>
         UnaryExprNode <9:12> int* &
           IdExprNode <9:13> b: int
       ReturnStmtNode <10:3>
-        FuncCallExprNode <10:10> int (int**, int**)
+        FuncCallExprNode <10:10> int
           IdExprNode <10:10> add: int (int**, int**)
           ArgExprNode <10:14> int**
             UnaryExprNode <10:14> int** &
