@@ -67,7 +67,7 @@ void TypeChecker::Visit(DeclArrNode& arr_decl) {
 
     for (auto& init : arr_decl.init_list) {
       init->Accept(*this);
-      if (!init->type->IsEqual(*symbol->expr_type)) {
+      if (!init->type->IsEqual(*symbol->type)) {
         // TODO: element unmatches array element type
       }
     }
@@ -113,7 +113,6 @@ void TypeChecker::Visit(FuncDefNode& func_def) {
       std::make_unique<SymbolEntry>(func_def.id, func_def.type->Clone());
   for (auto& parameter : func_def.parameters) {
     parameter->Accept(*this);
-    symbol->param_types.push_back(parameter->type->Clone());
   }
   env_.Add(std::move(symbol), ScopeKind::kFile);
 
@@ -153,8 +152,6 @@ void TypeChecker::InstallBuiltins_(ScopeStack& env) {
       "__builtin_print", std::make_unique<FuncType>(
                              std::make_unique<PrimType>(PrimitiveType::kInt),
                              std::move(param_types)));
-  symbol->param_types.emplace_back(
-      std::make_unique<PrimType>(PrimitiveType::kInt));
   env.Add(std::move(symbol), ScopeKind::kFile);
 }
 
@@ -298,9 +295,10 @@ void TypeChecker::Visit(NullExprNode&) {
 
 void TypeChecker::Visit(IdExprNode& id_expr) {
   if (auto symbol = env_.LookUp(id_expr.id)) {
-    id_expr.type = symbol->expr_type->Clone();
+    id_expr.type = symbol->type->Clone();
   } else {
     // TODO: 'id' undeclared
+    assert(false);
   }
 }
 
