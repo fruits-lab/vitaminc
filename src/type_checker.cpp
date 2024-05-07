@@ -417,9 +417,11 @@ void TypeChecker::Visit(BinaryExprNode& bin_expr) {
 void TypeChecker::Visit(SimpleAssignmentExprNode& assign_expr) {
   assign_expr.lhs->Accept(*this);
   assign_expr.rhs->Accept(*this);
-  if (!assign_expr.lhs->type->IsEqual(*assign_expr.rhs->type)) {
+  if (!assign_expr.rhs->type->IsConvertibleTo(*assign_expr.lhs->type)) {
     // TODO: unmatched assignment type
+    assert(false);
   } else {
-    assign_expr.type = assign_expr.rhs->type->Clone();
+    // The type of the assignment is the type of the left-hand side.
+    assign_expr.type = assign_expr.lhs->type->Clone();
   }
 }

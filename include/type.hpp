@@ -35,8 +35,14 @@ class Type {
   /// @brief A convenience function to compare with a primitive type.
   bool IsEqual(PrimitiveType that) const noexcept;
 
-  // NOLINTNEXTLINE(readability-identifier-naming)
-  virtual std::size_t size() const = 0;
+  /// @note `that` is not necessarily convertible to `this`.
+  /// @note Two types that are equal are always compatible.
+  bool IsConvertibleTo(const Type& that) const noexcept {
+    return IsEqual(that) || ConvertibleHook_(that);
+  }
+
+  virtual std::size_t size()  // NOLINT(readability-identifier-naming)
+      const = 0;
   virtual std::string ToString() const = 0;
   virtual std::unique_ptr<Type> Clone() const = 0;
 
@@ -49,6 +55,13 @@ class Type {
   Type(Type&&) = delete;
   Type& operator=(const Type&) = delete;
   Type& operator=(Type&&) = delete;
+
+ private:
+  /// @note By default, types are only convertible to themselves. Derived types
+  /// should override this hook to provide additional compatibility rules.
+  virtual bool ConvertibleHook_(const Type& that) const noexcept {
+    return false;
+  }
 };
 
 /// @brief A primitive type wrapper.
@@ -151,6 +164,8 @@ class FuncType : public Type {
  private:
   std::unique_ptr<Type> return_type_;
   std::vector<std::unique_ptr<Type>> param_types_;
+
+  bool ConvertibleHook_(const Type& that) const noexcept override;
 };
 
 #endif  // TYPE_HPP_
