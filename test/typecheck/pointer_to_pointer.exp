@@ -11,7 +11,7 @@ ProgramNode <1:1>
           IdExprNode <4:16> pa: int*
       ExprStmtNode <5:3>
         FuncCallExprNode <5:3> int
-          IdExprNode <5:3> __builtin_print: int
+          IdExprNode <5:3> __builtin_print: int (int)
           ArgExprNode <5:19> int
             UnaryExprNode <5:19> int *
               UnaryExprNode <5:20> int* *
@@ -28,7 +28,7 @@ ProgramNode <1:1>
           IdExprNode <9:10> pb: int*
       ExprStmtNode <10:3>
         FuncCallExprNode <10:3> int
-          IdExprNode <10:3> __builtin_print: int
+          IdExprNode <10:3> __builtin_print: int (int)
           ArgExprNode <10:19> int
             UnaryExprNode <10:19> int *
               UnaryExprNode <10:20> int* *
@@ -41,7 +41,7 @@ ProgramNode <1:1>
           IntConstExprNode <12:11> 30: int
       ExprStmtNode <13:3>
         FuncCallExprNode <13:3> int
-          IdExprNode <13:3> __builtin_print: int
+          IdExprNode <13:3> __builtin_print: int (int)
           ArgExprNode <13:19> int
             IdExprNode <13:19> b: int
       ReturnStmtNode <15:3>
