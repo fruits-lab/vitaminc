@@ -4,5 +4,6 @@ int add(int a, int b) {
 
 int main() {
   int (*p)(int, int);
+  int c = p(2, 3);
   return 0;
 }
