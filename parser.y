@@ -539,8 +539,8 @@ abstract_declarator_opt: abstract_declarator { $$ = $1; }
 abstract_declarator: pointer {
     std::unique_ptr<Type> type = std::make_unique<PrimType>(PrimitiveType::kUnknown);
     for (int i = 0, e = $1; i < e; ++i) {
-      type = std::make_unique<PtrType>(std::move(type)); 
-    }     
+      type = std::make_unique<PtrType>(std::move(type));
+    }
     $$ = std::move(type);
   }
   | pointer_opt direct_abstract_declarator {
@@ -561,13 +561,15 @@ direct_abstract_declarator: LEFT_PAREN abstract_declarator RIGHT_PAREN {
   | direct_abstract_declarator_opt LEFT_SQUARE NUM RIGHT_SQUARE {
     $$ = std::make_unique<ArrType>($1, $3);
   }
+  /* e.g., (*)(int, int) */
   | direct_abstract_declarator_opt LEFT_PAREN parameter_type_list_opt RIGHT_PAREN {
     auto params = $3;
     auto param_types = std::vector<std::unique_ptr<Type>>{};
     for (const auto& param : params) {
       param_types.push_back(param->type->Clone());
     }
-    $$ = std::make_unique<FuncType>($1, std::move(param_types));
+    auto func_type = std::make_unique<FuncType>(std::make_unique<PrimType>(PrimitiveType::kUnknown), std::move(param_types));
+    $$ = ResolveType(std::move(func_type), $1);
   }
   ;
 
