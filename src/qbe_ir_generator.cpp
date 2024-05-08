@@ -130,7 +130,7 @@ void QbeIrGenerator::Visit(const DeclVarNode& decl) {
     decl.init->Accept(*this);
     int init_num = num_recorder.NumOfPrevExpr();
     // A pointer declaration may have two options for its right hand side:
-    if (decl.init->type->IsPtr()) {
+    if (decl.init->type->IsPtr() || decl.init->type->IsFunc()) {
       // 1. int* a = &b; rhs is a reference of integer. We need to store b's
       // address to a, where we need to map b's reg_num back to its id_num.
       if (dynamic_cast<UnaryExprNode*>((decl.init).get())) {
@@ -578,7 +578,7 @@ void QbeIrGenerator::Visit(const IdExprNode& id_expr) {
   /// the register before use.
   int id_num = id_to_num.at(id_expr.id);
   int reg_num = NextLocalNum();
-  if (id_expr.type->IsPtr()) {
+  if (id_expr.type->IsPtr() || id_expr.type->IsFunc()) {
     WriteInstr_("{} =l loadl {}", FuncScopeTemp{reg_num},
                 FuncScopeTemp{id_num});
   } else {
