@@ -21,5 +21,17 @@ ProgramNode <1:1>
             IntConstExprNode <8:13> 2: int
           ArgExprNode <8:16> int
             IntConstExprNode <8:16> 3: int
-      ReturnStmtNode <9:3>
-        IntConstExprNode <9:10> 0: int
+      ExprStmtNode <9:3>
+        SimpleAssignmentExprNode <9:5> int (*)(int, int)
+          IdExprNode <9:3> p: int (*)(int, int)
+          UnaryExprNode <9:7> int (*)(int, int) &
+            IdExprNode <9:8> add: int (int, int)
+      DeclVarNode <10:7> d: int
+        FuncCallExprNode <10:11> int
+          IdExprNode <10:11> p: int (*)(int, int)
+          ArgExprNode <10:13> int
+            IntConstExprNode <10:13> 1: int
+          ArgExprNode <10:16> int
+            IntConstExprNode <10:16> 2: int
+      ReturnStmtNode <11:3>
+        IntConstExprNode <11:10> 0: int

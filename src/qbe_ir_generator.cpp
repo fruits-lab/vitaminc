@@ -749,6 +749,10 @@ void QbeIrGenerator::Visit(const UnaryExprNode& unary_expr) {
       num_recorder.Record(res_num);
     } break;
     case UnaryOperator::kAddr: {
+      if (unary_expr.operand->type->IsFunc()) {
+        // No-op; the function itself already evaluates to the address.
+        break;
+      }
       const auto* id_expr =
           dynamic_cast<IdExprNode*>((unary_expr.operand).get());
       // NOTE: The operand of the address-of operator must be an lvalue, and we
