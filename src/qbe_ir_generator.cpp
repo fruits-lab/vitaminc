@@ -564,9 +564,18 @@ void QbeIrGenerator::Visit(const NullExprNode& null_expr) {
 }
 
 void QbeIrGenerator::Visit(const IdExprNode& id_expr) {
+  // If the id is a function, the result is the address of the function.
+  if (id_expr.type->IsFunc()) {
+    int res_num = NextLocalNum();
+    // The function name is already a function pointer.
+    WriteInstr_("{} =l copy {}", FuncScopeTemp{res_num},
+                user_defined::GlobalPointer{id_expr.id});
+    num_recorder.Record(res_num);
+    return;
+  }
+  assert(id_to_num.count(id_expr.id) != 0);
   /// @brief Plays the role of a "pointer". Its value has to be loaded to
   /// the register before use.
-  assert(id_to_num.count(id_expr.id) != 0);
   int id_num = id_to_num.at(id_expr.id);
   int reg_num = NextLocalNum();
   if (id_expr.type->IsPtr()) {
@@ -628,10 +637,8 @@ void QbeIrGenerator::Visit(const ArrSubExprNode& arr_sub_expr) {
 }
 
 void QbeIrGenerator::Visit(const FuncCallExprNode& call_expr) {
-  const auto* id_expr = dynamic_cast<IdExprNode*>((call_expr.func_expr).get());
-  // TODO: The right hand side may not be an IdExprNode of a function.
-  assert(id_expr);
-  const int res_num = NextLocalNum();
+  call_expr.func_expr->Accept(*this);
+  const int func_num = num_recorder.NumOfPrevExpr();
 
   // Evaluate the arguments.
   std::vector<int> arg_nums{};
@@ -641,13 +648,16 @@ void QbeIrGenerator::Visit(const FuncCallExprNode& call_expr) {
     arg_nums.push_back(arg_num);
   }
 
+  const int res_num = NextLocalNum();
   Write_(kIndentStr);
-  if (id_expr->id == "__builtin_print") {
+  if (const auto* id_expr =
+          dynamic_cast<IdExprNode*>(call_expr.func_expr.get());
+      id_expr && id_expr->id == "__builtin_print") {
     Write_("{} =w call $printf(", FuncScopeTemp{res_num});
     Write_("l {}, ", user_defined::GlobalPointer{"__builtin_print_format"});
   } else {
-    Write_("{} =w call {}(", FuncScopeTemp{res_num},
-           user_defined::GlobalPointer{id_expr->id});
+    // Call the function through its address.
+    Write_("{} =w call {}(", FuncScopeTemp{res_num}, FuncScopeTemp{func_num});
   }
   // Traverse the argument number along with the argument to get the type.
   for (auto i = size_t{0}, e = arg_nums.size(); i < e; ++i) {
