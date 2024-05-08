@@ -330,11 +330,11 @@ void TypeChecker::Visit(FuncCallExprNode& call_expr) {
   if (call_expr.func_expr->type->IsFunc()) {
     func_type = std::dynamic_pointer_cast<FuncType>(
         std::shared_ptr<Type>{call_expr.func_expr->type->Clone()});
-    // In case that the expression is a function type, it should be an
-    // identifier expression of a declared identifier (function).
     const auto* id_expr =
         dynamic_cast<IdExprNode*>((call_expr.func_expr).get());
-    if (!id_expr || !env_.LookUp(id_expr->id)) {
+    // If is an identifier, either a function or a function pointer, it should
+    // be declared.
+    if (id_expr && !env_.LookUp(id_expr->id)) {
       // TODO: use of undeclared identifier 'id'
       assert(false);
     }

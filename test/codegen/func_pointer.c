@@ -10,7 +10,7 @@ int main() {
   // Taking address of a function has the same effect as using the function
   // name.
   p = &add;
-  int d = p(1, 2);
+  int d = (*p)(1, 2);
   __builtin_print(d);
   return 0;
 }

@@ -770,6 +770,15 @@ void QbeIrGenerator::Visit(const UnaryExprNode& unary_expr) {
       num_recorder.Record(res_num);
     } break;
     case UnaryOperator::kDeref: {
+      // Is function pointer.
+      if (unary_expr.operand->type->IsPtr() &&
+          dynamic_cast<PtrType*>((unary_expr.operand->type).get())
+              ->base_type()
+              .IsFunc()) {
+        // No-op; the function itself also evaluates to the address.
+        break;
+      }
+
       // Lhs can use res_num to map to the address, which reg_num currently
       // holds.
       const int reg_num = num_recorder.NumOfPrevExpr();
