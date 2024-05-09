@@ -90,6 +90,8 @@ int { return yy::parser::make_INT(yylloc); }
 return { return yy::parser::make_RETURN(yylloc); }
 while { return yy::parser::make_WHILE(yylloc); }
 goto { return yy::parser::make_GOTO(yylloc); }
+struct { return yy::parser::make_STRUCT(yylloc); }
+union { return yy::parser::make_UNION(yylloc); }
 
   /* brackets */
 "(" { return yy::parser::make_LEFT_PAREN(yylloc); }
