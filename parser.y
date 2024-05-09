@@ -92,6 +92,7 @@ std::unique_ptr<Type> ResolveType(std::unique_ptr<Type> resolved_type,
 %token DO WHILE FOR
 %token CONTINUE BREAK RETURN
 %token GOTO
+%token STRUCT UNION
 // increment (INCR: ++) and decrement (DECR: --)
 %token INCR DECR
 %token LOGIC_OR LOGIC_AND OR XOR
@@ -101,16 +102,19 @@ std::unique_ptr<Type> ResolveType(std::unique_ptr<Type> resolved_type,
 %nterm <std::unique_ptr<ExprNode>> expr assign_expr expr_opt unary_expr postfix_expr primary_expr
 %nterm <std::unique_ptr<ExprNode>> const_expr cond_expr logic_or_expr logic_and_expr inclusive_or_expr exclusive_or_expr
 %nterm <std::unique_ptr<ExprNode>> and_expr eq_expr relational_expr shift_expr add_expr mul_expr cast_expr
-%nterm <std::unique_ptr<DeclNode>> decl
+%nterm <std::unique_ptr<DeclNode>> decl id_opt
 %nterm <std::unique_ptr<ParamNode>> parameter_declaration
 %nterm <std::vector<std::unique_ptr<ParamNode>>> parameter_type_list_opt parameter_type_list parameter_list
+%nterm <std::unique_ptr<FieldNode>> struct_declaration struct_declarator struct_declarator_list
+%nterm <std::vector<std::unique_ptr<FieldNode>>> struct_declaration_list
 // The followings also declare an identifier, however, their types are not yet fully resolved.
-%nterm <std::unique_ptr<DeclNode>> declarator direct_declarator init_declarator
+%nterm <std::unique_ptr<DeclNode>> declarator direct_declarator init_declarator_opt init_declarator
 // The abstract declarator is a declarator without an identifier, which are actually types.
 %nterm <std::unique_ptr<Type>> abstract_declarator_opt abstract_declarator direct_abstract_declarator_opt direct_abstract_declarator
-%nterm <std::unique_ptr<Type>> type_specifier
+%nterm <std::unique_ptr<Type>> struct_or_union specifier_qualifier_list
+// Type specifier can be a primitive type (int) or an user defined type (struct, union)
 // The followings also construct types, but they are not yet fully resolved.
-%nterm <std::unique_ptr<Type>> declaration_specifiers
+%nterm <std::variant<std::unique_ptr<Type>, std::unique_ptr<DeclNode>>> type_specifier declaration_specifiers struct_or_union_specifier
 // The number of '*'s.
 %nterm <int> pointer_opt pointer
 // The initializer of a simple variable is an expression, whereas that of an array or complex object is a list of expressions.
@@ -171,7 +175,8 @@ func_def: declaration_specifiers declarator compound_stmt {
     assert(dynamic_cast<FuncDefNode*>(func_def.get()));
     assert(func_def->type->IsFunc());
     const auto* func_type = static_cast<FuncType*>(func_def->type.get());
-    auto resolved_return_type = ResolveType($1, func_type->return_type().Clone());
+    auto type = std::move(std::get<std::unique_ptr<Type>>($1));
+    auto resolved_return_type = ResolveType(std::move(type), func_type->return_type().Clone());
     auto param_types = std::vector<std::unique_ptr<Type>>{};
     for (auto& param : func_type->param_types()) {
       param_types.push_back(param->Clone());
@@ -397,6 +402,10 @@ declaration_specifiers: type_specifier declaration_specifiers {
   | type_specifier { $$ = $1; }
   ;
 
+init_declarator_opt: init_declarator { $$ = $1; }
+  | epsilon { $$ = nullptr; }
+  ;
+
 /* A init declarator is a declarator with an optional initializer. */
 init_declarator: declarator { $$ = $1; }
   | declarator ASSIGN initializer {
@@ -422,9 +431,43 @@ init_declarator: declarator { $$ = $1; }
 /* 6.7.2 Type specifiers */
 /* TODO: support multiple data types */
 type_specifier: INT { $$ = std::make_unique<PrimType>(PrimitiveType::kInt); }
-  /* TODO: struct or union specifier */
+  | struct_or_union_specifier { $$ = $1; }
   /* TODO: enum specifier */
   /* TODO: typedef name */
+  ;
+
+// Create a type struct or union
+struct_or_union_specifier: struct_or_union id_opt LEFT_CURLY struct_declaration_list RIGHT_CURLY {}
+  | struct_or_union ID {}
+  ;
+
+struct_declaration_list: struct_declaration {}
+  | struct_declaration_list struct_declaration {}
+  ;
+
+/* TODO: struct_declarator_list_opt */
+struct_declaration: specifier_qualifier_list struct_declarator_list SEMICOLON {}
+  ;
+
+struct_declarator_list: struct_declarator {}
+  | struct_declarator_list COMMA struct_declarator
+  ;
+
+/* TODO: declarator_opt COLON const_expr */
+struct_declarator: declarator {}
+  ;
+
+/* TODO: type_qualifier specifier_qualifier_list_opt */
+specifier_qualifier_list: type_specifier {}
+  ;
+
+/* Identifier_opt is used for struct, union, enum. */
+id_opt: ID {}
+  | epsilon {}
+  ;
+
+struct_or_union: STRUCT {}
+  | UNION {}
   ;
 
 /* 6.7.5 Declarators */
@@ -519,14 +562,16 @@ parameter_list: parameter_declaration {
   ;
 
 parameter_declaration: declaration_specifiers declarator {
+    auto type = std::move(std::get<std::unique_ptr<Type>>($1));
     auto decl = $2;
-    auto resolved_type = ResolveType($1, std::move(decl->type));
+    auto resolved_type = ResolveType(std::move(type), std::move(decl->type));
     $$ = std::make_unique<ParamNode>(Loc(@2), std::move(decl->id), std::move(resolved_type));
   }
   /* Declare parameters without identifiers. */
   | declaration_specifiers abstract_declarator_opt {
     // XXX: The identifier is empty.
-    $$ = std::make_unique<ParamNode>(Loc(@1), /* id */ "", ResolveType($1, $2));
+    auto type = std::move(std::get<std::unique_ptr<Type>>($1));
+    $$ = std::make_unique<ParamNode>(Loc(@1), /* id */ "", ResolveType(std::move(type), $2));
   }
   ;
 
