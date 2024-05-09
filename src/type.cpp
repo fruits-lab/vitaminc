@@ -6,6 +6,8 @@
 #include <utility>
 #include <vector>
 
+#include "ast.hpp"
+
 bool Type::IsEqual(PrimitiveType that) const noexcept {
   return IsEqual(PrimType{that});
 }
@@ -151,4 +153,73 @@ std::unique_ptr<Type> FuncType::Clone() const {
   }
   return std::make_unique<FuncType>(std::move(cloned_return_type),
                                     std::move(cloned_param_types));
+}
+
+bool StructType::IsEqual(const Type& that) const noexcept {
+  if (const auto* that_struct = dynamic_cast<const StructType*>(&that)) {
+    if (that_struct->size() != that.size()) {
+      return false;
+    }
+    for (auto i = std::size_t{0}, e = field_types_.size(); i < e; ++i) {
+      if (!that_struct->field_types_.at(i)->IsEqual(*field_types_.at(i))) {
+        return false;
+      }
+    }
+    return true;
+  }
+  return false;
+}
+
+std::size_t StructType::size() const {
+  // TODO: There may be unnamed padding at the end of a structure or union.
+  auto size = std::size_t{0};
+  for (auto i = std::size_t{0}, e = field_types_.size(); i < e; ++i) {
+    size += field_types_.at(i)->size();
+  }
+  return size;
+}
+
+std::string StructType::ToString() const {
+  if (field_types_.size() > 0) {
+    return "definition";
+  }
+
+  return "";
+}
+
+std::unique_ptr<Type> StructType::Clone() const {
+  auto cloned_field_types = std::vector<std::unique_ptr<Type>>{};
+  for (const auto& field_type : field_types_) {
+    cloned_field_types.push_back(field_type->Clone());
+  }
+  return std::make_unique<StructType>(std::move(cloned_field_types));
+}
+
+bool UnionType::IsEqual(const Type& that) const noexcept {
+  if (const auto* that_union = dynamic_cast<const UnionType*>(&that)) {
+    return (that_union->selected_ == selected_) &&
+           (that_union->size() == size());
+  }
+  return false;
+}
+
+std::size_t UnionType::size() const {
+  // TODO: There may be unnamed padding at the end of a structure or union.
+  return field_types_.at(selected_)->size();
+}
+
+std::string UnionType::ToString() const {
+  if (field_types_.size() > 0) {
+    return "definition";
+  }
+
+  return "";
+}
+
+std::unique_ptr<Type> UnionType::Clone() const {
+  auto cloned_field_types = std::vector<std::unique_ptr<Type>>{};
+  for (const auto& field_type : field_types_) {
+    cloned_field_types.push_back(field_type->Clone());
+  }
+  return std::make_unique<UnionType>(std::move(cloned_field_types));
 }

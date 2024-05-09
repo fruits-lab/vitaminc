@@ -30,6 +30,12 @@ class Type {
   virtual bool IsFunc() const noexcept {
     return false;
   }
+  virtual bool IsStruct() const noexcept {
+    return false;
+  }
+  virtual bool IsUnion() const noexcept {
+    return false;
+  }
 
   virtual bool IsEqual(const Type& that) const noexcept = 0;
   /// @brief A convenience function to compare with a primitive type.
@@ -166,6 +172,45 @@ class FuncType : public Type {
   std::vector<std::unique_ptr<Type>> param_types_;
 
   bool ConvertibleHook_(const Type& that) const noexcept override;
+};
+
+class StructType : public Type {
+ public:
+  explicit StructType(std::vector<std::unique_ptr<Type>> field_types)
+      : field_types_{std::move(field_types)} {}
+
+  bool IsStruct() const noexcept override {
+    return true;
+  }
+
+  bool IsEqual(const Type& that) const noexcept override;
+  std::size_t size() const override;
+  std::string ToString() const override;
+  std::unique_ptr<Type> Clone() const override;
+
+ private:
+  std::vector<std::unique_ptr<Type>> field_types_;
+};
+
+class UnionType : public Type {
+ public:
+  /// @param selected_ The index of the selected field in the union.
+  explicit UnionType(std::vector<std::unique_ptr<Type>> field_types,
+                     std::size_t selected = 0)
+      : field_types_{std::move(field_types)}, selected_{selected} {}
+
+  bool IsStruct() const noexcept override {
+    return true;
+  }
+
+  bool IsEqual(const Type& that) const noexcept override;
+  std::size_t size() const override;
+  std::string ToString() const override;
+  std::unique_ptr<Type> Clone() const override;
+
+ private:
+  std::vector<std::unique_ptr<Type>> field_types_;
+  std::size_t selected_;
 };
 
 #endif  // TYPE_HPP_
