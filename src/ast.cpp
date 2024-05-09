@@ -58,6 +58,30 @@ void ArrDeclNode::Accept(ModifyingVisitor& v) {
   v.Visit(*this);
 }
 
+void DefStructNode::Accept(NonModifyingVisitor& v) const {
+  v.Visit(*this);
+}
+
+void DefStructNode::Accept(ModifyingVisitor& v) {
+  v.Visit(*this);
+}
+
+void DefUnionNode::Accept(NonModifyingVisitor& v) const {
+  v.Visit(*this);
+}
+
+void DefUnionNode::Accept(ModifyingVisitor& v) {
+  v.Visit(*this);
+}
+
+void FieldNode::Accept(NonModifyingVisitor& v) const {
+  v.Visit(*this);
+}
+
+void FieldNode::Accept(ModifyingVisitor& v) {
+  v.Visit(*this);
+}
+
 void ParamNode::Accept(NonModifyingVisitor& v) const {
   v.Visit(*this);
 }

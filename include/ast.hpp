@@ -111,6 +111,38 @@ struct ArrDeclNode : public DeclNode {
   std::vector<std::unique_ptr<ExprNode>> init_list;
 };
 
+struct DefStructNode : public DeclNode {
+  DefStructNode(Location loc, std::string id, std::unique_ptr<Type> type,
+                std::vector<std::unique_ptr<FieldNode>> field_list)
+      : DeclNode{loc, std::move(id), std::move(type)},
+        field_list{std::move(field_list)} {}
+
+  void Accept(NonModifyingVisitor&) const override;
+  void Accept(ModifyingVisitor&) override;
+
+  std::vector<std::unique_ptr<FieldNode>> field_list;
+};
+
+struct DefUnionNode : public DeclNode {
+  DefUnionNode(Location loc, std::string id, std::unique_ptr<Type> type,
+               std::vector<std::unique_ptr<FieldNode>> field_list)
+      : DeclNode{loc, std::move(id), std::move(type)},
+        field_list{std::move(field_list)} {}
+
+  void Accept(NonModifyingVisitor&) const override;
+  void Accept(ModifyingVisitor&) override;
+
+  std::vector<std::unique_ptr<FieldNode>> field_list;
+};
+
+/// @brief A field in a struct or an union.
+struct FieldNode : public DeclNode {
+  using DeclNode::DeclNode;
+
+  void Accept(NonModifyingVisitor&) const override;
+  void Accept(ModifyingVisitor&) override;
+};
+
 struct ParamNode : public DeclNode {
   using DeclNode::DeclNode;
 
