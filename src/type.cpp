@@ -6,8 +6,6 @@
 #include <utility>
 #include <vector>
 
-#include "ast.hpp"
-
 bool Type::IsEqual(PrimitiveType that) const noexcept {
   return IsEqual(PrimType{that});
 }
@@ -180,11 +178,7 @@ std::size_t StructType::size() const {
 }
 
 std::string StructType::ToString() const {
-  if (field_types_.size() > 0) {
-    return "definition";
-  }
-
-  return "";
+  return "struct";
 }
 
 std::unique_ptr<Type> StructType::Clone() const {
@@ -209,11 +203,7 @@ std::size_t UnionType::size() const {
 }
 
 std::string UnionType::ToString() const {
-  if (field_types_.size() > 0) {
-    return "definition";
-  }
-
-  return "";
+  return "union";
 }
 
 std::unique_ptr<Type> UnionType::Clone() const {

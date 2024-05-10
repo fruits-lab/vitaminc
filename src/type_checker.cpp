@@ -78,6 +78,14 @@ void TypeChecker::Visit(ArrDeclNode& arr_decl) {
   // TODO: Check initializer type
 }
 
+void TypeChecker::Visit(RecordDeclNode& struct_def) {
+  // TODO: Store record declaration in a new table under scope.
+}
+
+void TypeChecker::Visit(FieldNode& field) {
+  // TODO: Store field in corresponding record declaration, e.g., struct, union.
+}
+
 void TypeChecker::Visit(ParamNode& parameter) {
   if (env_.Probe(parameter.id)) {
     // TODO: redefinition of 'id'

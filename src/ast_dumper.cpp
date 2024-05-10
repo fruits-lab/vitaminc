@@ -104,6 +104,26 @@ void AstDumper::Visit(const ArrDeclNode& arr_decl) {
   indenter_.DecreaseLevel();
 }
 
+void AstDumper::Visit(const RecordDeclNode& record_decl) {
+  std::string id = "";
+  if (!record_decl.id.empty()) {
+    id += " " + record_decl.id;
+  }
+  std::cout << indenter_.Indent() << "RecordDeclNode <" << record_decl.loc
+            << "> " << record_decl.type->ToString() << id << " definition\n";
+
+  indenter_.IncreaseLevel();
+  for (const auto& field : record_decl.field_list) {
+    field->Accept(*this);
+  }
+  indenter_.DecreaseLevel();
+}
+
+void AstDumper::Visit(const FieldNode& field) {
+  std::cout << indenter_.Indent() << "FieldNode <" << field.loc << "> "
+            << field.id << ": " << field.type->ToString() << '\n';
+}
+
 void AstDumper::Visit(const ParamNode& parameter) {
   std::cout << indenter_.Indent() << "ParamNode <" << parameter.loc << "> "
             << parameter.id << ": " << parameter.type->ToString() << '\n';
