@@ -1,7 +1,7 @@
 ProgramNode <1:1>
   FuncDefNode <1:5> main: int ()
     CompoundStmtNode <1:12>
-      DeclVarNode <2:7> a: int
+      VarDeclNode <2:7> a: int
         IntConstExprNode <2:11> 1: int
       SwitchStmtNode <3:3>
         IdExprNode <3:11> a: int

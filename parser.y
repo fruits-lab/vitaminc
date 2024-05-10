@@ -404,12 +404,12 @@ init_declarator: declarator { $$ = $1; }
     auto decl = $1;
     auto init = $3;
     if (std::holds_alternative<std::unique_ptr<ExprNode>>(init)) {
-      auto* var_decl = dynamic_cast<DeclVarNode*>(decl.get());
+      auto* var_decl = dynamic_cast<VarDeclNode*>(decl.get());
       assert(var_decl);
       auto init_expr = std::move(std::get<std::unique_ptr<ExprNode>>(init));
       var_decl->init = std::move(init_expr);
     } else { // The initializer is a list of expressions.
-      auto* arr_decl = dynamic_cast<DeclArrNode*>(decl.get());
+      auto* arr_decl = dynamic_cast<ArrDeclNode*>(decl.get());
       assert(arr_decl);
       auto init_expr_list = std::move(std::get<std::vector<std::unique_ptr<ExprNode>>>(init));
       arr_decl->init_list = std::move(init_expr_list);
@@ -448,7 +448,7 @@ declarator: pointer_opt direct_declarator {
 
 direct_declarator: ID {
     auto type = std::make_unique<PrimType>(PrimitiveType::kUnknown);
-    $$ = std::make_unique<DeclVarNode>(Loc(@1), $1, std::move(type));
+    $$ = std::make_unique<VarDeclNode>(Loc(@1), $1, std::move(type));
   }
   | LEFT_PAREN declarator RIGHT_PAREN {
     @$ = @2; // Set the location to the identifier.
@@ -458,9 +458,9 @@ direct_declarator: ID {
   | direct_declarator LEFT_SQUARE NUM RIGHT_SQUARE {
     auto declarator = $1;
     auto type = std::make_unique<ArrType>(std::move(declarator->type), $3);
-    if (!dynamic_cast<DeclArrNode*>(declarator.get())) {
+    if (!dynamic_cast<ArrDeclNode*>(declarator.get())) {
       // If the declarator is not yet a array declarator, we need to construct one.
-      $$ = std::make_unique<DeclArrNode>(Loc(@1), declarator->id, std::move(type), /* init list */ std::vector<std::unique_ptr<ExprNode>>{});
+      $$ = std::make_unique<ArrDeclNode>(Loc(@1), declarator->id, std::move(type), /* init list */ std::vector<std::unique_ptr<ExprNode>>{});
     } else {
       declarator->type = std::move(type);
       $$ = std::move(declarator);

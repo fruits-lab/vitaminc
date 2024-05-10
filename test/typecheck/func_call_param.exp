@@ -19,7 +19,7 @@ ProgramNode <1:1>
           IntConstExprNode <6:14> 5: int
   FuncDefNode <9:5> main: int ()
     CompoundStmtNode <9:12>
-      DeclVarNode <10:7> a: int
+      VarDeclNode <10:7> a: int
         FuncCallExprNode <10:11> int
           IdExprNode <10:11> sum: int (int, int, int)
           ArgExprNode <10:15> int
@@ -28,7 +28,7 @@ ProgramNode <1:1>
             IntConstExprNode <10:18> 2: int
           ArgExprNode <10:21> int
             IntConstExprNode <10:21> 3: int
-      DeclVarNode <11:7> b: int
+      VarDeclNode <11:7> b: int
         BinaryExprNode <11:13> int +
           IdExprNode <11:11> a: int
           IntConstExprNode <11:15> 4: int

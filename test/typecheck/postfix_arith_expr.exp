@@ -1,7 +1,7 @@
 ProgramNode <1:1>
   FuncDefNode <1:5> main: int ()
     CompoundStmtNode <1:12>
-      DeclVarNode <2:7> a: int
+      VarDeclNode <2:7> a: int
         IntConstExprNode <2:11> 0: int
       ExprStmtNode <3:3>
         PostfixArithExprNode <3:3> int ++
@@ -9,7 +9,7 @@ ProgramNode <1:1>
       ExprStmtNode <4:3>
         PostfixArithExprNode <4:3> int --
           IdExprNode <4:3> a: int
-      DeclVarNode <6:8> b: int*
+      VarDeclNode <6:8> b: int*
         UnaryExprNode <6:12> int* &
           IdExprNode <6:13> a: int
       ExprStmtNode <7:3>

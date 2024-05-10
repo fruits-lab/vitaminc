@@ -1,11 +1,11 @@
 ProgramNode <1:1>
   FuncDefNode <1:5> main: int ()
     CompoundStmtNode <1:12>
-      DeclVarNode <2:7> k: int
+      VarDeclNode <2:7> k: int
         IntConstExprNode <2:11> 0: int
       ForStmtNode <3:3>
         LoopInitNode <3:8>
-          DeclVarNode <3:12> i: int
+          VarDeclNode <3:12> i: int
             IntConstExprNode <3:16> 0: int
         BinaryExprNode <3:21> int <
           IdExprNode <3:19> i: int
@@ -18,7 +18,7 @@ ProgramNode <1:1>
         CompoundStmtNode <3:37>
           ForStmtNode <4:5>
             LoopInitNode <4:10>
-              DeclVarNode <4:14> j: int
+              VarDeclNode <4:14> j: int
                 IntConstExprNode <4:18> 0: int
             BinaryExprNode <4:23> int <
               IdExprNode <4:21> j: int
