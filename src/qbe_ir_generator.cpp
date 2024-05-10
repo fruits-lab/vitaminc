@@ -192,6 +192,10 @@ void QbeIrGenerator::Visit(const ArrDeclNode& arr_decl) {
   }
 }
 
+void QbeIrGenerator::Visit(const RecordDeclNode& struct_def) {}
+
+void QbeIrGenerator::Visit(const FieldNode& field) {}
+
 void QbeIrGenerator::Visit(const ParamNode& parameter) {
   int id_num = NextLocalNum();
   // TODO: support different data types

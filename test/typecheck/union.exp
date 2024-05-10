@@ -1,0 +1,16 @@
+ProgramNode <1:1>
+  FuncDefNode <1:5> main: int ()
+    CompoundStmtNode <1:12>
+      RecordDeclNode <2:9> union u definition
+      RecordDeclNode <4:9> union shape definition
+        FieldNode <5:9> square: int
+        FieldNode <6:9> circle: int
+        FieldNode <7:9> triangle: int
+      RecordDeclNode <10:8> union definition
+        FieldNode <11:9> a: int
+        FieldNode <12:9> b: int
+        FieldNode <13:9> c: int
+        FieldNode <14:9> d: int
+        FieldNode <15:9> e: int
+      ReturnStmtNode <18:3>
+        IntConstExprNode <18:10> 0: int

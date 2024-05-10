@@ -384,12 +384,20 @@ arg: expr {
   ;
 
 /* 6.7 Declarations */
+/* Declaration specifiers can be either a 'type' or a 'declaration of type'. */
 /* TODO: init declarator list */
 /* TODO: If the init declarator doesn't present, e.g., `int;`, the declaration is still valid. */
-decl: declaration_specifiers init_declarator SEMICOLON {
-    auto decl = $2;
-    decl->type = ResolveType($1, std::move(decl->type));
-    $$ = std::move(decl);
+decl: declaration_specifiers init_declarator_opt SEMICOLON {
+    auto decl_specifers = $1;
+    auto init_decl = $2;
+    if (std::holds_alternative<std::unique_ptr<Type>>(decl_specifers)) {
+      auto type = std::move(std::get<std::unique_ptr<Type>>(decl_specifers));
+      init_decl->type = ResolveType(std::move(type), std::move(init_decl->type));
+      $$ = std::move(init_decl);
+    } else {
+      auto decl = std::move(std::get<std::unique_ptr<DeclNode>>(decl_specifers));
+      $$ = std::move(decl);
+    }
   }
   ;
 
@@ -397,7 +405,7 @@ decl: declaration_specifiers init_declarator SEMICOLON {
 /* TODO: storage class specifier, type qualifier, function specifier */
 declaration_specifiers: type_specifier declaration_specifiers {
     // Leave unimplemented; useless without support of other specifiers.
-    $$ = nullptr;
+    $$ = $1;
   }
   | type_specifier { $$ = $1; }
   ;
@@ -436,38 +444,86 @@ type_specifier: INT { $$ = std::make_unique<PrimType>(PrimitiveType::kInt); }
   /* TODO: typedef name */
   ;
 
-// Create a type struct or union
-struct_or_union_specifier: struct_or_union id_opt LEFT_CURLY struct_declaration_list RIGHT_CURLY {}
-  | struct_or_union ID {}
+struct_or_union_specifier: struct_or_union id_opt LEFT_CURLY struct_declaration_list RIGHT_CURLY {
+    // Field types for variable 'type' are unknown until now.
+    auto type = $1;
+    auto decl_id = $2;
+    auto field_list = $4;
+    auto field_types = std::vector<std::unique_ptr<Type>>{};
+    for (const auto& field : field_list) {
+      field_types.push_back(field->type->Clone());
+    }
+
+    if (dynamic_cast<StructType*>(type.get())) {
+      type = std::make_unique<StructType>(std::move(field_types));
+    } else {
+      type = std::make_unique<UnionType>(std::move(field_types));
+    }
+
+    if (decl_id) {
+      $$ = std::make_unique<RecordDeclNode>(Loc(@2), std::move(decl_id->id), std::move(type), std::move(field_list));
+    } else {
+      $$ = std::make_unique<RecordDeclNode>(Loc(@2), /* no id */ "", std::move(type), std::move(field_list));
+    }
+  }
+  | struct_or_union ID {
+    auto field_list = std::vector<std::unique_ptr<FieldNode>>{};
+    $$ = std::make_unique<RecordDeclNode>(Loc(@2), $2, $1, std::move(field_list));
+  }
   ;
 
-struct_declaration_list: struct_declaration {}
-  | struct_declaration_list struct_declaration {}
+struct_declaration_list: struct_declaration {
+    $$ = std::vector<std::unique_ptr<FieldNode>>{};
+    $$.push_back($1);
+  }
+  | struct_declaration_list struct_declaration {
+    $$ = $1;
+    $$.push_back($2);
+  }
   ;
 
 /* TODO: struct_declarator_list_opt */
-struct_declaration: specifier_qualifier_list struct_declarator_list SEMICOLON {}
+struct_declaration: specifier_qualifier_list struct_declarator_list SEMICOLON {
+    auto type = $1;
+    auto decl = $2;
+    decl->type = ResolveType(std::move(type), std::move(decl->type));
+    $$ = std::move(decl);
+  }
   ;
 
-struct_declarator_list: struct_declarator {}
+struct_declarator_list: struct_declarator { $$ = $1; }
   | struct_declarator_list COMMA struct_declarator
   ;
 
 /* TODO: declarator_opt COLON const_expr */
-struct_declarator: declarator {}
+struct_declarator: declarator {
+    auto decl = $1;
+    $$ = std::make_unique<FieldNode>(Loc(@1), std::move(decl->id), std::move(decl->type));
+  }
   ;
 
 /* TODO: type_qualifier specifier_qualifier_list_opt */
-specifier_qualifier_list: type_specifier {}
+specifier_qualifier_list: type_specifier {
+    $$ = std::move(std::get<std::unique_ptr<Type>>($1));
+  }
   ;
 
 /* Identifier_opt is used for struct, union, enum. */
-id_opt: ID {}
-  | epsilon {}
+id_opt: ID {
+    auto type = std::make_unique<PrimType>(PrimitiveType::kUnknown);
+    $$ = std::make_unique<VarDeclNode>(Loc(@1), $1, std::move(type));
+  }
+  | epsilon { $$ = nullptr; }
   ;
 
-struct_or_union: STRUCT {}
-  | UNION {}
+struct_or_union: STRUCT {
+    auto field_types = std::vector<std::unique_ptr<Type>>{};
+    $$ = std::make_unique<StructType>(std::move(field_types));
+  }
+  | UNION {
+    auto field_types = std::vector<std::unique_ptr<Type>>{};
+    $$ = std::make_unique<UnionType>(std::move(field_types));
+  }
   ;
 
 /* 6.7.5 Declarators */
