@@ -319,18 +319,18 @@ eq_expr: relational_expr { $$ = $1; }
   ;
 
 /* 6.5.10 Bitwise AND operators */
-and_expr: eq_expr
-  | and_expr AMPERSAND eq_expr
+and_expr: eq_expr { $$ = $1; }
+  | and_expr AMPERSAND eq_expr { $$ = std::make_unique<BinaryExprNode>(Loc(@2), BinaryOperator::kAnd, $1, $3); }
   ;
 
 /* 6.5.11 Bitwise exclusive OR operators */
-exclusive_or_expr: and_expr
-  | exclusive_or_expr XOR and_expr
+exclusive_or_expr: and_expr { $$ = $1; }
+  | exclusive_or_expr XOR and_expr { $$ = std::make_unique<BinaryExprNode>(Loc(@2), BinaryOperator::kXor, $1, $3); }
   ;
 
 /* 6.5.12 Bitwise inclusive OR operators */
-inclusive_or_expr: exclusive_or_expr
-  | inclusive_or_expr OR exclusive_or_expr
+inclusive_or_expr: exclusive_or_expr { $$ = $1; }
+  | inclusive_or_expr OR exclusive_or_expr { $$ = std::make_unique<BinaryExprNode>(Loc(@2), BinaryOperator::kOr, $1, $3); }
   ;
 
 /* 6.5.13 Logical AND operators */
