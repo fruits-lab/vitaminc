@@ -15,6 +15,9 @@ enum class BinaryOperator : std::uint8_t {
   kLte,
   kEq,
   kNeq,
+  kAnd,
+  kXor,
+  kOr,
 };
 
 enum class UnaryOperator : std::uint8_t {

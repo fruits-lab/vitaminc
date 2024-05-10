@@ -35,6 +35,12 @@ std::string GetBinaryOperator(BinaryOperator op) {
       return "==";
     case BinaryOperator::kNeq:
       return "!=";
+    case BinaryOperator::kAnd:
+      return "&";
+    case BinaryOperator::kXor:
+      return "^";
+    case BinaryOperator::kOr:
+      return "|";
     default:
       return "Unknown";
   }

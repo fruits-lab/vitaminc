@@ -64,6 +64,12 @@ std::string GetBinaryOperator(BinaryOperator op) {
       return "ceqw";
     case BinaryOperator::kNeq:
       return "cnew";
+    case BinaryOperator::kAnd:
+      return "and";
+    case BinaryOperator::kXor:
+      return "xor";
+    case BinaryOperator::kOr:
+      return "or";
     default:
       return "Unknown";
   }

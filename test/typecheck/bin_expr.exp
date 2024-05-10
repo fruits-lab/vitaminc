@@ -35,3 +35,15 @@ ProgramNode <1:1>
           BinaryExprNode <7:25> int %
             IntConstExprNode <7:23> 6: int
             IntConstExprNode <7:27> 2: int
+      ExprStmtNode <8:3>
+        BinaryExprNode <8:5> int &
+          IntConstExprNode <8:3> 1: int
+          IntConstExprNode <8:7> 4: int
+      ExprStmtNode <9:3>
+        BinaryExprNode <9:5> int |
+          IntConstExprNode <9:3> 1: int
+          IntConstExprNode <9:7> 2: int
+      ExprStmtNode <10:3>
+        BinaryExprNode <10:5> int ^
+          IntConstExprNode <10:3> 1: int
+          IntConstExprNode <10:7> 3: int
