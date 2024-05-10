@@ -42,19 +42,19 @@ void DeclNode::Accept(ModifyingVisitor& v) {
 
 DeclNode::~DeclNode() = default;
 
-void DeclVarNode::Accept(NonModifyingVisitor& v) const {
+void VarDeclNode::Accept(NonModifyingVisitor& v) const {
   v.Visit(*this);
 }
 
-void DeclVarNode::Accept(ModifyingVisitor& v) {
+void VarDeclNode::Accept(ModifyingVisitor& v) {
   v.Visit(*this);
 }
 
-void DeclArrNode::Accept(NonModifyingVisitor& v) const {
+void ArrDeclNode::Accept(NonModifyingVisitor& v) const {
   v.Visit(*this);
 }
 
-void DeclArrNode::Accept(ModifyingVisitor& v) {
+void ArrDeclNode::Accept(ModifyingVisitor& v) {
   v.Visit(*this);
 }
 

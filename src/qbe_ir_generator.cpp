@@ -122,7 +122,7 @@ auto
 
 }  // namespace
 
-void QbeIrGenerator::Visit(const DeclVarNode& decl) {
+void QbeIrGenerator::Visit(const VarDeclNode& decl) {
   int id_num = NextLocalNum();
   WriteInstr_("{} =l alloc{} {}", FuncScopeTemp{id_num}, decl.type->size(),
               decl.type->size());
@@ -152,7 +152,7 @@ void QbeIrGenerator::Visit(const DeclVarNode& decl) {
   id_to_num[decl.id] = id_num;
 }
 
-void QbeIrGenerator::Visit(const DeclArrNode& arr_decl) {
+void QbeIrGenerator::Visit(const ArrDeclNode& arr_decl) {
   int base_addr_num = NextLocalNum();
   assert(arr_decl.type->IsArr());
   const auto* arr_type = dynamic_cast<ArrType*>((arr_decl.type).get());

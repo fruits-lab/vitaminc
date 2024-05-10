@@ -40,7 +40,7 @@ bool IsInBodyOf(BodyType type) {
 
 }  // namespace
 
-void TypeChecker::Visit(DeclVarNode& decl) {
+void TypeChecker::Visit(VarDeclNode& decl) {
   if (decl.init) {
     decl.init->Accept(*this);
     if (decl.init->type != decl.type) {
@@ -58,7 +58,7 @@ void TypeChecker::Visit(DeclVarNode& decl) {
   }
 }
 
-void TypeChecker::Visit(DeclArrNode& arr_decl) {
+void TypeChecker::Visit(ArrDeclNode& arr_decl) {
   if (env_.Probe(arr_decl.id)) {
     // TODO: redefinition of 'id'
   } else {

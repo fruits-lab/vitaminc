@@ -76,8 +76,8 @@ std::string GetPostfixOperator(PostfixOperator op) {
 
 }  // namespace
 
-void AstDumper::Visit(const DeclVarNode& decl) {
-  std::cout << indenter_.Indent() << "DeclVarNode <" << decl.loc << "> "
+void AstDumper::Visit(const VarDeclNode& decl) {
+  std::cout << indenter_.Indent() << "VarDeclNode <" << decl.loc << "> "
             << decl.id << ": " << decl.type->ToString() << '\n';
 
   if (decl.init) {
@@ -87,8 +87,8 @@ void AstDumper::Visit(const DeclVarNode& decl) {
   }
 }
 
-void AstDumper::Visit(const DeclArrNode& arr_decl) {
-  std::cout << indenter_.Indent() << "DeclArrNode <" << arr_decl.loc << "> "
+void AstDumper::Visit(const ArrDeclNode& arr_decl) {
+  std::cout << indenter_.Indent() << "ArrDeclNode <" << arr_decl.loc << "> "
             << arr_decl.id << ": " << arr_decl.type->ToString() << '\n';
 
   indenter_.IncreaseLevel();

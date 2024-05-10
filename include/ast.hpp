@@ -88,8 +88,8 @@ struct ExprNode  // NOLINT(cppcoreguidelines-special-member-functions)
       std::make_unique<PrimType>(PrimitiveType::kUnknown);
 };
 
-struct DeclVarNode : public DeclNode {
-  DeclVarNode(Location loc, std::string id, std::unique_ptr<Type> type,
+struct VarDeclNode : public DeclNode {
+  VarDeclNode(Location loc, std::string id, std::unique_ptr<Type> type,
               std::unique_ptr<ExprNode> init = {})
       : DeclNode{loc, std::move(id), std::move(type)}, init{std::move(init)} {}
 
@@ -99,8 +99,8 @@ struct DeclVarNode : public DeclNode {
   std::unique_ptr<ExprNode> init;
 };
 
-struct DeclArrNode : public DeclNode {
-  DeclArrNode(Location loc, std::string id, std::unique_ptr<Type> type,
+struct ArrDeclNode : public DeclNode {
+  ArrDeclNode(Location loc, std::string id, std::unique_ptr<Type> type,
               std::vector<std::unique_ptr<ExprNode>> init_list)
       : DeclNode{loc, std::move(id), std::move(type)},
         init_list{std::move(init_list)} {}
