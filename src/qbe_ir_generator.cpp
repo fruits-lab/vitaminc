@@ -70,6 +70,13 @@ std::string GetBinaryOperator(BinaryOperator op) {
       return "xor";
     case BinaryOperator::kOr:
       return "or";
+    case BinaryOperator::kShl:
+      return "shl";
+    // NOTE: Arithmetic shift right (sar) is akin to dividing by a power of two
+    // for non-negative numbers. For negatives, it's implementation-defined, so
+    // we opt for arithmetic shifting.
+    case BinaryOperator::kShr:
+      return "sar";
     default:
       return "Unknown";
   }
