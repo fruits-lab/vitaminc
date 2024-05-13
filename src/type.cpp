@@ -1,5 +1,6 @@
 #include "type.hpp"
 
+#include <algorithm>
 #include <cstddef>
 #include <memory>
 #include <string>
