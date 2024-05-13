@@ -175,7 +175,7 @@ func_def: declaration_specifiers declarator compound_stmt {
     assert(dynamic_cast<FuncDefNode*>(func_def.get()));
     assert(func_def->type->IsFunc());
     const auto* func_type = static_cast<FuncType*>(func_def->type.get());
-    auto type = std::move(std::get<std::unique_ptr<Type>>($1));
+    auto type = std::get<std::unique_ptr<Type>>($1);
     auto resolved_return_type = ResolveType(std::move(type), func_type->return_type().Clone());
     auto param_types = std::vector<std::unique_ptr<Type>>{};
     for (auto& param : func_type->param_types()) {
@@ -454,17 +454,13 @@ struct_or_union_specifier: struct_or_union id_opt LEFT_CURLY struct_declaration_
       field_types.push_back(field->type->Clone());
     }
 
-    if (dynamic_cast<StructType*>(type.get())) {
+    if (type->IsStruct()) {
       type = std::make_unique<StructType>(std::move(field_types));
     } else {
       type = std::make_unique<UnionType>(std::move(field_types));
     }
 
-    if (decl_id) {
-      $$ = std::make_unique<RecordDeclNode>(Loc(@2), std::move(decl_id->id), std::move(type), std::move(field_list));
-    } else {
-      $$ = std::make_unique<RecordDeclNode>(Loc(@2), /* no id */ "", std::move(type), std::move(field_list));
-    }
+    $$ = std::make_unique<RecordDeclNode>(Loc(@2), decl_id ? std::move(decl_id->id) : "", std::move(type), std::move(field_list));
   }
   | struct_or_union ID {
     auto field_list = std::vector<std::unique_ptr<FieldNode>>{};
@@ -508,7 +504,7 @@ specifier_qualifier_list: type_specifier {
   }
   ;
 
-/* Identifier_opt is used for struct, union, enum. */
+/* id_opt is used for struct, union, enum. */
 id_opt: ID {
     auto type = std::make_unique<PrimType>(PrimitiveType::kUnknown);
     $$ = std::make_unique<VarDeclNode>(Loc(@1), $1, std::move(type));
@@ -626,7 +622,7 @@ parameter_declaration: declaration_specifiers declarator {
   /* Declare parameters without identifiers. */
   | declaration_specifiers abstract_declarator_opt {
     // XXX: The identifier is empty.
-    auto type = std::move(std::get<std::unique_ptr<Type>>($1));
+    auto type = std::get<std::unique_ptr<Type>>($1);
     $$ = std::make_unique<ParamNode>(Loc(@1), /* id */ "", ResolveType(std::move(type), $2));
   }
   ;

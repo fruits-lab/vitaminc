@@ -113,7 +113,7 @@ void AstDumper::Visit(const RecordDeclNode& record_decl) {
             << "> " << record_decl.type->ToString() << id << " definition\n";
 
   indenter_.IncreaseLevel();
-  for (const auto& field : record_decl.field_list) {
+  for (const auto& field : record_decl.fields) {
     field->Accept(*this);
   }
   indenter_.DecreaseLevel();
