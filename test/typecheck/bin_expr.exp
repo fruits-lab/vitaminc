@@ -47,3 +47,11 @@ ProgramNode <1:1>
         BinaryExprNode <10:5> int ^
           IntConstExprNode <10:3> 1: int
           IntConstExprNode <10:7> 3: int
+      ExprStmtNode <11:3>
+        BinaryExprNode <11:5> int <<
+          IntConstExprNode <11:3> 1: int
+          IntConstExprNode <11:8> 16: int
+      ExprStmtNode <12:3>
+        BinaryExprNode <12:9> int >>
+          IntConstExprNode <12:3> 65536: int
+          IntConstExprNode <12:12> 16: int

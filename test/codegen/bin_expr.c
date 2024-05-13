@@ -3,5 +3,9 @@ int main() {
   __builtin_print(5 | 4);
   __builtin_print(5 ^ 4);
   __builtin_print(5 & 4);
+  __builtin_print(1 << 16);
+  __builtin_print(-1 << 31);
+  __builtin_print(65536 >> 16);
+  __builtin_print(-1 >> 16);
   return 0;
 }

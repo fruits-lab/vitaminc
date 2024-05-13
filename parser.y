@@ -305,8 +305,8 @@ add_expr: mul_expr { $$ = $1; }
 
 /* 6.5.7 Bitwise shift operators */
 shift_expr: add_expr { $$ = $1; }
-  | shift_expr SHIFT_LEFT add_expr
-  | shift_expr SHIFT_RIGHT add_expr
+  | shift_expr SHIFT_LEFT add_expr { $$ = std::make_unique<BinaryExprNode>(Loc(@2), BinaryOperator::kShl, $1, $3); }
+  | shift_expr SHIFT_RIGHT add_expr { $$ = std::make_unique<BinaryExprNode>(Loc(@2), BinaryOperator::kShr, $1, $3); }
   ;
 
 /* 6.5.8 Relational operators */

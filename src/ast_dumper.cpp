@@ -41,6 +41,10 @@ std::string GetBinaryOperator(BinaryOperator op) {
       return "^";
     case BinaryOperator::kOr:
       return "|";
+    case BinaryOperator::kShl:
+      return "<<";
+    case BinaryOperator::kShr:
+      return ">>";
     default:
       return "Unknown";
   }
