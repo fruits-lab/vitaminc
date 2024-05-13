@@ -155,7 +155,7 @@ std::unique_ptr<Type> FuncType::Clone() const {
 
 bool StructType::IsEqual(const Type& that) const noexcept {
   if (const auto* that_struct = dynamic_cast<const StructType*>(&that)) {
-    if (that_struct->size() != that.size()) {
+    if (that_struct->size() != size()) {
       return false;
     }
     for (auto i = std::size_t{0}, e = field_types_.size(); i < e; ++i) {
@@ -171,8 +171,8 @@ bool StructType::IsEqual(const Type& that) const noexcept {
 std::size_t StructType::size() const {
   // TODO: There may be unnamed padding at the end of a structure or union.
   auto size = std::size_t{0};
-  for (auto i = std::size_t{0}, e = field_types_.size(); i < e; ++i) {
-    size += field_types_.at(i)->size();
+  for (const auto& field_type : field_types_) {
+    size += field_type->size();
   }
   return size;
 }
@@ -191,15 +191,19 @@ std::unique_ptr<Type> StructType::Clone() const {
 
 bool UnionType::IsEqual(const Type& that) const noexcept {
   if (const auto* that_union = dynamic_cast<const UnionType*>(&that)) {
-    return (that_union->selected_ == selected_) &&
-           (that_union->size() == size());
+    return that_union->size() == size();
   }
   return false;
 }
 
 std::size_t UnionType::size() const {
+  // The size of a union is sufficient to contain the largest of its members.
   // TODO: There may be unnamed padding at the end of a structure or union.
-  return field_types_.at(selected_)->size();
+  auto size = std::size_t{0};
+  for (const auto& field_type : field_types_) {
+    size = std::max(size, field_type->size());
+  }
+  return size;
 }
 
 std::string UnionType::ToString() const {

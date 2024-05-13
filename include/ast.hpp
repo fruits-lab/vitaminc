@@ -111,17 +111,17 @@ struct ArrDeclNode : public DeclNode {
   std::vector<std::unique_ptr<ExprNode>> init_list;
 };
 
-/// @brief Record Declaration Node holds the definition of struct or union.
+/// @brief This holds the declaration of struct or union type.
 struct RecordDeclNode : public DeclNode {
   RecordDeclNode(Location loc, std::string id, std::unique_ptr<Type> type,
-                 std::vector<std::unique_ptr<FieldNode>> field_list)
+                 std::vector<std::unique_ptr<FieldNode>> fields)
       : DeclNode{loc, std::move(id), std::move(type)},
-        field_list{std::move(field_list)} {}
+        fields{std::move(fields)} {}
 
   void Accept(NonModifyingVisitor&) const override;
   void Accept(ModifyingVisitor&) override;
 
-  std::vector<std::unique_ptr<FieldNode>> field_list;
+  std::vector<std::unique_ptr<FieldNode>> fields;
 };
 
 /// @brief A field in a struct or an union.

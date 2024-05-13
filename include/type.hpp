@@ -194,12 +194,10 @@ class StructType : public Type {
 
 class UnionType : public Type {
  public:
-  /// @param selected_ The index of the selected field in the union.
-  explicit UnionType(std::vector<std::unique_ptr<Type>> field_types,
-                     std::size_t selected = 0)
-      : field_types_{std::move(field_types)}, selected_{selected} {}
+  explicit UnionType(std::vector<std::unique_ptr<Type>> field_types)
+      : field_types_{std::move(field_types)} {}
 
-  bool IsStruct() const noexcept override {
+  bool IsUnion() const noexcept override {
     return true;
   }
 
@@ -210,7 +208,6 @@ class UnionType : public Type {
 
  private:
   std::vector<std::unique_ptr<Type>> field_types_;
-  std::size_t selected_;
 };
 
 #endif  // TYPE_HPP_
