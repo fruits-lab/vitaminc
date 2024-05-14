@@ -19,18 +19,38 @@ ProgramNode <1:1>
             IdExprNode <6:12> a: int
           ArgExprNode <6:15> int
             IdExprNode <6:15> b: int
-  FuncDefNode <9:5> main: int ()
-    CompoundStmtNode <9:12>
-      VarDeclNode <10:9> c: int (*)(int (*)(int, int), int, int)
-        IdExprNode <10:43> call: int (int (*)(int, int), int, int)
-      ExprStmtNode <11:3>
-        FuncCallExprNode <11:3> int
-          IdExprNode <11:3> c: int (*)(int (*)(int, int), int, int)
-          ArgExprNode <11:5> int (int, int)
-            IdExprNode <11:5> add: int (int, int)
-          ArgExprNode <11:10> int
-            IntConstExprNode <11:10> 1: int
-          ArgExprNode <11:13> int
-            IntConstExprNode <11:13> 2: int
+  FuncDefNode <10:5> call_decay: int (int (*)(int, int), int, int)
+    ParamNode <10:20> p: int (*)(int, int)
+    ParamNode <10:37> a: int
+    ParamNode <10:44> b: int
+    CompoundStmtNode <10:47>
       ReturnStmtNode <12:3>
         IntConstExprNode <12:10> 0: int
+  FuncDefNode <15:5> main: int ()
+    CompoundStmtNode <15:12>
+      VarDeclNode <16:9> c: int (*)(int (*)(int, int), int, int)
+        IdExprNode <16:43> call: int (int (*)(int, int), int, int)
+      ExprStmtNode <17:3>
+        FuncCallExprNode <17:3> int
+          IdExprNode <17:3> c: int (*)(int (*)(int, int), int, int)
+          ArgExprNode <17:5> int (int, int)
+            IdExprNode <17:5> add: int (int, int)
+          ArgExprNode <17:10> int
+            IntConstExprNode <17:10> 1: int
+          ArgExprNode <17:13> int
+            IntConstExprNode <17:13> 2: int
+      ExprStmtNode <18:3>
+        SimpleAssignmentExprNode <18:5> int (*)(int (*)(int, int), int, int)
+          IdExprNode <18:3> c: int (*)(int (*)(int, int), int, int)
+          IdExprNode <18:7> call_decay: int (int (*)(int, int), int, int)
+      ExprStmtNode <19:3>
+        FuncCallExprNode <19:3> int
+          IdExprNode <19:3> c: int (*)(int (*)(int, int), int, int)
+          ArgExprNode <19:5> int (int, int)
+            IdExprNode <19:5> add: int (int, int)
+          ArgExprNode <19:10> int
+            IntConstExprNode <19:10> 1: int
+          ArgExprNode <19:13> int
+            IntConstExprNode <19:13> 2: int
+      ReturnStmtNode <20:3>
+        IntConstExprNode <20:10> 0: int
