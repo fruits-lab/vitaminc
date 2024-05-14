@@ -90,6 +90,16 @@ void TypeChecker::Visit(ParamNode& parameter) {
   if (env_.Probe(parameter.id)) {
     // TODO: redefinition of 'id'
   } else {
+    // NOTE: Any parameter of array or function type is adjusted to the
+    // corresponding pointer type.
+    if (parameter.type->IsArr()) {
+      // Decay to simple pointer type.
+      parameter.type = std::make_unique<PtrType>(
+          dynamic_cast<ArrType*>(parameter.type.get())->element_type().Clone());
+    } else if (parameter.type->IsFunc()) {
+      // Decay to function pointer type.
+      parameter.type = std::make_unique<PtrType>(parameter.type->Clone());
+    }
     auto symbol =
         std::make_unique<SymbolEntry>(parameter.id, parameter.type->Clone());
     // TODO: May be parameter scope once we support function prototypes.
@@ -117,11 +127,21 @@ void TypeChecker::Visit(FuncDefNode& func_def) {
   // NOTE: This block scope will be merged with the function body. Don't pop it.
   env_.PushScope(ScopeKind::kBlock);
   env_.MergeWithNextScope();
-  auto symbol =
-      std::make_unique<SymbolEntry>(func_def.id, func_def.type->Clone());
   for (auto& parameter : func_def.parameters) {
     parameter->Accept(*this);
   }
+  // The type of some parameters may be decayed to pointer type.
+  // The type of the function should be updated accordingly.
+  auto decayed_param_types = std::vector<std::unique_ptr<Type>>{};
+  for (auto& parameter : func_def.parameters) {
+    decayed_param_types.push_back(parameter->type->Clone());
+  }
+  auto return_type =
+      dynamic_cast<FuncType*>(func_def.type.get())->return_type().Clone();
+  func_def.type = std::make_unique<FuncType>(std::move(return_type),
+                                             std::move(decayed_param_types));
+  auto symbol =
+      std::make_unique<SymbolEntry>(func_def.id, func_def.type->Clone());
   env_.Add(std::move(symbol), ScopeKind::kFile);
 
   label_defined.clear();

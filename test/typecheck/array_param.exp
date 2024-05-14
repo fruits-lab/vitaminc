@@ -1,0 +1,19 @@
+ProgramNode <1:1>
+  FuncDefNode <2:5> func: int (int*)
+    ParamNode <2:14> a: int*
+    CompoundStmtNode <2:20>
+      ReturnStmtNode <4:3>
+        IntConstExprNode <4:10> 0: int
+  FuncDefNode <7:5> main: int ()
+    CompoundStmtNode <7:12>
+      ArrDeclNode <8:7> a: int[3]
+        IntConstExprNode <8:15> 1: int
+        IntConstExprNode <8:18> 2: int
+        IntConstExprNode <8:21> 3: int
+      ExprStmtNode <9:3>
+        FuncCallExprNode <9:3> int
+          IdExprNode <9:3> func: int (int*)
+          ArgExprNode <9:8> int[3]
+            IdExprNode <9:8> a: int[3]
+      ReturnStmtNode <10:3>
+        IntConstExprNode <10:10> 0: int
