@@ -339,13 +339,13 @@ inclusive_or_expr: exclusive_or_expr { $$ = $1; }
   ;
 
 /* 6.5.13 Logical AND operators */
-logic_and_expr: inclusive_or_expr
-  | logic_and_expr LOGIC_AND inclusive_or_expr
+logic_and_expr: inclusive_or_expr { $$ = $1; }
+  | logic_and_expr LOGIC_AND inclusive_or_expr { $$ = std::make_unique<BinaryExprNode>(Loc(@2), BinaryOperator::kLand, $1, $3); }
   ;
 
 /* 6.5.14 Logical OR operators */
-logic_or_expr: logic_and_expr
-  | logic_or_expr LOGIC_OR logic_and_expr
+logic_or_expr: logic_and_expr { $$ = $1; }
+  | logic_or_expr LOGIC_OR logic_and_expr { $$ = std::make_unique<BinaryExprNode>(Loc(@2), BinaryOperator::kLor, $1, $3); }
   ;
 
 /* 6.5.15 Conditional operators */
