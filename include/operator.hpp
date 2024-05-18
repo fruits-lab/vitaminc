@@ -20,6 +20,8 @@ enum class BinaryOperator : std::uint8_t {
   kOr,
   kShl,
   kShr,
+  kLor,
+  kLand,
 };
 
 enum class UnaryOperator : std::uint8_t {
