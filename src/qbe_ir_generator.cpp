@@ -822,14 +822,51 @@ void QbeIrGenerator::Visit(const BinaryExprNode& bin_expr) {
   int left_num = num_recorder.NumOfPrevExpr();
   bin_expr.rhs->Accept(*this);
   int right_num = num_recorder.NumOfPrevExpr();
-  int num = NextLocalNum();
-  // TODO: use the correct instruction for specific data type:
-  // 1. signed or unsigned: currently only supports signed integers.
-  // 2. QBE base data type 'w' | 'l' | 's' | 'd': currently only supports 'w'.
-  WriteInstr_("{} =w {} {}, {}", FuncScopeTemp{num},
-              GetBinaryOperator(bin_expr.op), FuncScopeTemp{left_num},
-              FuncScopeTemp{right_num});
-  num_recorder.Record(num);
+  // Due to the lack of direct support for logical operators in QBE, we
+  // implement logical expressions using comparison and jump instructions.
+  if (bin_expr.op == BinaryOperator::kLand ||
+      bin_expr.op == BinaryOperator::kLor) {
+    // The && operator shall yield 1 if both of its operands compare unequal to
+    // 0; otherwise, it yields 0; The || operator shall yield 1 if either of its
+    // operands compare unequal to 0; otherwise, it yields 0.
+    const int label_num = NextLabelNum();
+    auto rhs_label = BlockLabel{"logic_rhs", label_num};
+    // Early exit after evaluating the first operand.
+    auto short_circuit_label = BlockLabel{"short_circuit", label_num};
+    auto end_label = BlockLabel{"logic_end", label_num};
+    const int left_res = NextLocalNum();
+    // NOTE: (&& operator) If the first operand compares equal to 0, the second
+    // operand is not evaluated. (|| operator)  If the first operand compares
+    // unequal to 0, the second operand is not evaluated.
+    WriteInstr_("{} =w {} {}, 0", FuncScopeTemp{left_res},
+                bin_expr.op == BinaryOperator::kLand
+                    ? GetBinaryOperator(BinaryOperator::kNeq)
+                    : GetBinaryOperator(BinaryOperator::kEq),
+                FuncScopeTemp{left_num});
+    WriteInstr_("jnz {}, {}, {}", FuncScopeTemp{left_res}, rhs_label,
+                short_circuit_label);
+    WriteLabel_(rhs_label);
+    const int res_num = NextLocalNum();
+    WriteInstr_("{} =w {} {}, 0", FuncScopeTemp{res_num},
+                GetBinaryOperator(BinaryOperator::kNeq),
+                FuncScopeTemp{right_num});
+    WriteInstr_("jmp {}", end_label);
+    WriteLabel_(short_circuit_label);
+    WriteInstr_("{} =w copy {}", FuncScopeTemp{res_num},
+                bin_expr.op == BinaryOperator::kLand ? 0 : 1);
+    WriteLabel_(end_label);
+    num_recorder.Record(res_num);
+  } else {
+    int num = NextLocalNum();
+    // TODO: use the correct instruction for specific data type:
+    // 1. signed or unsigned: currently only supports signed integers.
+    // 2. QBE base data type 'w' | 'l' | 's' | 'd': currently only supports
+    // 'w'.
+    WriteInstr_("{} =w {} {}, {}", FuncScopeTemp{num},
+                GetBinaryOperator(bin_expr.op), FuncScopeTemp{left_num},
+                FuncScopeTemp{right_num});
+    num_recorder.Record(num);
+  }
 }
 
 void QbeIrGenerator::Visit(const SimpleAssignmentExprNode& assign_expr) {
