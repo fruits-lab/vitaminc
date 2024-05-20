@@ -46,20 +46,44 @@ class ScopeStack {
   void PopScope();
 
   /// @brief Adds an entry to the top-most scope of the kind.
-  template <typename Table>
-  std::shared_ptr<typename Table::EntryType> AddEntry(
-      std::unique_ptr<typename Table::EntryType> entry, ScopeKind kind,
-      std::unique_ptr<Table> Scope::*table);
+  /// @throws `NotInScopeError`
+  /// @throws `NotInSuchKindOfScopeError`
+  template <typename Table, typename EntryType>
+  std::shared_ptr<EntryType> AddEntry(std::unique_ptr<EntryType> entry,
+                                      ScopeKind kind,
+                                      std::unique_ptr<Table> Scope::*table) {
+    ThrowIfNotInScope_();
+    for (auto it = scopes_.rbegin(); it != scopes_.rend(); ++it) {
+      if (it->kind == kind) {
+        return ((*it).*table)->Add(std::move(entry));
+      }
+    }
+    throw NotInSuchKindOfScopeError{""};
+  }
 
   /// @brief Looks up the `id` from through all scopes.
-  template <typename Table>
-  std::shared_ptr<typename Table::EntryType> LookUpEntry(
-      const std::string& id, std::unique_ptr<Table> Scope::*table) const;
+  /// @throws `NotInScopeError`
+  template <typename Table, typename EntryType>
+  std::shared_ptr<EntryType> LookUpEntry(
+      const std::string& id, std::unique_ptr<Table> Scope::*table) const {
+    ThrowIfNotInScope_();
+    // Iterates backward since we're using the container as a stack.
+    for (auto it = scopes_.crbegin(); it != scopes_.crend(); ++it) {
+      if (auto entry = ((*it).*table)->Probe(id)) {
+        return entry;
+      }
+    }
+    return nullptr;
+  }
 
   /// @brief Probes the `id` from the top-most scope.
-  template <typename Table>
-  std::shared_ptr<typename Table::EntryType> ProbeEntry(
-      const std::string& id, std::unique_ptr<Table> Scope::*table) const;
+  /// @throws `NotInScopeError`
+  template <typename Table, typename EntryType>
+  std::shared_ptr<EntryType> ProbeEntry(
+      const std::string& id, std::unique_ptr<Table> Scope::*table) const {
+    ThrowIfNotInScope_();
+    return (scopes_.back().*table)->Probe(id);
+  }
 
   /// @brief Merges the current scope with the next pushed scope.
   void MergeWithNextScope();
