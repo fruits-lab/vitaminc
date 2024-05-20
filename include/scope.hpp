@@ -37,66 +37,22 @@ struct Scope {
 class ScopeStack {
  public:
   /// @brief Pushes a new scope of the kind.
-  /// @throws `ScopesOfDifferentKindIsNotMergeableError` if the previous scope
-  /// had set to merge with the next (this) scope, which is of a different kind.
-  void PushScope(ScopeKind kind) {
-    if (should_merge_with_next_scope_) {
-      if (scopes_.back().kind != kind) {
-        throw ScopesOfDifferentKindIsNotMergeableError{""};
-      }
-      should_merge_with_next_scope_ = false;
-      // No need to push a new scope.
-      return;
-    }
-    scopes_.emplace_back(kind, std::make_unique<SymbolTable>());
-  }
-
-  /// @throws `NotInScopeError`
-  void PopScope() {
-    ThrowIfNotInScope_();
-    scopes_.pop_back();
-  }
+  void PushScope(ScopeKind kind);
+  /// @brief Pops the top scope of the stack.
+  void PopScope();
 
   /// @brief Adds an entry to the top-most scope of the kind.
-  /// @throws `NotInScopeError`
-  /// @throws `NotInSuchKindOfScopeError`
   std::shared_ptr<SymbolEntry> Add(std::unique_ptr<SymbolEntry> entry,
-                                   ScopeKind kind) {
-    ThrowIfNotInScope_();
-    for (auto it = scopes_.rbegin(); it != scopes_.rend(); ++it) {
-      if (it->kind == kind) {
-        return it->table->Add(std::move(entry));
-      }
-    }
-    throw NotInSuchKindOfScopeError{""};
-  }
+                                   ScopeKind kind);
 
   /// @brief Looks up the `id` from through all scopes.
-  /// @throws `NotInScopeError`
-  std::shared_ptr<SymbolEntry> LookUp(const std::string& id) const {
-    ThrowIfNotInScope_();
-    // Iterates backward since we're using the container as a stack.
-    for (auto it = scopes_.crbegin(); it != scopes_.crend(); ++it) {
-      if (auto entry = it->table->Probe(id)) {
-        return entry;
-      }
-    }
-    return nullptr;
-  }
+  std::shared_ptr<SymbolEntry> LookUp(const std::string& id) const;
 
   /// @brief Probes the `id` from the top-most scope.
-  /// @throws `NotInScopeError`
-  std::shared_ptr<SymbolEntry> Probe(const std::string& id) const {
-    ThrowIfNotInScope_();
-    return scopes_.back().table->Probe(id);
-  }
+  std::shared_ptr<SymbolEntry> Probe(const std::string& id) const;
 
   /// @brief Merges the current scope with the next pushed scope.
-  /// @throws `NotInScopeError` if currently not in any scope.
-  void MergeWithNextScope() {
-    ThrowIfNotInScope_();
-    should_merge_with_next_scope_ = true;
-  }
+  void MergeWithNextScope();
 
   using NotInSuchKindOfScopeError = std::runtime_error;
   using NotInScopeError = std::runtime_error;
