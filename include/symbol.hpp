@@ -24,30 +24,34 @@ struct DeclTypeEntry {
       : id{std::move(id)}, type{std::move(type)} {}
 };
 
-/// @brief Stores identifiers.
-class SymbolTable {
+template <typename EntryType>
+class TableTemplate {
  public:
-  using EntryType = SymbolEntry;
   /// @brief Adds the `entry` to the table if the `id` of the `entry` isn't
   /// already in the table.
   /// @returns The added entry if the `id` of the `entry` isn't
   /// already in the table; otherwise, the original entry.
-  std::shared_ptr<SymbolEntry> Add(std::unique_ptr<SymbolEntry> entry);
-  std::shared_ptr<SymbolEntry> Probe(const std::string& id) const;
+  std::shared_ptr<EntryType> Add(std::unique_ptr<EntryType> entry) {
+    const std::string& id = entry->id;  // to reference id after moved
+    if (!Probe(id)) {
+      entries_.insert({id, std::shared_ptr<EntryType>{std::move(entry)}});
+    }
+    return entries_.at(id);
+  }
+  std::shared_ptr<EntryType> Probe(const std::string& id) const {
+    if (entries_.count(id)) {
+      return entries_.at(id);
+    }
+    return nullptr;
+  }
 
  private:
-  std::map<std::string, std::shared_ptr<SymbolEntry>> entries_{};
+  std::map<std::string, std::shared_ptr<EntryType>> entries_{};
 };
 
+/// @brief Stores identifiers.
+using SymbolTable = TableTemplate<SymbolEntry>;
 /// @brief Stores declared types, such as struct, union.
-class DeclTypeTable {
- public:
-  using EntryType = DeclTypeEntry;
-  std::shared_ptr<DeclTypeEntry> Add(std::unique_ptr<DeclTypeEntry> entry);
-  std::shared_ptr<DeclTypeEntry> Probe(const std::string& id) const;
-
- private:
-  std::map<std::string, std::shared_ptr<DeclTypeEntry>> entries_{};
-};
+using DeclTypeTable = TableTemplate<DeclTypeEntry>;
 
 #endif  // SYMBOL_HPP_
