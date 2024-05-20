@@ -653,7 +653,38 @@ void QbeIrGenerator::Visit(const ArrSubExprNode& arr_sub_expr) {
   num_recorder.Record(res_num);
 }
 
-void QbeIrGenerator::Visit(const CondExprNode& cond_expr) {}
+void QbeIrGenerator::Visit(const CondExprNode& cond_expr) {
+  cond_expr.predicate->Accept(*this);
+  const int first_num = num_recorder.NumOfPrevExpr();
+  // The second operand is evaluated only if the first compares unequal to
+  // 0; the third operand is evaluated only if the first compares equal to
+  // 0; the result is the value of the second or third operand (whichever is
+  // evaluated).
+  const int label_num = NextLabelNum();
+  auto second_label = BlockLabel{"cond_second", label_num};
+  auto third_label = BlockLabel{"cond_third", label_num};
+  auto end_label = BlockLabel{"cond_end", label_num};
+  const int first_res = NextLocalNum();
+  WriteInstr_("{} =w {} {}, 0", FuncScopeTemp{first_res},
+              GetBinaryOperator(BinaryOperator::kNeq),
+              FuncScopeTemp{first_num});
+  WriteInstr_("jnz {}, {}, {}", FuncScopeTemp{first_res}, second_label,
+              third_label);
+  const int res_num = NextLocalNum();
+  WriteLabel_(second_label);
+  cond_expr.then->Accept(*this);
+  const int second_num = num_recorder.NumOfPrevExpr();
+  WriteInstr_("{} =w copy {}", FuncScopeTemp{res_num},
+              FuncScopeTemp{second_num});
+  WriteInstr_("jmp {}", end_label);
+  WriteLabel_(third_label);
+  cond_expr.or_else->Accept(*this);
+  const int third_num = num_recorder.NumOfPrevExpr();
+  WriteInstr_("{} =w copy {}", FuncScopeTemp{res_num},
+              FuncScopeTemp{third_num});
+  WriteLabel_(end_label);
+  num_recorder.Record(res_num);
+}
 
 void QbeIrGenerator::Visit(const FuncCallExprNode& call_expr) {
   call_expr.func_expr->Accept(*this);

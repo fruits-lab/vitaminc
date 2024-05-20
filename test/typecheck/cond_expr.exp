@@ -1,0 +1,14 @@
+ProgramNode <1:1>
+  FuncDefNode <1:5> main: int ()
+    CompoundStmtNode <1:12>
+      VarDeclNode <2:7> a: int
+        IntConstExprNode <2:11> 4: int
+      VarDeclNode <3:7> b: int
+        CondExprNode <3:18> int
+          BinaryExprNode <3:13> int ==
+            IdExprNode <3:11> a: int
+            IntConstExprNode <3:16> 4: int
+          IntConstExprNode <3:20> 2: int
+          IntConstExprNode <3:24> 3: int
+      ReturnStmtNode <4:3>
+        IntConstExprNode <4:10> 0: int

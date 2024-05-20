@@ -315,7 +315,15 @@ void AstDumper::Visit(const ArrSubExprNode& arr_sub_expr) {
   indenter_.DecreaseLevel();
 }
 
-void AstDumper::Visit(const CondExprNode& cond_expr) {}
+void AstDumper::Visit(const CondExprNode& cond_expr) {
+  std::cout << indenter_.Indent() << "CondExprNode <" << cond_expr.loc << "> "
+            << cond_expr.type->ToString() << '\n';
+  indenter_.IncreaseLevel();
+  cond_expr.predicate->Accept(*this);
+  cond_expr.then->Accept(*this);
+  cond_expr.or_else->Accept(*this);
+  indenter_.DecreaseLevel();
+}
 
 void AstDumper::Visit(const FuncCallExprNode& call_expr) {
   std::cout << indenter_.Indent() << "FuncCallExprNode <" << call_expr.loc
