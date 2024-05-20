@@ -348,7 +348,22 @@ void TypeChecker::Visit(ArrSubExprNode& arr_sub_expr) {
   arr_sub_expr.type = arr_type->element_type().Clone();
 }
 
-void TypeChecker::Visit(CondExprNode& cond_expr) {}
+void TypeChecker::Visit(CondExprNode& cond_expr) {
+  // TODO: support operand pointer types
+  cond_expr.predicate->Accept(*this);
+  cond_expr.then->Accept(*this);
+  cond_expr.or_else->Accept(*this);
+  if (!cond_expr.then->type->IsEqual(*cond_expr.or_else->type)) {
+    // TODO: unmatched operand types
+  } else {
+    // If both the second and third operands have arithmetic type, the result
+    // type that would be determined by the usual arithmetic conversions, were
+    // they applied to those two operands, is the type of the result. If both
+    // the operands have structure or union type, the result has that type. If
+    // both operands have void type, the result has void type.
+    cond_expr.type = cond_expr.then->type->Clone();
+  }
+}
 
 void TypeChecker::Visit(FuncCallExprNode& call_expr) {
   call_expr.func_expr->Accept(*this);
