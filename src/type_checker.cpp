@@ -49,17 +49,17 @@ void TypeChecker::Visit(VarDeclNode& decl) {
     }
   }
 
-  if (env_.Probe(decl.id)) {
+  if (env_.ProbeSymbol(decl.id)) {
     // TODO: redefinition of 'id'
   } else {
     auto symbol = std::make_unique<SymbolEntry>(decl.id, decl.type->Clone());
     // TODO: May be file scope once we support global variables.
-    env_.Add(std::move(symbol), ScopeKind::kBlock);
+    env_.AddSymbol(std::move(symbol), ScopeKind::kBlock);
   }
 }
 
 void TypeChecker::Visit(ArrDeclNode& arr_decl) {
-  if (env_.Probe(arr_decl.id)) {
+  if (env_.ProbeSymbol(arr_decl.id)) {
     // TODO: redefinition of 'id'
   } else {
     auto symbol =
@@ -72,7 +72,7 @@ void TypeChecker::Visit(ArrDeclNode& arr_decl) {
       }
     }
     // TODO: May be file scope once we support global variables.
-    env_.Add(std::move(symbol), ScopeKind::kBlock);
+    env_.AddSymbol(std::move(symbol), ScopeKind::kBlock);
   }
 
   // TODO: Check initializer type
@@ -87,7 +87,7 @@ void TypeChecker::Visit(FieldNode& field) {
 }
 
 void TypeChecker::Visit(ParamNode& parameter) {
-  if (env_.Probe(parameter.id)) {
+  if (env_.ProbeSymbol(parameter.id)) {
     // TODO: redefinition of 'id'
   } else {
     // NOTE: Any parameter of array or function type is adjusted to the
@@ -103,7 +103,7 @@ void TypeChecker::Visit(ParamNode& parameter) {
     auto symbol =
         std::make_unique<SymbolEntry>(parameter.id, parameter.type->Clone());
     // TODO: May be parameter scope once we support function prototypes.
-    env_.Add(std::move(symbol), ScopeKind::kBlock);
+    env_.AddSymbol(std::move(symbol), ScopeKind::kBlock);
   }
 }
 
@@ -119,7 +119,7 @@ std::unordered_map<std::string, bool>
 }  // namespace
 
 void TypeChecker::Visit(FuncDefNode& func_def) {
-  if (env_.Probe(func_def.id)) {
+  if (env_.ProbeSymbol(func_def.id)) {
     // TODO: redefinition of function id
   }
 
@@ -142,7 +142,7 @@ void TypeChecker::Visit(FuncDefNode& func_def) {
                                              std::move(decayed_param_types));
   auto symbol =
       std::make_unique<SymbolEntry>(func_def.id, func_def.type->Clone());
-  env_.Add(std::move(symbol), ScopeKind::kFile);
+  env_.AddSymbol(std::move(symbol), ScopeKind::kFile);
 
   label_defined.clear();
   func_def.body->Accept(*this);
@@ -180,7 +180,7 @@ void TypeChecker::InstallBuiltins_(ScopeStack& env) {
       "__builtin_print", std::make_unique<FuncType>(
                              std::make_unique<PrimType>(PrimitiveType::kInt),
                              std::move(param_types)));
-  env.Add(std::move(symbol), ScopeKind::kFile);
+  env.AddSymbol(std::move(symbol), ScopeKind::kFile);
 }
 
 void TypeChecker::Visit(ProgramNode& program) {
@@ -322,7 +322,7 @@ void TypeChecker::Visit(NullExprNode&) {
 }
 
 void TypeChecker::Visit(IdExprNode& id_expr) {
-  if (auto symbol = env_.LookUp(id_expr.id)) {
+  if (auto symbol = env_.LookUpSymbol(id_expr.id)) {
     id_expr.type = symbol->type->Clone();
   } else {
     // TODO: 'id' undeclared
@@ -379,7 +379,7 @@ void TypeChecker::Visit(FuncCallExprNode& call_expr) {
         dynamic_cast<IdExprNode*>((call_expr.func_expr).get());
     // If is an identifier, either a function or a function pointer, it should
     // be declared.
-    if (id_expr && !env_.LookUp(id_expr->id)) {
+    if (id_expr && !env_.LookUpSymbol(id_expr->id)) {
       // TODO: use of undeclared identifier 'id'
       assert(false);
     }
@@ -414,7 +414,7 @@ void TypeChecker::Visit(PostfixArithExprNode& postfix_expr) {
   // have atomic, qualified, or unqualified real or pointer type, and shall
   // be a modifiable lvalue.
   const auto* id_expr = dynamic_cast<IdExprNode*>((postfix_expr.operand).get());
-  if (!id_expr || !env_.LookUp(id_expr->id)) {
+  if (!id_expr || !env_.LookUpSymbol(id_expr->id)) {
     // TODO: lvalue required for postfix increment
   }
   postfix_expr.type = postfix_expr.operand->type->Clone();
@@ -428,7 +428,7 @@ void TypeChecker::Visit(UnaryExprNode& unary_expr) {
           dynamic_cast<IdExprNode*>((unary_expr.operand).get());
       // NOTE: The operand of unary '&' must be an lvalue, and the only
       // supported lvalue is an identifier.
-      if (!id_expr || !env_.LookUp(id_expr->id)) {
+      if (!id_expr || !env_.LookUpSymbol(id_expr->id)) {
         // TODO: lvalue required as unary '&' operand
       }
       unary_expr.type =
