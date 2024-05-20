@@ -27,10 +27,14 @@ enum class ScopeKind : std::uint8_t {
 /// @brief A symbol table associated with a scope kind.
 struct Scope {
   ScopeKind kind;
-  std::unique_ptr<SymbolTable> table;
+  std::unique_ptr<SymbolTable> symbol_table;
+  std::unique_ptr<DeclTypeTable> type_table;
 
-  Scope(ScopeKind kind, std::unique_ptr<SymbolTable> table)
-      : kind{kind}, table{std::move(table)} {}
+  Scope(ScopeKind kind, std::unique_ptr<SymbolTable> symbol_table,
+        std::unique_ptr<DeclTypeTable> type_table)
+      : kind{kind},
+        symbol_table{std::move(symbol_table)},
+        type_table{std::move(type_table)} {}
 };
 
 /// @brief Manages scopes and symbol tables.
@@ -42,14 +46,20 @@ class ScopeStack {
   void PopScope();
 
   /// @brief Adds an entry to the top-most scope of the kind.
-  std::shared_ptr<SymbolEntry> Add(std::unique_ptr<SymbolEntry> entry,
-                                   ScopeKind kind);
+  template <typename Table>
+  std::shared_ptr<typename Table::EntryType> AddEntry(
+      std::unique_ptr<typename Table::EntryType> entry, ScopeKind kind,
+      std::unique_ptr<Table> Scope::*table);
 
   /// @brief Looks up the `id` from through all scopes.
-  std::shared_ptr<SymbolEntry> LookUp(const std::string& id) const;
+  template <typename Table>
+  std::shared_ptr<typename Table::EntryType> LookUpEntry(
+      const std::string& id, std::unique_ptr<Table> Scope::*table) const;
 
   /// @brief Probes the `id` from the top-most scope.
-  std::shared_ptr<SymbolEntry> Probe(const std::string& id) const;
+  template <typename Table>
+  std::shared_ptr<typename Table::EntryType> ProbeEntry(
+      const std::string& id, std::unique_ptr<Table> Scope::*table) const;
 
   /// @brief Merges the current scope with the next pushed scope.
   void MergeWithNextScope();
@@ -57,6 +67,16 @@ class ScopeStack {
   using NotInSuchKindOfScopeError = std::runtime_error;
   using NotInScopeError = std::runtime_error;
   using ScopesOfDifferentKindIsNotMergeableError = std::runtime_error;
+
+  std::shared_ptr<SymbolEntry> AddSymbol(std::unique_ptr<SymbolEntry> entry,
+                                         ScopeKind kind);
+  std::shared_ptr<SymbolEntry> LookUpSymbol(const std::string& id) const;
+  std::shared_ptr<SymbolEntry> ProbeSymbol(const std::string& id) const;
+
+  std::shared_ptr<DeclTypeEntry> AddType(std::unique_ptr<DeclTypeEntry> entry,
+                                         ScopeKind kind);
+  std::shared_ptr<DeclTypeEntry> LookUpType(const std::string& id) const;
+  std::shared_ptr<DeclTypeEntry> ProbeType(const std::string& id) const;
 
  private:
   std::vector<Scope> scopes_{};
