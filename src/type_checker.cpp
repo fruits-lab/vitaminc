@@ -348,6 +348,8 @@ void TypeChecker::Visit(ArrSubExprNode& arr_sub_expr) {
   arr_sub_expr.type = arr_type->element_type().Clone();
 }
 
+void TypeChecker::Visit(CondExprNode& cond_expr) {}
+
 void TypeChecker::Visit(FuncCallExprNode& call_expr) {
   call_expr.func_expr->Accept(*this);
 

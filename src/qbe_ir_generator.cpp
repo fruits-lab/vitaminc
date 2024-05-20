@@ -653,6 +653,8 @@ void QbeIrGenerator::Visit(const ArrSubExprNode& arr_sub_expr) {
   num_recorder.Record(res_num);
 }
 
+void QbeIrGenerator::Visit(const CondExprNode& cond_expr) {}
+
 void QbeIrGenerator::Visit(const FuncCallExprNode& call_expr) {
   call_expr.func_expr->Accept(*this);
   const int func_num = num_recorder.NumOfPrevExpr();
