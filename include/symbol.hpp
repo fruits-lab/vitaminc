@@ -16,18 +16,38 @@ struct SymbolEntry {
       : id{std::move(id)}, type{std::move(expr_type)} {}
 };
 
+struct DeclTypeEntry {
+  std::string id;
+  std::unique_ptr<Type> type;
+
+  DeclTypeEntry(std::string id, std::unique_ptr<Type> type)
+      : id{std::move(id)}, type{std::move(type)} {}
+};
+
+/// @brief Stores identifiers.
 class SymbolTable {
  public:
+  using EntryType = SymbolEntry;
   /// @brief Adds the `entry` to the table if the `id` of the `entry` isn't
   /// already in the table.
   /// @returns The added entry if the `id` of the `entry` isn't
   /// already in the table; otherwise, the original entry.
   std::shared_ptr<SymbolEntry> Add(std::unique_ptr<SymbolEntry> entry);
-
   std::shared_ptr<SymbolEntry> Probe(const std::string& id) const;
 
  private:
   std::map<std::string, std::shared_ptr<SymbolEntry>> entries_{};
+};
+
+/// @brief Stores declared types, such as struct, union.
+class DeclTypeTable {
+ public:
+  using EntryType = DeclTypeEntry;
+  std::shared_ptr<DeclTypeEntry> Add(std::unique_ptr<DeclTypeEntry> entry);
+  std::shared_ptr<DeclTypeEntry> Probe(const std::string& id) const;
+
+ private:
+  std::map<std::string, std::shared_ptr<DeclTypeEntry>> entries_{};
 };
 
 #endif  // SYMBOL_HPP_
