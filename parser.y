@@ -349,8 +349,8 @@ logic_or_expr: logic_and_expr { $$ = $1; }
   ;
 
 /* 6.5.15 Conditional operators */
-cond_expr: logic_or_expr
-  | logic_or_expr QUESTION expr : cond_expr
+cond_expr: logic_or_expr { $$ = $1; }
+  | logic_or_expr QUESTION expr COLON cond_expr { $$ = std::make_unique<CondExprNode>(Loc(@1), $1, $3, $5); }
   ;
 
 /* 6.5.16 Assignment operators */

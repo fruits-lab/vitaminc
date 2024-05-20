@@ -402,6 +402,23 @@ struct ArrSubExprNode : public ExprNode {
   std::unique_ptr<ExprNode> index;
 };
 
+struct CondExprNode : public ExprNode {
+  CondExprNode(Location loc, std::unique_ptr<ExprNode> predicate,
+               std::unique_ptr<ExprNode> then,
+               std::unique_ptr<ExprNode> or_else)
+      : ExprNode{loc},
+        predicate{std::move(predicate)},
+        then{std::move(then)},
+        or_else{std::move(or_else)} {}
+
+  void Accept(NonModifyingVisitor&) const override;
+  void Accept(ModifyingVisitor&) override;
+
+  std::unique_ptr<ExprNode> predicate;
+  std::unique_ptr<ExprNode> then;
+  std::unique_ptr<ExprNode> or_else;
+};
+
 struct FuncCallExprNode : public ExprNode {
   FuncCallExprNode(Location loc, std::unique_ptr<ExprNode> func_expr,
                    std::vector<std::unique_ptr<ArgExprNode>> args)

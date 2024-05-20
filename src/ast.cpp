@@ -260,6 +260,14 @@ void ArrSubExprNode::Accept(ModifyingVisitor& v) {
   v.Visit(*this);
 }
 
+void CondExprNode::Accept(NonModifyingVisitor& v) const {
+  v.Visit(*this);
+}
+
+void CondExprNode::Accept(ModifyingVisitor& v) {
+  v.Visit(*this);
+}
+
 void FuncCallExprNode::Accept(NonModifyingVisitor& v) const {
   v.Visit(*this);
 }

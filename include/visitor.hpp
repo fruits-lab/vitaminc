@@ -37,6 +37,7 @@ struct IdExprNode;
 struct IntConstExprNode;
 struct ArgExprNode;
 struct ArrSubExprNode;
+struct CondExprNode;
 struct FuncCallExprNode;
 struct PostfixArithExprNode;
 struct UnaryExprNode;
@@ -91,6 +92,7 @@ class Visitor {
   virtual void Visit(CondMut<IntConstExprNode>&){};
   virtual void Visit(CondMut<ArgExprNode>&){};
   virtual void Visit(CondMut<ArrSubExprNode>&){};
+  virtual void Visit(CondMut<CondExprNode>&){};
   virtual void Visit(CondMut<FuncCallExprNode>&){};
   virtual void Visit(CondMut<PostfixArithExprNode>&){};
   virtual void Visit(CondMut<UnaryExprNode>&){};
