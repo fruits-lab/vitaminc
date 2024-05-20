@@ -78,12 +78,26 @@ void TypeChecker::Visit(ArrDeclNode& arr_decl) {
   // TODO: Check initializer type
 }
 
-void TypeChecker::Visit(RecordDeclNode& struct_def) {
-  // TODO: Store record declaration in a new table under scope.
+void TypeChecker::Visit(RecordDeclNode& record_decl) {
+  if (env_.ProbeType(record_decl.id)) {
+    // TODO: Check if 'id' is forward declaration (incomplete type).
+    // If yes, then 'id' is used to declare its fields. For instance,
+    // struct ss; // forward declaration
+    // struct ss { // declaration of its fields
+    //    int num;
+    // };
+    // If no, then it is the redefinition of 'id'.
+  } else {
+    auto decl_type = std::make_unique<DeclTypeEntry>(record_decl.id,
+                                                     record_decl.type->Clone());
+
+    // TODO: May be file scope once we support global variables.
+    env_.AddType(std::move(decl_type), ScopeKind::kBlock);
+  }
 }
 
 void TypeChecker::Visit(FieldNode& field) {
-  // TODO: Store field in corresponding record declaration, e.g., struct, union.
+  // NOTE: Do nothing since record_decl 'Clone' already copies every field.
 }
 
 void TypeChecker::Visit(ParamNode& parameter) {
