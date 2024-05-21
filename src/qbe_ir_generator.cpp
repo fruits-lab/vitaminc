@@ -852,9 +852,7 @@ void QbeIrGenerator::Visit(const UnaryExprNode& unary_expr) {
 
 void QbeIrGenerator::Visit(const BinaryExprNode& bin_expr) {
   bin_expr.lhs->Accept(*this);
-  int left_num = num_recorder.NumOfPrevExpr();
-  bin_expr.rhs->Accept(*this);
-  int right_num = num_recorder.NumOfPrevExpr();
+  const int left_num = num_recorder.NumOfPrevExpr();
   // Due to the lack of direct support for logical operators in QBE, we
   // implement logical expressions using comparison and jump instructions.
   if (bin_expr.op == BinaryOperator::kLand ||
@@ -880,6 +878,8 @@ void QbeIrGenerator::Visit(const BinaryExprNode& bin_expr) {
                 short_circuit_label);
     WriteLabel_(rhs_label);
     const int res_num = NextLocalNum();
+    bin_expr.rhs->Accept(*this);
+    const int right_num = num_recorder.NumOfPrevExpr();
     WriteInstr_("{} =w {} {}, 0", FuncScopeTemp{res_num},
                 GetBinaryOperator(BinaryOperator::kNeq),
                 FuncScopeTemp{right_num});
@@ -890,11 +890,13 @@ void QbeIrGenerator::Visit(const BinaryExprNode& bin_expr) {
     WriteLabel_(end_label);
     num_recorder.Record(res_num);
   } else {
-    int num = NextLocalNum();
+    const int num = NextLocalNum();
     // TODO: use the correct instruction for specific data type:
     // 1. signed or unsigned: currently only supports signed integers.
     // 2. QBE base data type 'w' | 'l' | 's' | 'd': currently only supports
     // 'w'.
+    bin_expr.rhs->Accept(*this);
+    const int right_num = num_recorder.NumOfPrevExpr();
     WriteInstr_("{} =w {} {}, {}", FuncScopeTemp{num},
                 GetBinaryOperator(bin_expr.op), FuncScopeTemp{left_num},
                 FuncScopeTemp{right_num});
