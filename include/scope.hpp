@@ -113,9 +113,10 @@ class ScopeStack {
   /// @param table The class member pointer to the table to add the entry.
   /// @return The added entry if the `id` of the `entry` isn't already in such
   /// scope; otherwise, the original entry.
-  template <typename Table, typename Entry>
-  std::shared_ptr<Entry> AddEntry_(std::unique_ptr<Entry> entry, ScopeKind kind,
-                                   std::unique_ptr<Table> Scope::*table);
+  template <typename Entry>
+  std::shared_ptr<Entry> AddEntry_(
+      std::unique_ptr<Entry> entry, ScopeKind kind,
+      std::unique_ptr<TableTemplate<Entry>> Scope::*table);
 
   /// @brief Looks up the `id` from through all scopes.
   /// @tparam Table The type of the table to look up from the scope.
@@ -124,9 +125,10 @@ class ScopeStack {
   /// scope.
   /// @return The entry with the `id` if it exists; otherwise, `nullptr`.
   /// @throws `NotInScopeError`
-  template <typename Table, typename Entry>
+  template <typename Entry>
   std::shared_ptr<Entry> LookUpEntry_(
-      const std::string& id, std::unique_ptr<Table> Scope::*table) const;
+      const std::string& id,
+      std::unique_ptr<TableTemplate<Entry>> Scope::*table) const;
 
   /// @brief Probes the `id` from the top-most scope.
   /// @tparam Table The type of the table to probe from the scope.
@@ -135,9 +137,10 @@ class ScopeStack {
   /// scope.
   /// @return The entry with the `id` if it exists; otherwise, `nullptr`.
   /// @throws `NotInScopeError`
-  template <typename Table, typename Entry>
+  template <typename Entry>
   std::shared_ptr<Entry> ProbeEntry_(
-      const std::string& id, std::unique_ptr<Table> Scope::*table) const;
+      const std::string& id,
+      std::unique_ptr<TableTemplate<Entry>> Scope::*table) const;
 };
 
 #endif  // SCOPE_HPP_
