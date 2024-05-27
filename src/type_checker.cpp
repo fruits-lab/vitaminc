@@ -88,8 +88,8 @@ void TypeChecker::Visit(RecordDeclNode& record_decl) {
     // };
     // If no, then it is the redefinition of 'id'.
   } else {
-    auto decl_type = std::make_unique<DeclTypeEntry>(record_decl.id,
-                                                     record_decl.type->Clone());
+    auto decl_type =
+        std::make_unique<TypeEntry>(record_decl.id, record_decl.type->Clone());
 
     // TODO: May be file scope once we support global variables.
     env_.AddType(std::move(decl_type), ScopeKind::kBlock);
