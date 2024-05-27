@@ -24,7 +24,7 @@ enum class ScopeKind : std::uint8_t {
   kParam,
 };
 
-/// @brief A symbol table associated with a scope kind.
+/// @brief Has a symbol table and a type table associating with the scope kind.
 struct Scope {
   ScopeKind kind;
   std::unique_ptr<SymbolTable> symbol_table;
@@ -56,14 +56,40 @@ class ScopeStack {
   using NotInScopeError = std::runtime_error;
   using ScopesOfDifferentKindIsNotMergeableError = std::runtime_error;
 
+  //
+  // Provides two sets of functions for symbols and types respectively.
+  //
+
+  /// @brief Adds the `entry` to the top-most scope of the `kind`.
+  /// @return The added entry if the `id` of the `entry` isn't already in such
+  /// scope; otherwise, the original entry.
+  /// @throws `NotInScopeError`
+  /// @throws `NotInSuchKindOfScopeError`
   std::shared_ptr<SymbolEntry> AddSymbol(std::unique_ptr<SymbolEntry> entry,
                                          ScopeKind kind);
+  /// @brief Looks up the symbol with the `id` from through all scopes.
+  /// @return The symbol with the `id` if it exists; otherwise, `nullptr`.
+  /// @throws `NotInScopeError`
   std::shared_ptr<SymbolEntry> LookUpSymbol(const std::string& id) const;
+  /// @brief Probes the symbol with the `id` from the top-most scope.
+  /// @return The symbol with the `id` if it exists; otherwise, `nullptr`.
+  /// @throws `NotInScopeError`
   std::shared_ptr<SymbolEntry> ProbeSymbol(const std::string& id) const;
 
+  /// @brief Adds the `entry` to the top-most scope of the `kind`.
+  /// @return The added entry if the `id` of the `entry` isn't already in such
+  /// scope; otherwise, the original entry.
+  /// @throws `NotInScopeError`
+  /// @throws `NotInSuchKindOfScopeError`
   std::shared_ptr<TypeEntry> AddType(std::unique_ptr<TypeEntry> entry,
                                      ScopeKind kind);
+  /// @brief Looks up the type with the `id` from through all scopes.
+  /// @return The type with the `id` if it exists; otherwise, `nullptr`.
+  /// @throws `NotInScopeError`
   std::shared_ptr<TypeEntry> LookUpType(const std::string& id) const;
+  /// @brief Probes the type with the `id` from the top-most scope.
+  /// @return The type with the `id` if it exists; otherwise, `nullptr`.
+  /// @throws `NotInScopeError`
   std::shared_ptr<TypeEntry> ProbeType(const std::string& id) const;
 
  private:
@@ -80,20 +106,34 @@ class ScopeStack {
     }
   }
 
-  /// @brief Adds an entry to the top-most scope of the kind.
-  /// @throws `NotInScopeError`
-  /// @throws `NotInSuchKindOfScopeError`
+  /// @brief Adds the `entry` to the top-most scope of the `kind`.
+  /// @tparam Table The type of the table to add the entry.
+  /// @tparam Entry The type of the entry to add.
+  /// @param kind The kind of the scope to add the entry.
+  /// @param table The class member pointer to the table to add the entry.
+  /// @return The added entry if the `id` of the `entry` isn't already in such
+  /// scope; otherwise, the original entry.
   template <typename Table, typename Entry>
   std::shared_ptr<Entry> AddEntry_(std::unique_ptr<Entry> entry, ScopeKind kind,
                                    std::unique_ptr<Table> Scope::*table);
 
   /// @brief Looks up the `id` from through all scopes.
+  /// @tparam Table The type of the table to look up from the scope.
+  /// @tparam Entry The type of the entry to look up.
+  /// @param table The class member pointer to the table to look up from the
+  /// scope.
+  /// @return The entry with the `id` if it exists; otherwise, `nullptr`.
   /// @throws `NotInScopeError`
   template <typename Table, typename Entry>
   std::shared_ptr<Entry> LookUpEntry_(
       const std::string& id, std::unique_ptr<Table> Scope::*table) const;
 
   /// @brief Probes the `id` from the top-most scope.
+  /// @tparam Table The type of the table to probe from the scope.
+  /// @tparam Entry The type of the entry to probe.
+  /// @param table The class member pointer to the table to probe from the
+  /// scope.
+  /// @return The entry with the `id` if it exists; otherwise, `nullptr`.
   /// @throws `NotInScopeError`
   template <typename Table, typename Entry>
   std::shared_ptr<Entry> ProbeEntry_(
