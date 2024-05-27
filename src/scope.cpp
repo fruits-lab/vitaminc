@@ -9,8 +9,6 @@
 
 #include "symbol.hpp"
 
-/// @throws `ScopesOfDifferentKindIsNotMergeableError` if the previous scope
-/// had set to merge with the next (this) scope, which is of a different kind.
 void ScopeStack::PushScope(ScopeKind kind) {
   if (should_merge_with_next_scope_) {
     if (scopes_.back().kind != kind) {
@@ -20,16 +18,14 @@ void ScopeStack::PushScope(ScopeKind kind) {
     return;
   }
   scopes_.emplace_back(kind, std::make_unique<SymbolTable>(),
-                       std::make_unique<DeclTypeTable>());
+                       std::make_unique<TypeTable>());
 }
 
-/// @throws `NotInScopeError`
 void ScopeStack::PopScope() {
   ThrowIfNotInScope_();
   scopes_.pop_back();
 }
 
-/// @throws `NotInScopeError` if currently not in any scope.
 void ScopeStack::MergeWithNextScope() {
   ThrowIfNotInScope_();
   should_merge_with_next_scope_ = true;
@@ -51,18 +47,16 @@ std::shared_ptr<SymbolEntry> ScopeStack::ProbeSymbol(
   return ProbeEntry<SymbolTable, SymbolEntry>(id, &Scope::symbol_table);
 }
 
-std::shared_ptr<DeclTypeEntry> ScopeStack::AddType(
-    std::unique_ptr<DeclTypeEntry> entry, ScopeKind kind) {
-  return AddEntry<DeclTypeTable, DeclTypeEntry>(std::move(entry), kind,
-                                                &Scope::type_table);
+std::shared_ptr<TypeEntry> ScopeStack::AddType(std::unique_ptr<TypeEntry> entry,
+                                               ScopeKind kind) {
+  return AddEntry<TypeTable, TypeEntry>(std::move(entry), kind,
+                                        &Scope::type_table);
 }
 
-std::shared_ptr<DeclTypeEntry> ScopeStack::LookUpType(
-    const std::string& id) const {
-  return LookUpEntry<DeclTypeTable, DeclTypeEntry>(id, &Scope::type_table);
+std::shared_ptr<TypeEntry> ScopeStack::LookUpType(const std::string& id) const {
+  return LookUpEntry<TypeTable, TypeEntry>(id, &Scope::type_table);
 }
 
-std::shared_ptr<DeclTypeEntry> ScopeStack::ProbeType(
-    const std::string& id) const {
-  return ProbeEntry<DeclTypeTable, DeclTypeEntry>(id, &Scope::type_table);
+std::shared_ptr<TypeEntry> ScopeStack::ProbeType(const std::string& id) const {
+  return ProbeEntry<TypeTable, TypeEntry>(id, &Scope::type_table);
 }

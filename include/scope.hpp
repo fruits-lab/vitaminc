@@ -28,10 +28,10 @@ enum class ScopeKind : std::uint8_t {
 struct Scope {
   ScopeKind kind;
   std::unique_ptr<SymbolTable> symbol_table;
-  std::unique_ptr<DeclTypeTable> type_table;
+  std::unique_ptr<TypeTable> type_table;
 
   Scope(ScopeKind kind, std::unique_ptr<SymbolTable> symbol_table,
-        std::unique_ptr<DeclTypeTable> type_table)
+        std::unique_ptr<TypeTable> type_table)
       : kind{kind},
         symbol_table{std::move(symbol_table)},
         type_table{std::move(type_table)} {}
@@ -41,17 +41,19 @@ struct Scope {
 class ScopeStack {
  public:
   /// @brief Pushes a new scope of the kind.
+  /// @throws `ScopesOfDifferentKindIsNotMergeableError` if the previous scope
+  /// had set to merge with the next (this) scope, which is of a different kind.
   void PushScope(ScopeKind kind);
   /// @brief Pops the top scope of the stack.
+  /// @throws `NotInScopeError`
   void PopScope();
 
   /// @brief Adds an entry to the top-most scope of the kind.
   /// @throws `NotInScopeError`
   /// @throws `NotInSuchKindOfScopeError`
-  template <typename Table, typename EntryType>
-  std::shared_ptr<EntryType> AddEntry(std::unique_ptr<EntryType> entry,
-                                      ScopeKind kind,
-                                      std::unique_ptr<Table> Scope::*table) {
+  template <typename Table, typename Entry>
+  std::shared_ptr<Entry> AddEntry(std::unique_ptr<Entry> entry, ScopeKind kind,
+                                  std::unique_ptr<Table> Scope::*table) {
     ThrowIfNotInScope_();
     for (auto it = scopes_.rbegin(); it != scopes_.rend(); ++it) {
       if (it->kind == kind) {
@@ -63,8 +65,8 @@ class ScopeStack {
 
   /// @brief Looks up the `id` from through all scopes.
   /// @throws `NotInScopeError`
-  template <typename Table, typename EntryType>
-  std::shared_ptr<EntryType> LookUpEntry(
+  template <typename Table, typename Entry>
+  std::shared_ptr<Entry> LookUpEntry(
       const std::string& id, std::unique_ptr<Table> Scope::*table) const {
     ThrowIfNotInScope_();
     // Iterates backward since we're using the container as a stack.
@@ -78,14 +80,15 @@ class ScopeStack {
 
   /// @brief Probes the `id` from the top-most scope.
   /// @throws `NotInScopeError`
-  template <typename Table, typename EntryType>
-  std::shared_ptr<EntryType> ProbeEntry(
+  template <typename Table, typename Entry>
+  std::shared_ptr<Entry> ProbeEntry(
       const std::string& id, std::unique_ptr<Table> Scope::*table) const {
     ThrowIfNotInScope_();
     return (scopes_.back().*table)->Probe(id);
   }
 
   /// @brief Merges the current scope with the next pushed scope.
+  /// @throws `NotInScopeError` if currently not in any scope.
   void MergeWithNextScope();
 
   using NotInSuchKindOfScopeError = std::runtime_error;
@@ -97,10 +100,10 @@ class ScopeStack {
   std::shared_ptr<SymbolEntry> LookUpSymbol(const std::string& id) const;
   std::shared_ptr<SymbolEntry> ProbeSymbol(const std::string& id) const;
 
-  std::shared_ptr<DeclTypeEntry> AddType(std::unique_ptr<DeclTypeEntry> entry,
-                                         ScopeKind kind);
-  std::shared_ptr<DeclTypeEntry> LookUpType(const std::string& id) const;
-  std::shared_ptr<DeclTypeEntry> ProbeType(const std::string& id) const;
+  std::shared_ptr<TypeEntry> AddType(std::unique_ptr<TypeEntry> entry,
+                                     ScopeKind kind);
+  std::shared_ptr<TypeEntry> LookUpType(const std::string& id) const;
+  std::shared_ptr<TypeEntry> ProbeType(const std::string& id) const;
 
  private:
   std::vector<Scope> scopes_{};
