@@ -48,45 +48,6 @@ class ScopeStack {
   /// @throws `NotInScopeError`
   void PopScope();
 
-  /// @brief Adds an entry to the top-most scope of the kind.
-  /// @throws `NotInScopeError`
-  /// @throws `NotInSuchKindOfScopeError`
-  template <typename Table, typename Entry>
-  std::shared_ptr<Entry> AddEntry(std::unique_ptr<Entry> entry, ScopeKind kind,
-                                  std::unique_ptr<Table> Scope::*table) {
-    ThrowIfNotInScope_();
-    for (auto it = scopes_.rbegin(); it != scopes_.rend(); ++it) {
-      if (it->kind == kind) {
-        return ((*it).*table)->Add(std::move(entry));
-      }
-    }
-    throw NotInSuchKindOfScopeError{""};
-  }
-
-  /// @brief Looks up the `id` from through all scopes.
-  /// @throws `NotInScopeError`
-  template <typename Table, typename Entry>
-  std::shared_ptr<Entry> LookUpEntry(
-      const std::string& id, std::unique_ptr<Table> Scope::*table) const {
-    ThrowIfNotInScope_();
-    // Iterates backward since we're using the container as a stack.
-    for (auto it = scopes_.crbegin(); it != scopes_.crend(); ++it) {
-      if (auto entry = ((*it).*table)->Probe(id)) {
-        return entry;
-      }
-    }
-    return nullptr;
-  }
-
-  /// @brief Probes the `id` from the top-most scope.
-  /// @throws `NotInScopeError`
-  template <typename Table, typename Entry>
-  std::shared_ptr<Entry> ProbeEntry(
-      const std::string& id, std::unique_ptr<Table> Scope::*table) const {
-    ThrowIfNotInScope_();
-    return (scopes_.back().*table)->Probe(id);
-  }
-
   /// @brief Merges the current scope with the next pushed scope.
   /// @throws `NotInScopeError` if currently not in any scope.
   void MergeWithNextScope();
@@ -118,6 +79,25 @@ class ScopeStack {
       throw NotInScopeError{""};
     }
   }
+
+  /// @brief Adds an entry to the top-most scope of the kind.
+  /// @throws `NotInScopeError`
+  /// @throws `NotInSuchKindOfScopeError`
+  template <typename Table, typename Entry>
+  std::shared_ptr<Entry> AddEntry_(std::unique_ptr<Entry> entry, ScopeKind kind,
+                                   std::unique_ptr<Table> Scope::*table);
+
+  /// @brief Looks up the `id` from through all scopes.
+  /// @throws `NotInScopeError`
+  template <typename Table, typename Entry>
+  std::shared_ptr<Entry> LookUpEntry_(
+      const std::string& id, std::unique_ptr<Table> Scope::*table) const;
+
+  /// @brief Probes the `id` from the top-most scope.
+  /// @throws `NotInScopeError`
+  template <typename Table, typename Entry>
+  std::shared_ptr<Entry> ProbeEntry_(
+      const std::string& id, std::unique_ptr<Table> Scope::*table) const;
 };
 
 #endif  // SCOPE_HPP_
