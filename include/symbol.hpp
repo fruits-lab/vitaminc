@@ -32,12 +32,15 @@ class TableTemplate {
   /// @returns The added entry if the `id` of the `entry` isn't
   /// already in the table; otherwise, the original entry.
   std::shared_ptr<Entry> Add(std::unique_ptr<Entry> entry);
+  /// @brief Probes the entry with the `id` from the table.
+  /// @returns The entry with the `id` if it exists; otherwise, `nullptr`.
   std::shared_ptr<Entry> Probe(const std::string& id) const;
 
  private:
   std::map<std::string, std::shared_ptr<Entry>> entries_{};
 };
 
+/// @brief Stores declared symbols.
 using SymbolTable = TableTemplate<SymbolEntry>;
 /// @brief Stores declared types, such as struct, union.
 using TypeTable = TableTemplate<TypeEntry>;
