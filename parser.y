@@ -79,7 +79,7 @@ std::unique_ptr<Type> ResolveType(std::unique_ptr<Type> resolved_type,
 
 %token MINUS PLUS STAR DIV MOD ASSIGN
 %token EXCLAMATION TILDE AMPERSAND QUESTION
-%token COMMA SEMICOLON COLON
+%token COMMA PERIOD SEMICOLON COLON
 // (), {}, []
 %token LEFT_PAREN RIGHT_PAREN LEFT_CURLY RIGHT_CURLY LEFT_SQUARE RIGHT_SQUARE
 
@@ -426,6 +426,7 @@ init_declarator: declarator { $$ = $1; }
       auto init_expr = std::move(std::get<std::unique_ptr<ExprNode>>(init));
       var_decl->init = std::move(init_expr);
     } else { // The initializer is a list of expressions.
+      // TODO: struct_decl
       auto* arr_decl = dynamic_cast<ArrDeclNode*>(decl.get());
       assert(arr_decl);
       auto init_expr_list = std::move(std::get<std::vector<std::unique_ptr<ExprNode>>>(init));
@@ -677,19 +678,31 @@ direct_abstract_declarator_opt: direct_abstract_declarator { $$ = $1; }
 /* 6.7.8 Initialization */
 /* The current object shall have array type and the expression shall be an integer constant expression. */
 initializer: LEFT_CURLY initializer_list comma_opt RIGHT_CURLY { $$ = $2; }
-  | expr { $$ = $1; }
+  | assign_expr { $$ = $1; }
   ;
 
-/* TODO: the initializer may be nested */
-initializer_list: expr {
+/* TODO: the initializer may be nested (change expr to initializer) */
+initializer_list: designation_opt expr {
     $$ = std::vector<std::unique_ptr<ExprNode>>{};
-    $$.push_back($1);
+    $$.push_back($2);
   }
-  | initializer_list COMMA expr {
+  | initializer_list COMMA designation_opt expr {
     auto initializer_list = $1;
-    initializer_list.push_back($3);
+    initializer_list.push_back($4);
     $$ = std::move(initializer_list);
   }
+  ;
+
+designation_opt: designator_list ASSIGN
+  | epsilon
+  ;
+
+designator_list: designator
+  | designator_list designator
+  ;
+
+designator: LEFT_SQUARE const_expr RIGHT_SQUARE
+  | PERIOD ID
   ;
 
 comma_opt: COMMA
