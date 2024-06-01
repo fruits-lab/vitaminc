@@ -32,6 +32,7 @@ struct IdLabeledStmtNode;
 struct CaseStmtNode;
 struct DefaultStmtNode;
 struct ExprStmtNode;
+struct InitExprNode;
 struct NullExprNode;
 struct IdExprNode;
 struct IntConstExprNode;
@@ -87,6 +88,7 @@ class Visitor {
   virtual void Visit(CondMut<CaseStmtNode>&){};
   virtual void Visit(CondMut<DefaultStmtNode>&){};
   virtual void Visit(CondMut<ExprStmtNode>&){};
+  virtual void Visit(CondMut<InitExprNode>&){};
   virtual void Visit(CondMut<NullExprNode>&){};
   virtual void Visit(CondMut<IdExprNode>&){};
   virtual void Visit(CondMut<IntConstExprNode>&){};

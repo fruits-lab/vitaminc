@@ -118,8 +118,8 @@ std::unique_ptr<Type> ResolveType(std::unique_ptr<Type> resolved_type,
 // The number of '*'s.
 %nterm <int> pointer_opt pointer
 // The initializer of a simple variable is an expression, whereas that of an array or complex object is a list of expressions.
-%nterm <std::variant<std::unique_ptr<ExprNode>, std::vector<std::unique_ptr<ExprNode>>>> initializer
-%nterm <std::vector<std::unique_ptr<ExprNode>>> initializer_list
+%nterm <std::variant<std::unique_ptr<InitExprNode>, std::vector<std::unique_ptr<InitExprNode>>>> initializer
+%nterm <std::vector<std::unique_ptr<InitExprNode>>> initializer_list
 %nterm <std::unique_ptr<ArgExprNode>> arg
 %nterm <std::vector<std::unique_ptr<ArgExprNode>>> arg_list_opt arg_list
 %nterm <std::unique_ptr<FuncDefNode>> func_def
@@ -420,17 +420,21 @@ init_declarator: declarator { $$ = $1; }
     // NOTE: The parser crashes when initializing a variable with a list of expressions.
     auto decl = $1;
     auto init = $3;
-    if (std::holds_alternative<std::unique_ptr<ExprNode>>(init)) {
+    if (std::holds_alternative<std::unique_ptr<InitExprNode>>(init)) {
       auto* var_decl = dynamic_cast<VarDeclNode*>(decl.get());
       assert(var_decl);
-      auto init_expr = std::move(std::get<std::unique_ptr<ExprNode>>(init));
-      var_decl->init = std::move(init_expr);
+      auto initializer = std::move(std::get<std::unique_ptr<InitExprNode>>(init));
+      var_decl->init = std::move(initializer->expr);
     } else { // The initializer is a list of expressions.
-      // TODO: struct_decl
-      auto* arr_decl = dynamic_cast<ArrDeclNode*>(decl.get());
-      assert(arr_decl);
-      auto init_expr_list = std::move(std::get<std::vector<std::unique_ptr<ExprNode>>>(init));
-      arr_decl->init_list = std::move(init_expr_list);
+      if (auto* arr_decl = dynamic_cast<ArrDeclNode*>(decl.get())) {
+        auto initializers = std::move(std::get<std::vector<std::unique_ptr<InitExprNode>>>(init));
+        auto init_expr_list = std::vector<std::unique_ptr<ExprNode>>{};
+        for (const auto& initializer : initializers) {
+          init_expr_list.push_back(std::move(initializer->expr));
+        }
+        arr_decl->init_list = std::move(init_expr_list);
+      } else {
+      }
     }
     $$ = std::move(decl);
   }
@@ -678,17 +682,19 @@ direct_abstract_declarator_opt: direct_abstract_declarator { $$ = $1; }
 /* 6.7.8 Initialization */
 /* The current object shall have array type and the expression shall be an integer constant expression. */
 initializer: LEFT_CURLY initializer_list comma_opt RIGHT_CURLY { $$ = $2; }
-  | assign_expr { $$ = $1; }
+  | assign_expr { $$ = std::make_unique<InitExprNode>(Loc(@1), $1); }
   ;
 
 /* TODO: the initializer may be nested (change expr to initializer) */
 initializer_list: designation_opt expr {
-    $$ = std::vector<std::unique_ptr<ExprNode>>{};
-    $$.push_back($2);
+    auto init = std::make_unique<InitExprNode>(Loc(@1), $2);
+    $$ = std::vector<std::unique_ptr<InitExprNode>>{};
+    $$.push_back(std::move(init));
   }
   | initializer_list COMMA designation_opt expr {
     auto initializer_list = $1;
-    initializer_list.push_back($4);
+    auto init = std::make_unique<InitExprNode>(Loc(@1), $4);
+    initializer_list.push_back(std::move(init));
     $$ = std::move(initializer_list);
   }
   ;

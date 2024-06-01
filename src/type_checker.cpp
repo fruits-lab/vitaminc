@@ -331,6 +331,11 @@ void TypeChecker::Visit(ExprStmtNode& expr_stmt) {
   expr_stmt.expr->Accept(*this);
 }
 
+void TypeChecker::Visit(InitExprNode& init_expr) {
+  init_expr.expr->Accept(*this);
+  init_expr.type = init_expr.expr->type->Clone();
+}
+
 void TypeChecker::Visit(NullExprNode&) {
   /* do nothing */
 }

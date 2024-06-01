@@ -351,6 +351,17 @@ struct ExprStmtNode : public StmtNode {
   std::unique_ptr<ExprNode> expr;
 };
 
+/// @brief An initializer initializes a member in array, struct or union.
+struct InitExprNode : public ExprNode {
+  InitExprNode(Location loc, std::unique_ptr<ExprNode> expr)
+      : ExprNode{loc}, expr{std::move(expr)} {}
+
+  void Accept(NonModifyingVisitor&) const override;
+  void Accept(ModifyingVisitor&) override;
+
+  std::unique_ptr<ExprNode> expr;
+};
+
 /// @note Only appears in for statement's expressions and null statement.
 struct NullExprNode : public ExprNode {
   using ExprNode::ExprNode;
