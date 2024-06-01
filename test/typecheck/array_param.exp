@@ -7,9 +7,12 @@ ProgramNode <1:1>
   FuncDefNode <7:5> main: int ()
     CompoundStmtNode <7:12>
       ArrDeclNode <8:7> a: int[3]
-        IntConstExprNode <8:15> 1: int
-        IntConstExprNode <8:18> 2: int
-        IntConstExprNode <8:21> 3: int
+        InitExprNode <8:15>
+          IntConstExprNode <8:15> 1: int
+        InitExprNode <8:15>
+          IntConstExprNode <8:18> 2: int
+        InitExprNode <8:15>
+          IntConstExprNode <8:21> 3: int
       ExprStmtNode <9:3>
         FuncCallExprNode <9:3> int
           IdExprNode <9:3> func: int (int*)

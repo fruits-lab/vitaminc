@@ -101,14 +101,14 @@ struct VarDeclNode : public DeclNode {
 
 struct ArrDeclNode : public DeclNode {
   ArrDeclNode(Location loc, std::string id, std::unique_ptr<Type> type,
-              std::vector<std::unique_ptr<ExprNode>> init_list)
+              std::vector<std::unique_ptr<InitExprNode>> init_list)
       : DeclNode{loc, std::move(id), std::move(type)},
         init_list{std::move(init_list)} {}
 
   void Accept(NonModifyingVisitor&) const override;
   void Accept(ModifyingVisitor&) override;
 
-  std::vector<std::unique_ptr<ExprNode>> init_list;
+  std::vector<std::unique_ptr<InitExprNode>> init_list;
 };
 
 /// @brief This holds the declaration of struct or union type.
