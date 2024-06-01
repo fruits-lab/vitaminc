@@ -88,6 +88,23 @@ struct ExprNode  // NOLINT(cppcoreguidelines-special-member-functions)
       std::make_unique<PrimType>(PrimitiveType::kUnknown);
 };
 
+/// @brief A designator node is used to explicitly reference a member for
+/// initializer.
+/// @note This is an abstract class.
+struct DesNode  // NOLINT(cppcoreguidelines-special-member-functions)
+    : public AstNode {
+  using AstNode::AstNode;
+
+  void Accept(NonModifyingVisitor&) const override;
+  void Accept(ModifyingVisitor&) override;
+
+  /// @note To make the class abstract.
+  ~DesNode() override = 0;
+
+  std::unique_ptr<Type> type =
+      std::make_unique<PrimType>(PrimitiveType::kUnknown);
+};
+
 struct VarDeclNode : public DeclNode {
   VarDeclNode(Location loc, std::string id, std::unique_ptr<Type> type,
               std::unique_ptr<ExprNode> init = {})
@@ -353,13 +370,38 @@ struct ExprStmtNode : public StmtNode {
 
 /// @brief An initializer initializes a member in array, struct or union.
 struct InitExprNode : public ExprNode {
-  InitExprNode(Location loc, std::unique_ptr<ExprNode> expr)
-      : ExprNode{loc}, expr{std::move(expr)} {}
+  InitExprNode(Location loc, std::vector<std::unique_ptr<DesNode>> des,
+               std::unique_ptr<ExprNode> expr)
+      : ExprNode{loc}, des{std::move(des)}, expr{std::move(expr)} {}
 
   void Accept(NonModifyingVisitor&) const override;
   void Accept(ModifyingVisitor&) override;
 
+  std::vector<std::unique_ptr<DesNode>> des;
   std::unique_ptr<ExprNode> expr;
+};
+
+/// @brief An array designator node can designate a member by using
+/// array subscripting.
+struct ArrDesNode : public DesNode {
+  ArrDesNode(Location loc, std::unique_ptr<ExprNode> index)
+      : DesNode{loc}, index{std::move(index)} {}
+
+  void Accept(NonModifyingVisitor&) const override;
+  void Accept(ModifyingVisitor&) override;
+
+  std::unique_ptr<ExprNode> index;
+};
+
+/// @brief An identifier designator node can designate a member by using
+/// parameter "id".
+struct IdDesNode : public DesNode {
+  IdDesNode(Location loc, std::string id) : DesNode{loc}, id{std::move(id)} {}
+
+  void Accept(NonModifyingVisitor&) const override;
+  void Accept(ModifyingVisitor&) override;
+
+  std::string id;
 };
 
 /// @note Only appears in for statement's expressions and null statement.

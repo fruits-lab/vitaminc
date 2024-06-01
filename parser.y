@@ -120,6 +120,8 @@ std::unique_ptr<Type> ResolveType(std::unique_ptr<Type> resolved_type,
 // The initializer of a simple variable is an expression, whereas that of an array or complex object is a list of expressions.
 %nterm <std::variant<std::unique_ptr<InitExprNode>, std::vector<std::unique_ptr<InitExprNode>>>> initializer
 %nterm <std::vector<std::unique_ptr<InitExprNode>>> initializer_list
+%nterm <std::unique_ptr<DesNode>> designator
+%nterm <std::vector<std::unique_ptr<DesNode>>> designator_list designation_opt
 %nterm <std::unique_ptr<ArgExprNode>> arg
 %nterm <std::vector<std::unique_ptr<ArgExprNode>>> arg_list_opt arg_list
 %nterm <std::unique_ptr<FuncDefNode>> func_def
@@ -678,33 +680,42 @@ direct_abstract_declarator_opt: direct_abstract_declarator { $$ = $1; }
 /* 6.7.8 Initialization */
 /* The current object shall have array type and the expression shall be an integer constant expression. */
 initializer: LEFT_CURLY initializer_list comma_opt RIGHT_CURLY { $$ = $2; }
-  | assign_expr { $$ = std::make_unique<InitExprNode>(Loc(@1), $1); }
+  | assign_expr { $$ = std::make_unique<InitExprNode>(Loc(@1), std::vector<std::unique_ptr<DesNode>>{}, $1); }
   ;
 
 /* TODO: the initializer may be nested (change expr to initializer) */
 initializer_list: designation_opt expr {
-    auto init = std::make_unique<InitExprNode>(Loc(@1), $2);
+    auto init = std::make_unique<InitExprNode>(Loc(@1), $1, $2);
     $$ = std::vector<std::unique_ptr<InitExprNode>>{};
     $$.push_back(std::move(init));
   }
   | initializer_list COMMA designation_opt expr {
     auto initializer_list = $1;
-    auto init = std::make_unique<InitExprNode>(Loc(@1), $4);
+    auto init = std::make_unique<InitExprNode>(Loc(@1), $3, $4);
     initializer_list.push_back(std::move(init));
     $$ = std::move(initializer_list);
   }
   ;
 
-designation_opt: designator_list ASSIGN
-  | epsilon
+designation_opt: designator_list ASSIGN { $$ = $1; }
+  | epsilon { $$ = std::vector<std::unique_ptr<DesNode>>{}; }
   ;
 
-designator_list: designator
-  | designator_list designator
+designator_list: designator {
+    auto designator_list = std::vector<std::unique_ptr<DesNode>>{};
+    designator_list.push_back($1);
+    $$ = std::move(designator_list);
+  }
+  | designator_list designator {
+    $$ = $1;
+    $$.push_back($2);
+  }
   ;
 
-designator: LEFT_SQUARE const_expr RIGHT_SQUARE
-  | PERIOD ID
+/* The current object shall have array type and the expression shall be an integer constant expression. */
+designator: LEFT_SQUARE const_expr RIGHT_SQUARE { $$ = std::make_unique<ArrDesNode>(Loc(@2), $2); }
+  /* The current object shall have structure or union type and the identifier shall be the name of a member of that type. */
+  | PERIOD ID { $$ = std::make_unique<IdDesNode>(Loc(@2), $2); }
   ;
 
 comma_opt: COMMA

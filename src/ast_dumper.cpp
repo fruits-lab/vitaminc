@@ -286,9 +286,16 @@ void AstDumper::Visit(const ExprStmtNode& expr_stmt) {
 void AstDumper::Visit(const InitExprNode& init_expr) {
   std::cout << indenter_.Indent() << "InitExprNode <" << init_expr.loc << ">\n";
   indenter_.IncreaseLevel();
+  for (const auto& des : init_expr.des) {
+    des->Accept(*this);
+  }
   init_expr.expr->Accept(*this);
   indenter_.DecreaseLevel();
 }
+
+void AstDumper::Visit(const ArrDesNode& arr_des) {}
+
+void AstDumper::Visit(const IdDesNode& id_des) {}
 
 void AstDumper::Visit(const NullExprNode& null_expr) {
   std::cout << indenter_.Indent() << "NullStmtNode <" << null_expr.loc << ">\n";

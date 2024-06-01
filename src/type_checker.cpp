@@ -336,6 +336,10 @@ void TypeChecker::Visit(InitExprNode& init_expr) {
   init_expr.type = init_expr.expr->type->Clone();
 }
 
+void TypeChecker::Visit(ArrDesNode& arr_des) {}
+
+void TypeChecker::Visit(IdDesNode& id_des) {}
+
 void TypeChecker::Visit(NullExprNode&) {
   /* do nothing */
 }
