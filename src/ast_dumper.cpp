@@ -283,6 +283,13 @@ void AstDumper::Visit(const ExprStmtNode& expr_stmt) {
   indenter_.DecreaseLevel();
 }
 
+void AstDumper::Visit(const InitExprNode& init_expr) {
+  std::cout << indenter_.Indent() << "InitExprNode <" << init_expr.loc << ">\n";
+  indenter_.IncreaseLevel();
+  init_expr.expr->Accept(*this);
+  indenter_.DecreaseLevel();
+}
+
 void AstDumper::Visit(const NullExprNode& null_expr) {
   std::cout << indenter_.Indent() << "NullStmtNode <" << null_expr.loc << ">\n";
 }

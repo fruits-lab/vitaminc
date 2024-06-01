@@ -220,6 +220,14 @@ void ExprStmtNode::Accept(ModifyingVisitor& v) {
   v.Visit(*this);
 }
 
+void InitExprNode::Accept(NonModifyingVisitor& v) const {
+  v.Visit(*this);
+}
+
+void InitExprNode::Accept(ModifyingVisitor& v) {
+  v.Visit(*this);
+}
+
 void NullExprNode::Accept(NonModifyingVisitor& v) const {
   v.Visit(*this);
 }

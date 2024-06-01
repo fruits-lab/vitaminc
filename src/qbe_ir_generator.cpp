@@ -576,6 +576,10 @@ void QbeIrGenerator::Visit(const ExprStmtNode& expr_stmt) {
   expr_stmt.expr->Accept(*this);
 }
 
+void QbeIrGenerator::Visit(const InitExprNode& init_expr) {
+  init_expr.expr->Accept(*this);
+}
+
 void QbeIrGenerator::Visit(const NullExprNode& null_expr) {
   /* do nothing */
 }
