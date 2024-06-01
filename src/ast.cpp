@@ -42,6 +42,16 @@ void DeclNode::Accept(ModifyingVisitor& v) {
 
 DeclNode::~DeclNode() = default;
 
+void DesNode::Accept(NonModifyingVisitor& v) const {
+  v.Visit(*this);
+}
+
+void DesNode::Accept(ModifyingVisitor& v) {
+  v.Visit(*this);
+}
+
+DesNode::~DesNode() = default;
+
 void VarDeclNode::Accept(NonModifyingVisitor& v) const {
   v.Visit(*this);
 }
@@ -225,6 +235,22 @@ void InitExprNode::Accept(NonModifyingVisitor& v) const {
 }
 
 void InitExprNode::Accept(ModifyingVisitor& v) {
+  v.Visit(*this);
+}
+
+void ArrDesNode::Accept(NonModifyingVisitor& v) const {
+  v.Visit(*this);
+}
+
+void ArrDesNode::Accept(ModifyingVisitor& v) {
+  v.Visit(*this);
+}
+
+void IdDesNode::Accept(NonModifyingVisitor& v) const {
+  v.Visit(*this);
+}
+
+void IdDesNode::Accept(ModifyingVisitor& v) {
   v.Visit(*this);
 }
 
