@@ -427,11 +427,7 @@ init_declarator: declarator { $$ = $1; }
       var_decl->init = std::move(initializer->expr);
     } else { // The initializer is a list of expressions.
       if (auto* arr_decl = dynamic_cast<ArrDeclNode*>(decl.get())) {
-        auto initializers = std::move(std::get<std::vector<std::unique_ptr<InitExprNode>>>(init));
-        auto init_expr_list = std::vector<std::unique_ptr<ExprNode>>{};
-        for (const auto& initializer : initializers) {
-          init_expr_list.push_back(std::move(initializer->expr));
-        }
+        auto init_expr_list = std::move(std::get<std::vector<std::unique_ptr<InitExprNode>>>(init));
         arr_decl->init_list = std::move(init_expr_list);
       } else {
       }
@@ -560,7 +556,7 @@ direct_declarator: ID {
     auto type = std::make_unique<ArrType>(std::move(declarator->type), $3);
     if (!dynamic_cast<ArrDeclNode*>(declarator.get())) {
       // If the declarator is not yet a array declarator, we need to construct one.
-      $$ = std::make_unique<ArrDeclNode>(Loc(@1), declarator->id, std::move(type), /* init list */ std::vector<std::unique_ptr<ExprNode>>{});
+      $$ = std::make_unique<ArrDeclNode>(Loc(@1), declarator->id, std::move(type), /* init list */ std::vector<std::unique_ptr<InitExprNode>>{});
     } else {
       declarator->type = std::move(type);
       $$ = std::move(declarator);
