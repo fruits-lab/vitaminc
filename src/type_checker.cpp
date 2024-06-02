@@ -107,6 +107,7 @@ void TypeChecker::Visit(RecordVarDeclNode& record_decl) {
     auto symbol = std::make_unique<SymbolEntry>(record_decl.id,
                                                 record_decl.type->Clone());
 
+    // TODO: type check between fields and initialized members.
     for (auto& init : record_decl.inits) {
       init->Accept(*this);
     }

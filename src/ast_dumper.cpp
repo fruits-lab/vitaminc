@@ -113,12 +113,8 @@ void AstDumper::Visit(const ArrDeclNode& arr_decl) {
 }
 
 void AstDumper::Visit(const RecordDeclNode& record_decl) {
-  std::string id = "";
-  if (!record_decl.id.empty()) {
-    id += " " + record_decl.id;
-  }
   std::cout << indenter_.Indent() << "RecordDeclNode <" << record_decl.loc
-            << "> " << record_decl.type->ToString() << id << " definition\n";
+            << "> " << record_decl.type->ToString() << " definition\n";
 
   indenter_.IncreaseLevel();
   for (const auto& field : record_decl.fields) {

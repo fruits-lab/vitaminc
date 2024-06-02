@@ -176,8 +176,10 @@ class FuncType : public Type {
 
 class StructType : public Type {
  public:
-  explicit StructType(std::vector<std::unique_ptr<Type>> field_types)
-      : field_types_{std::move(field_types)} {}
+  /// @param id The identifier of a struct type.
+  explicit StructType(std::string id,
+                      std::vector<std::unique_ptr<Type>> field_types)
+      : id_{std::move(id)}, field_types_{std::move(field_types)} {}
 
   bool IsStruct() const noexcept override {
     return true;
@@ -189,13 +191,16 @@ class StructType : public Type {
   std::unique_ptr<Type> Clone() const override;
 
  private:
+  std::string id_;
   std::vector<std::unique_ptr<Type>> field_types_;
 };
 
 class UnionType : public Type {
  public:
-  explicit UnionType(std::vector<std::unique_ptr<Type>> field_types)
-      : field_types_{std::move(field_types)} {}
+  /// @param id The identifier of a union type.
+  explicit UnionType(std::string id,
+                     std::vector<std::unique_ptr<Type>> field_types)
+      : id_{std::move(id)}, field_types_{std::move(field_types)} {}
 
   bool IsUnion() const noexcept override {
     return true;
@@ -207,6 +212,7 @@ class UnionType : public Type {
   std::unique_ptr<Type> Clone() const override;
 
  private:
+  std::string id_;
   std::vector<std::unique_ptr<Type>> field_types_;
 };
 

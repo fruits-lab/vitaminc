@@ -179,7 +179,10 @@ std::size_t StructType::size() const {
 }
 
 std::string StructType::ToString() const {
-  return "struct";
+  if (id_ == "") {
+    return "struct";
+  }
+  return "struct " + id_;
 }
 
 std::unique_ptr<Type> StructType::Clone() const {
@@ -187,7 +190,7 @@ std::unique_ptr<Type> StructType::Clone() const {
   for (const auto& field_type : field_types_) {
     cloned_field_types.push_back(field_type->Clone());
   }
-  return std::make_unique<StructType>(std::move(cloned_field_types));
+  return std::make_unique<StructType>(id_, std::move(cloned_field_types));
 }
 
 bool UnionType::IsEqual(const Type& that) const noexcept {
@@ -208,7 +211,10 @@ std::size_t UnionType::size() const {
 }
 
 std::string UnionType::ToString() const {
-  return "union";
+  if (id_ == "") {
+    return "union";
+  }
+  return "union " + id_;
 }
 
 std::unique_ptr<Type> UnionType::Clone() const {
@@ -216,5 +222,5 @@ std::unique_ptr<Type> UnionType::Clone() const {
   for (const auto& field_type : field_types_) {
     cloned_field_types.push_back(field_type->Clone());
   }
-  return std::make_unique<UnionType>(std::move(cloned_field_types));
+  return std::make_unique<UnionType>(id_, std::move(cloned_field_types));
 }
