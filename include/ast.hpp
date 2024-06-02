@@ -149,6 +149,19 @@ struct FieldNode : public DeclNode {
   void Accept(ModifyingVisitor&) override;
 };
 
+/// @brief This holds the declaration of struct or union variable.
+struct RecordVarDeclNode : public DeclNode {
+  RecordVarDeclNode(Location loc, std::string id, std::unique_ptr<Type> type,
+                    std::vector<std::unique_ptr<InitExprNode>> inits)
+      : DeclNode{loc, std::move(id), std::move(type)},
+        inits{std::move(inits)} {}
+
+  void Accept(NonModifyingVisitor&) const override;
+  void Accept(ModifyingVisitor&) override;
+
+  std::vector<std::unique_ptr<InitExprNode>> inits;
+};
+
 struct ParamNode : public DeclNode {
   using DeclNode::DeclNode;
 

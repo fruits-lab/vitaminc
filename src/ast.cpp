@@ -84,6 +84,14 @@ void FieldNode::Accept(ModifyingVisitor& v) {
   v.Visit(*this);
 }
 
+void RecordVarDeclNode::Accept(NonModifyingVisitor& v) const {
+  v.Visit(*this);
+}
+
+void RecordVarDeclNode::Accept(ModifyingVisitor& v) {
+  v.Visit(*this);
+}
+
 void ParamNode::Accept(NonModifyingVisitor& v) const {
   v.Visit(*this);
 }

@@ -127,6 +127,18 @@ void AstDumper::Visit(const RecordDeclNode& record_decl) {
   indenter_.DecreaseLevel();
 }
 
+void AstDumper::Visit(const RecordVarDeclNode& record_decl) {
+  std::cout << indenter_.Indent() << "RecordVarDeclNode <" << record_decl.loc
+            << "> " << record_decl.id << ": " << record_decl.type->ToString()
+            << '\n';
+
+  indenter_.IncreaseLevel();
+  for (const auto& init : record_decl.inits) {
+    init->Accept(*this);
+  }
+  indenter_.DecreaseLevel();
+}
+
 void AstDumper::Visit(const FieldNode& field) {
   std::cout << indenter_.Indent() << "FieldNode <" << field.loc << "> "
             << field.id << ": " << field.type->ToString() << '\n';
@@ -293,9 +305,17 @@ void AstDumper::Visit(const InitExprNode& init_expr) {
   indenter_.DecreaseLevel();
 }
 
-void AstDumper::Visit(const ArrDesNode& arr_des) {}
+void AstDumper::Visit(const ArrDesNode& arr_des) {
+  std::cout << indenter_.Indent() << "ArrDesNode <" << arr_des.loc << ">\n";
+  indenter_.IncreaseLevel();
+  arr_des.index->Accept(*this);
+  indenter_.DecreaseLevel();
+}
 
-void AstDumper::Visit(const IdDesNode& id_des) {}
+void AstDumper::Visit(const IdDesNode& id_des) {
+  std::cout << indenter_.Indent() << "IdDesNode <" << id_des.loc << "> "
+            << id_des.id << "\n";
+}
 
 void AstDumper::Visit(const NullExprNode& null_expr) {
   std::cout << indenter_.Indent() << "NullStmtNode <" << null_expr.loc << ">\n";

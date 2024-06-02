@@ -398,6 +398,18 @@ decl: declaration_specifiers init_declarator_opt SEMICOLON {
       $$ = std::move(init_decl);
     } else {
       auto decl = std::move(std::get<std::unique_ptr<DeclNode>>(decl_specifers));
+      auto rec_decl = dynamic_cast<RecordDeclNode*>(decl.get());
+      assert(rec_decl);
+      if (auto* rec_var_decl = dynamic_cast<RecordVarDeclNode*>(init_decl.get())) {
+        // A struct or union variable.
+        rec_var_decl->type = ResolveType(std::move(rec_decl->type), std::move(rec_var_decl->type));
+        decl = std::move(init_decl);
+      } else if (auto* arr_decl = dynamic_cast<ArrDeclNode*>(init_decl.get())) {
+        // An array with struct or union elements.
+        arr_decl->type = ResolveType(std::move(rec_decl->type), std::move(arr_decl->type));
+        decl = std::move(init_decl);
+      }
+
       $$ = std::move(decl);
     }
   }
@@ -428,10 +440,17 @@ init_declarator: declarator { $$ = $1; }
       auto initializer = std::move(std::get<std::unique_ptr<InitExprNode>>(init));
       var_decl->init = std::move(initializer->expr);
     } else { // The initializer is a list of expressions.
+      auto init_expr_list = std::move(std::get<std::vector<std::unique_ptr<InitExprNode>>>(init));
       if (auto* arr_decl = dynamic_cast<ArrDeclNode*>(decl.get())) {
-        auto init_expr_list = std::move(std::get<std::vector<std::unique_ptr<InitExprNode>>>(init));
+        // Declares an array variable.
         arr_decl->init_list = std::move(init_expr_list);
-      } else {
+      } else if (auto* var_decl = dynamic_cast<VarDeclNode*>(decl.get())) {
+        // Declares a struct or union variable.
+        auto rec_decl = std::make_unique<RecordVarDeclNode>(Loc(@1),
+                                         std::move(var_decl->id),
+                                         var_decl->type->Clone(),
+                                         std::move(init_expr_list));
+        decl = std::move(rec_decl);
       }
     }
     $$ = std::move(decl);
