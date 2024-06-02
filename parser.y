@@ -448,7 +448,7 @@ init_declarator: declarator { $$ = $1; }
         // Declares a struct or union variable.
         auto rec_decl = std::make_unique<RecordVarDeclNode>(Loc(@1),
                                          std::move(var_decl->id),
-                                         var_decl->type->Clone(),
+                                         std::move(var_decl->type),
                                          std::move(init_expr_list));
         decl = std::move(rec_decl);
       }
@@ -476,17 +476,29 @@ struct_or_union_specifier: struct_or_union id_opt LEFT_CURLY struct_declaration_
       field_types.push_back(field->type->Clone());
     }
 
+    auto type_id = decl_id ? decl_id->id : "";
     if (type->IsStruct()) {
-      type = std::make_unique<StructType>(std::move(field_types));
+      type = std::make_unique<StructType>(std::move(type_id), std::move(field_types));
     } else {
-      type = std::make_unique<UnionType>(std::move(field_types));
+      type = std::make_unique<UnionType>(std::move(type_id), std::move(field_types));
     }
 
     $$ = std::make_unique<RecordDeclNode>(Loc(@2), decl_id ? std::move(decl_id->id) : "", std::move(type), std::move(field_list));
   }
   | struct_or_union ID {
+    auto type = $1;
+    auto decl_id = $2;
     auto field_list = std::vector<std::unique_ptr<FieldNode>>{};
-    $$ = std::make_unique<RecordDeclNode>(Loc(@2), $2, $1, std::move(field_list));
+    auto field_types = std::vector<std::unique_ptr<Type>>{};
+
+    auto type_id = decl_id;
+    if (type->IsStruct()) {
+      type = std::make_unique<StructType>(std::move(type_id), std::move(field_types));
+    } else {
+      type = std::make_unique<UnionType>(std::move(type_id), std::move(field_types));
+    }
+
+    $$ = std::make_unique<RecordDeclNode>(Loc(@2), std::move(decl_id), std::move(type), std::move(field_list));
   }
   ;
 
@@ -536,11 +548,11 @@ id_opt: ID {
 
 struct_or_union: STRUCT {
     auto field_types = std::vector<std::unique_ptr<Type>>{};
-    $$ = std::make_unique<StructType>(std::move(field_types));
+    $$ = std::make_unique<StructType>("", std::move(field_types));
   }
   | UNION {
     auto field_types = std::vector<std::unique_ptr<Type>>{};
-    $$ = std::make_unique<UnionType>(std::move(field_types));
+    $$ = std::make_unique<UnionType>("", std::move(field_types));
   }
   ;
 

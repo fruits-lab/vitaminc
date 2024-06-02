@@ -10,7 +10,7 @@ ProgramNode <1:1>
         FieldNode <11:9> quarter: int
         FieldNode <12:9> dime: int
         FieldNode <13:9> penny: int
-      RecordVarDeclNode <16:16> bd1: struct
+      RecordVarDeclNode <16:16> bd1: struct birth
         InitExprNode <17:5>
           IdDesNode <17:6> date
           IntConstExprNode <17:13> 1: int
@@ -20,14 +20,14 @@ ProgramNode <1:1>
         InitExprNode <17:5>
           IdDesNode <19:6> year
           IntConstExprNode <19:13> 1995: int
-      RecordVarDeclNode <22:16> bd2: struct
+      RecordVarDeclNode <22:16> bd2: struct birth
         InitExprNode <22:23>
           IntConstExprNode <22:23> 3: int
         InitExprNode <22:23>
           IntConstExprNode <22:26> 3: int
         InitExprNode <22:23>
           IntConstExprNode <22:29> 1998: int
-      ArrDeclNode <24:16> bd3: struct[3]
+      ArrDeclNode <24:16> bd3: struct birth[3]
         InitExprNode <24:27>
           ArrDesNode <24:28>
             IntConstExprNode <24:28> 0: int
