@@ -19,6 +19,7 @@ class QbeIrGenerator : public NonModifyingVisitor {
   void Visit(const ArrDeclNode&) override;
   void Visit(const RecordDeclNode&) override;
   void Visit(const FieldNode&) override;
+  void Visit(const RecordVarDeclNode&) override;
   void Visit(const ParamNode&) override;
   void Visit(const FuncDefNode&) override;
   void Visit(const CompoundStmtNode&) override;

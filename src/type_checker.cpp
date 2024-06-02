@@ -100,6 +100,21 @@ void TypeChecker::Visit(FieldNode& field) {
   // NOTE: Do nothing since record_decl 'Clone' already copies every field.
 }
 
+void TypeChecker::Visit(RecordVarDeclNode& record_decl) {
+  if (env_.ProbeSymbol(record_decl.id)) {
+    // TODO: redefinition of 'id'
+  } else {
+    auto symbol = std::make_unique<SymbolEntry>(record_decl.id,
+                                                record_decl.type->Clone());
+
+    for (auto& init : record_decl.inits) {
+      init->Accept(*this);
+    }
+    // TODO: May be file scope once we support global variables.
+    env_.AddSymbol(std::move(symbol), ScopeKind::kBlock);
+  }
+}
+
 void TypeChecker::Visit(ParamNode& parameter) {
   if (env_.ProbeSymbol(parameter.id)) {
     // TODO: redefinition of 'id'
@@ -332,13 +347,20 @@ void TypeChecker::Visit(ExprStmtNode& expr_stmt) {
 }
 
 void TypeChecker::Visit(InitExprNode& init_expr) {
+  for (const auto& des : init_expr.des) {
+    des->Accept(*this);
+  }
   init_expr.expr->Accept(*this);
   init_expr.type = init_expr.expr->type->Clone();
 }
 
-void TypeChecker::Visit(ArrDesNode& arr_des) {}
+void TypeChecker::Visit(ArrDesNode& arr_des) {
+  arr_des.index->Accept(*this);
+}
 
-void TypeChecker::Visit(IdDesNode& id_des) {}
+void TypeChecker::Visit(IdDesNode& id_des) {
+  /* do nothing */
+}
 
 void TypeChecker::Visit(NullExprNode&) {
   /* do nothing */
