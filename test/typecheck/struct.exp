@@ -28,15 +28,15 @@ ProgramNode <1:1>
         InitExprNode <22:23>
           IntConstExprNode <22:29> 1998: int
       ArrDeclNode <24:16> bd3: struct birth[3]
-        InitExprNode <24:27>
-          ArrDesNode <24:28>
-            IntConstExprNode <24:28> 0: int
-          IdDesNode <24:31> date
-          IntConstExprNode <24:38> 4: int
-        InitExprNode <24:27>
-          ArrDesNode <24:42>
-            IntConstExprNode <24:42> 1: int
-          IdDesNode <24:45> year
-          IntConstExprNode <24:52> 1999: int
+        InitExprNode <24:26>
+          ArrDesNode <24:27>
+            IntConstExprNode <24:27> 0: int
+          IdDesNode <24:30> date
+          IntConstExprNode <24:37> 4: int
+        InitExprNode <24:26>
+          ArrDesNode <24:41>
+            IntConstExprNode <24:41> 1: int
+          IdDesNode <24:44> year
+          IntConstExprNode <24:51> 1999: int
       ReturnStmtNode <26:3>
         IntConstExprNode <26:10> 0: int

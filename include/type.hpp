@@ -176,9 +176,9 @@ class FuncType : public Type {
 
 class StructType : public Type {
  public:
-  /// @param id The identifier of a struct type.
-  explicit StructType(std::string id,
-                      std::vector<std::unique_ptr<Type>> field_types)
+  /// @param id The identifier of the struct type. May be empty ("") for unnamed
+  /// structs.
+  StructType(std::string id, std::vector<std::unique_ptr<Type>> field_types)
       : id_{std::move(id)}, field_types_{std::move(field_types)} {}
 
   bool IsStruct() const noexcept override {
@@ -197,9 +197,9 @@ class StructType : public Type {
 
 class UnionType : public Type {
  public:
-  /// @param id The identifier of a union type.
-  explicit UnionType(std::string id,
-                     std::vector<std::unique_ptr<Type>> field_types)
+  /// @param id The identifier of the union type. May be empty ("") for unnamed
+  /// unions.
+  UnionType(std::string id, std::vector<std::unique_ptr<Type>> field_types)
       : id_{std::move(id)}, field_types_{std::move(field_types)} {}
 
   bool IsUnion() const noexcept override {

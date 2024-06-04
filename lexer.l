@@ -48,7 +48,7 @@ integer [0-9]+
 ":" { return yy::parser::make_COLON(yylloc); }
 
 "," { return yy::parser::make_COMMA(yylloc); }
-"." { return yy::parser::make_PERIOD(yylloc); }
+"." { return yy::parser::make_DOT(yylloc); }
 
   /* operators */
 "-" { return yy::parser::make_MINUS(yylloc); }

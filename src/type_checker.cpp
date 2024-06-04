@@ -356,11 +356,14 @@ void TypeChecker::Visit(InitExprNode& init_expr) {
 }
 
 void TypeChecker::Visit(ArrDesNode& arr_des) {
+  /* ArrDesNode shall have array type and the expression shall be an integer
+   * constant expression. */
   arr_des.index->Accept(*this);
 }
 
 void TypeChecker::Visit(IdDesNode& id_des) {
-  /* do nothing */
+  /* IdDesNode does nothing and shall have structure or union type and the
+   * identifier shall be the name of a member of that type. */
 }
 
 void TypeChecker::Visit(NullExprNode&) {
