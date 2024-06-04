@@ -39,6 +39,8 @@ enum class UnaryOperator : std::uint8_t {
 enum class PostfixOperator : std::uint8_t {
   kIncr,
   kDecr,
+  kDot,
+  kArrow,
 };
 
 #endif

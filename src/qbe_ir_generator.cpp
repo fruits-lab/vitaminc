@@ -765,6 +765,8 @@ void QbeIrGenerator::Visit(const PostfixArithExprNode& postfix_expr) {
               FuncScopeTemp{id_to_num.at(id_expr->id)});
 }
 
+void QbeIrGenerator::Visit(const RecordMemExprNode& mem_expr) {}
+
 void QbeIrGenerator::Visit(const UnaryExprNode& unary_expr) {
   unary_expr.operand->Accept(*this);
   switch (unary_expr.op) {
