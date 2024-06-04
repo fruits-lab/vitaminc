@@ -475,6 +475,8 @@ void TypeChecker::Visit(PostfixArithExprNode& postfix_expr) {
   postfix_expr.type = postfix_expr.operand->type->Clone();
 }
 
+void TypeChecker::Visit(RecordMemExprNode& mem_expr) {}
+
 void TypeChecker::Visit(UnaryExprNode& unary_expr) {
   unary_expr.operand->Accept(*this);
   switch (unary_expr.op) {

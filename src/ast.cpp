@@ -334,6 +334,14 @@ void PostfixArithExprNode::Accept(ModifyingVisitor& v) {
   v.Visit(*this);
 }
 
+void RecordMemExprNode::Accept(NonModifyingVisitor& v) const {
+  v.Visit(*this);
+}
+
+void RecordMemExprNode::Accept(ModifyingVisitor& v) {
+  v.Visit(*this);
+}
+
 void UnaryExprNode::Accept(NonModifyingVisitor& v) const {
   v.Visit(*this);
 }

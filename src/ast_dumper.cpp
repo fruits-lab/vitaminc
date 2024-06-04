@@ -85,6 +85,10 @@ std::string GetPostfixOperator(PostfixOperator op) {
       return "++";
     case PostfixOperator::kDecr:
       return "--";
+    case PostfixOperator::kDot:
+      return ".";
+    case PostfixOperator::kArrow:
+      return "->";
     default:
       return "Unknown";
   }
@@ -385,6 +389,8 @@ void AstDumper::Visit(const PostfixArithExprNode& postfix_expr) {
   postfix_expr.operand->Accept(*this);
   indenter_.DecreaseLevel();
 }
+
+void AstDumper::Visit(const RecordMemExprNode& mem_expr) {}
 
 void AstDumper::Visit(const UnaryExprNode& unary_expr) {
   std::cout << indenter_.Indent() << "UnaryExprNode <" << unary_expr.loc << "> "

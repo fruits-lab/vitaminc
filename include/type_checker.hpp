@@ -44,6 +44,7 @@ class TypeChecker : public ModifyingVisitor {
   void Visit(CondExprNode&) override;
   void Visit(FuncCallExprNode&) override;
   void Visit(PostfixArithExprNode&) override;
+  void Visit(RecordMemExprNode&) override;
   void Visit(UnaryExprNode&) override;
   void Visit(BinaryExprNode&) override;
   void Visit(SimpleAssignmentExprNode&) override;

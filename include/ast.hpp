@@ -520,6 +520,20 @@ struct PostfixArithExprNode : public ExprNode {
   std::unique_ptr<ExprNode> operand;
 };
 
+/// @brief A postfix expression that designates a member of struct or union.
+struct RecordMemExprNode : public ExprNode {
+  RecordMemExprNode(Location loc, PostfixOperator op,
+                    std::unique_ptr<ExprNode> expr, std::string id)
+      : ExprNode{loc}, op{op}, expr{std::move(expr)}, id{std::move(id)} {}
+
+  void Accept(NonModifyingVisitor&) const override;
+  void Accept(ModifyingVisitor&) override;
+
+  PostfixOperator op;
+  std::unique_ptr<ExprNode> expr;
+  std::string id;
+};
+
 struct UnaryExprNode : public ExprNode {
   UnaryExprNode(Location loc, UnaryOperator op,
                 std::unique_ptr<ExprNode> operand)

@@ -274,8 +274,8 @@ postfix_expr: primary_expr { $$ = $1; }
   | postfix_expr INCR { $$ = std::make_unique<PostfixArithExprNode>(Loc(@1), PostfixOperator::kIncr, $1); }
   | postfix_expr DECR { $$ = std::make_unique<PostfixArithExprNode>(Loc(@1), PostfixOperator::kDecr, $1); }
   /* 6.5.2.3 Structure and union members */
-  | postfix_expr DOT ID
-  | postfix_expr ARROW ID
+  | postfix_expr DOT ID { $$ = std::make_unique<RecordMemExprNode>(Loc(@1), PostfixOperator::kDot, $1, $3); }
+  | postfix_expr ARROW ID { $$ = std::make_unique<RecordMemExprNode>(Loc(@1), PostfixOperator::kArrow, $1, $3); }
   ;
 
 /* 6.5.3 Unary operators */
