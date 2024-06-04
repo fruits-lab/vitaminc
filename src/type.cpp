@@ -159,8 +159,8 @@ bool StructType::IsEqual(const Type& that) const noexcept {
     if (that_struct->size() != size()) {
       return false;
     }
-    for (auto i = std::size_t{0}, e = field_types_.size(); i < e; ++i) {
-      if (!that_struct->field_types_.at(i)->IsEqual(*field_types_.at(i))) {
+    for (auto i = std::size_t{0}, e = fields_.size(); i < e; ++i) {
+      if (!that_struct->fields_.at(i)->type->IsEqual(*fields_.at(i)->type)) {
         return false;
       }
     }
@@ -172,8 +172,8 @@ bool StructType::IsEqual(const Type& that) const noexcept {
 std::size_t StructType::size() const {
   // TODO: There may be unnamed padding at the end of a structure or union.
   auto size = std::size_t{0};
-  for (const auto& field_type : field_types_) {
-    size += field_type->size();
+  for (const auto& field : fields_) {
+    size += field->type->size();
   }
   return size;
 }
@@ -186,11 +186,13 @@ std::string StructType::ToString() const {
 }
 
 std::unique_ptr<Type> StructType::Clone() const {
-  auto cloned_field_types = std::vector<std::unique_ptr<Type>>{};
-  for (const auto& field_type : field_types_) {
-    cloned_field_types.push_back(field_type->Clone());
+  auto cloned_fields = std::vector<std::unique_ptr<Field>>{};
+  for (const auto& field : fields_) {
+    auto cloned_field =
+        std::make_unique<Field>(field->id, field->type->Clone());
+    cloned_fields.push_back(std::move(cloned_field));
   }
-  return std::make_unique<StructType>(id_, std::move(cloned_field_types));
+  return std::make_unique<StructType>(id_, std::move(cloned_fields));
 }
 
 bool UnionType::IsEqual(const Type& that) const noexcept {
@@ -204,8 +206,8 @@ std::size_t UnionType::size() const {
   // The size of a union is sufficient to contain the largest of its members.
   // TODO: There may be unnamed padding at the end of a structure or union.
   auto size = std::size_t{0};
-  for (const auto& field_type : field_types_) {
-    size = std::max(size, field_type->size());
+  for (const auto& field : fields_) {
+    size = std::max(size, field->type->size());
   }
   return size;
 }
@@ -218,9 +220,11 @@ std::string UnionType::ToString() const {
 }
 
 std::unique_ptr<Type> UnionType::Clone() const {
-  auto cloned_field_types = std::vector<std::unique_ptr<Type>>{};
-  for (const auto& field_type : field_types_) {
-    cloned_field_types.push_back(field_type->Clone());
+  auto cloned_fields = std::vector<std::unique_ptr<Field>>{};
+  for (const auto& field : fields_) {
+    auto cloned_field =
+        std::make_unique<Field>(field->id, field->type->Clone());
+    cloned_fields.push_back(std::move(cloned_field));
   }
-  return std::make_unique<UnionType>(id_, std::move(cloned_field_types));
+  return std::make_unique<UnionType>(id_, std::move(cloned_fields));
 }
