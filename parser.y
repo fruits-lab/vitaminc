@@ -497,9 +497,10 @@ struct_or_union_specifier: struct_or_union id_opt LEFT_CURLY struct_declaration_
     auto type = $1;
     auto decl_id = $2;
     auto field_list = $4;
-    auto field_types = std::vector<std::unique_ptr<Type>>{};
+    auto fields = std::vector<std::unique_ptr<Field>>{};
     for (const auto& field : field_list) {
-      field_types.push_back(field->type->Clone());
+      auto field_node = std::make_unique<Field>(field->id, field->type->Clone());
+      fields.push_back(std::move(field_node));
     }
 
     auto type_id = decl_id ? decl_id->id : "";
@@ -515,7 +516,7 @@ struct_or_union_specifier: struct_or_union id_opt LEFT_CURLY struct_declaration_
     auto type = $1;
     auto decl_id = $2;
     auto field_list = std::vector<std::unique_ptr<FieldNode>>{};
-    auto field_types = std::vector<std::unique_ptr<Type>>{};
+    auto fields = std::vector<std::unique_ptr<Field>>{};
 
     if (type->IsStruct()) {
       type = std::make_unique<StructType>(decl_id, std::move(field_types));
@@ -572,12 +573,12 @@ id_opt: ID {
   ;
 
 struct_or_union: STRUCT {
-    auto field_types = std::vector<std::unique_ptr<Type>>{};
-    $$ = std::make_unique<StructType>("", std::move(field_types));
+    auto fields = std::vector<std::unique_ptr<Field>>{};
+    $$ = std::make_unique<StructType>("", std::move(fields));
   }
   | UNION {
-    auto field_types = std::vector<std::unique_ptr<Type>>{};
-    $$ = std::make_unique<UnionType>("", std::move(field_types));
+    auto fields = std::vector<std::unique_ptr<Field>>{};
+    $$ = std::make_unique<UnionType>("", std::move(fields));
   }
   ;
 

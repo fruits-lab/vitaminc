@@ -174,12 +174,21 @@ class FuncType : public Type {
   bool ConvertibleHook_(const Type& that) const noexcept override;
 };
 
+/// @brief Field stores the name and the type of a member in struct or union.
+struct Field {
+  std::string id;
+  std::unique_ptr<Type> type;
+
+  Field(std::string id, std::unique_ptr<Type> type)
+      : id{std::move(id)}, type{std::move(type)} {}
+};
+
 class StructType : public Type {
  public:
   /// @param id The identifier of the struct type. May be empty ("") for unnamed
   /// structs.
-  StructType(std::string id, std::vector<std::unique_ptr<Type>> field_types)
-      : id_{std::move(id)}, field_types_{std::move(field_types)} {}
+  StructType(std::string id, std::vector<std::unique_ptr<Field>> fields)
+      : id_{std::move(id)}, fields_{std::move(fields)} {}
 
   bool IsStruct() const noexcept override {
     return true;
@@ -192,15 +201,15 @@ class StructType : public Type {
 
  private:
   std::string id_;
-  std::vector<std::unique_ptr<Type>> field_types_;
+  std::vector<std::unique_ptr<Field>> fields_;
 };
 
 class UnionType : public Type {
  public:
   /// @param id The identifier of the union type. May be empty ("") for unnamed
   /// unions.
-  UnionType(std::string id, std::vector<std::unique_ptr<Type>> field_types)
-      : id_{std::move(id)}, field_types_{std::move(field_types)} {}
+  UnionType(std::string id, std::vector<std::unique_ptr<Field>> fields)
+      : id_{std::move(id)}, fields_{std::move(fields)} {}
 
   bool IsUnion() const noexcept override {
     return true;
@@ -213,7 +222,7 @@ class UnionType : public Type {
 
  private:
   std::string id_;
-  std::vector<std::unique_ptr<Type>> field_types_;
+  std::vector<std::unique_ptr<Field>> fields_;
 };
 
 #endif  // TYPE_HPP_
