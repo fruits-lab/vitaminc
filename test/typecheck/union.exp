@@ -24,20 +24,20 @@ ProgramNode <1:1>
           IdDesNode <22:26> circle
           IntConstExprNode <22:35> 1: int
       ArrDeclNode <23:15> puzzles: union shape[3]
-        InitExprNode <23:30>
-          ArrDesNode <23:31>
-            IntConstExprNode <23:31> 0: int
-          IdDesNode <23:34> circle
-          IntConstExprNode <23:43> 1: int
-        InitExprNode <23:30>
-          ArrDesNode <23:47>
-            IntConstExprNode <23:47> 1: int
-          IdDesNode <23:50> triangle
-          IntConstExprNode <23:61> 2: int
-        InitExprNode <23:30>
-          ArrDesNode <23:65>
-            IntConstExprNode <23:65> 2: int
-          IdDesNode <23:68> square
-          IntConstExprNode <23:77> 4: int
+        InitExprNode <23:29>
+          ArrDesNode <23:30>
+            IntConstExprNode <23:30> 0: int
+          IdDesNode <23:33> circle
+          IntConstExprNode <23:42> 1: int
+        InitExprNode <23:29>
+          ArrDesNode <23:46>
+            IntConstExprNode <23:46> 1: int
+          IdDesNode <23:49> triangle
+          IntConstExprNode <23:60> 2: int
+        InitExprNode <23:29>
+          ArrDesNode <23:64>
+            IntConstExprNode <23:64> 2: int
+          IdDesNode <23:67> square
+          IntConstExprNode <23:76> 4: int
       ReturnStmtNode <25:3>
         IntConstExprNode <25:10> 0: int

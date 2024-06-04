@@ -79,7 +79,7 @@ std::unique_ptr<Type> ResolveType(std::unique_ptr<Type> resolved_type,
 
 %token MINUS PLUS STAR DIV MOD ASSIGN
 %token EXCLAMATION TILDE AMPERSAND QUESTION
-%token COMMA PERIOD SEMICOLON COLON
+%token COMMA DOT SEMICOLON COLON
 // (), {}, []
 %token LEFT_PAREN RIGHT_PAREN LEFT_CURLY RIGHT_CURLY LEFT_SQUARE RIGHT_SQUARE
 
@@ -388,25 +388,24 @@ arg: expr {
 /* 6.7 Declarations */
 /* Declaration specifiers can be either a 'type' or a 'declaration of type'. */
 /* TODO: init declarator list */
-/* TODO: If the init declarator doesn't present, e.g., `int;`, the declaration is still valid. */
 decl: declaration_specifiers init_declarator_opt SEMICOLON {
     auto decl_specifers = $1;
     auto init_decl = $2;
     if (std::holds_alternative<std::unique_ptr<Type>>(decl_specifers)) {
       auto type = std::move(std::get<std::unique_ptr<Type>>(decl_specifers));
-      init_decl->type = ResolveType(std::move(type), std::move(init_decl->type));
+      if (init_decl) {
+        init_decl->type = ResolveType(std::move(type), std::move(init_decl->type));
+      } else { // unnamed primitive type
+        init_decl = std::make_unique<VarDeclNode>(Loc(@1), "", std::move(type));
+      }
+
       $$ = std::move(init_decl);
     } else {
       auto decl = std::move(std::get<std::unique_ptr<DeclNode>>(decl_specifers));
-      auto rec_decl = dynamic_cast<RecordDeclNode*>(decl.get());
+      auto* rec_decl = dynamic_cast<RecordDeclNode*>(decl.get());
       assert(rec_decl);
-      if (auto* rec_var_decl = dynamic_cast<RecordVarDeclNode*>(init_decl.get())) {
-        // A struct or union variable.
-        rec_var_decl->type = ResolveType(std::move(rec_decl->type), std::move(rec_var_decl->type));
-        decl = std::move(init_decl);
-      } else if (auto* arr_decl = dynamic_cast<ArrDeclNode*>(init_decl.get())) {
-        // An array with struct or union elements.
-        arr_decl->type = ResolveType(std::move(rec_decl->type), std::move(arr_decl->type));
+      if (init_decl) {
+        init_decl->type = ResolveType(std::move(rec_decl->type), std::move(init_decl->type));
         decl = std::move(init_decl);
       }
 
@@ -446,11 +445,10 @@ init_declarator: declarator { $$ = $1; }
         arr_decl->init_list = std::move(init_expr_list);
       } else if (auto* var_decl = dynamic_cast<VarDeclNode*>(decl.get())) {
         // Declares a struct or union variable.
-        auto rec_decl = std::make_unique<RecordVarDeclNode>(Loc(@1),
+        decl = std::make_unique<RecordVarDeclNode>(Loc(@1),
                                          std::move(var_decl->id),
                                          std::move(var_decl->type),
                                          std::move(init_expr_list));
-        decl = std::move(rec_decl);
       }
     }
     $$ = std::move(decl);
@@ -483,7 +481,7 @@ struct_or_union_specifier: struct_or_union id_opt LEFT_CURLY struct_declaration_
       type = std::make_unique<UnionType>(std::move(type_id), std::move(field_types));
     }
 
-    $$ = std::make_unique<RecordDeclNode>(Loc(@2), decl_id ? std::move(decl_id->id) : "", std::move(type), std::move(field_list));
+    $$ = std::make_unique<RecordDeclNode>(Loc(@2), std::move(type_id), std::move(type), std::move(field_list));
   }
   | struct_or_union ID {
     auto type = $1;
@@ -491,11 +489,10 @@ struct_or_union_specifier: struct_or_union id_opt LEFT_CURLY struct_declaration_
     auto field_list = std::vector<std::unique_ptr<FieldNode>>{};
     auto field_types = std::vector<std::unique_ptr<Type>>{};
 
-    auto type_id = decl_id;
     if (type->IsStruct()) {
-      type = std::make_unique<StructType>(std::move(type_id), std::move(field_types));
+      type = std::make_unique<StructType>(std::move(decl_id), std::move(field_types));
     } else {
-      type = std::make_unique<UnionType>(std::move(type_id), std::move(field_types));
+      type = std::make_unique<UnionType>(std::move(decl_id), std::move(field_types));
     }
 
     $$ = std::make_unique<RecordDeclNode>(Loc(@2), std::move(decl_id), std::move(type), std::move(field_list));
@@ -589,7 +586,7 @@ direct_declarator: ID {
     auto type = std::make_unique<ArrType>(std::move(declarator->type), $3);
     if (!dynamic_cast<ArrDeclNode*>(declarator.get())) {
       // If the declarator is not yet a array declarator, we need to construct one.
-      $$ = std::make_unique<ArrDeclNode>(Loc(@1), declarator->id, std::move(type), /* init list */ std::vector<std::unique_ptr<InitExprNode>>{});
+      $$ = std::make_unique<ArrDeclNode>(Loc(@1), declarator->id, std::move(type), std::vector<std::unique_ptr<InitExprNode>>{});
     } else {
       declarator->type = std::move(type);
       $$ = std::move(declarator);
@@ -709,7 +706,6 @@ direct_abstract_declarator_opt: direct_abstract_declarator { $$ = $1; }
   ;
 
 /* 6.7.8 Initialization */
-/* The current object shall have array type and the expression shall be an integer constant expression. */
 initializer: LEFT_CURLY initializer_list comma_opt RIGHT_CURLY { $$ = $2; }
   | assign_expr { $$ = std::make_unique<InitExprNode>(Loc(@1), std::vector<std::unique_ptr<DesNode>>{}, $1); }
   ;
@@ -743,10 +739,8 @@ designator_list: designator {
   }
   ;
 
-/* The current object shall have array type and the expression shall be an integer constant expression. */
 designator: LEFT_SQUARE const_expr RIGHT_SQUARE { $$ = std::make_unique<ArrDesNode>(Loc(@2), $2); }
-  /* The current object shall have structure or union type and the identifier shall be the name of a member of that type. */
-  | PERIOD ID { $$ = std::make_unique<IdDesNode>(Loc(@2), $2); }
+  | DOT ID { $$ = std::make_unique<IdDesNode>(Loc(@2), $2); }
   ;
 
 comma_opt: COMMA
