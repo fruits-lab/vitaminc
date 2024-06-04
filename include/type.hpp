@@ -183,12 +183,23 @@ struct Field {
       : id{std::move(id)}, type{std::move(type)} {}
 };
 
-class StructType : public Type {
+class RecordType : public Type {
+ public:
+  virtual bool IsMember(const std::string& id) const noexcept = 0;
+  virtual std::unique_ptr<Type> MemberType(
+      const std::string& id) const noexcept = 0;
+};
+
+class StructType : public RecordType {
  public:
   /// @param id The identifier of the struct type. May be empty ("") for unnamed
   /// structs.
   StructType(std::string id, std::vector<std::unique_ptr<Field>> fields)
       : id_{std::move(id)}, fields_{std::move(fields)} {}
+
+  bool IsMember(const std::string& id) const noexcept override;
+  std::unique_ptr<Type> MemberType(
+      const std::string& id) const noexcept override;
 
   bool IsStruct() const noexcept override {
     return true;
@@ -204,12 +215,16 @@ class StructType : public Type {
   std::vector<std::unique_ptr<Field>> fields_;
 };
 
-class UnionType : public Type {
+class UnionType : public RecordType {
  public:
   /// @param id The identifier of the union type. May be empty ("") for unnamed
   /// unions.
   UnionType(std::string id, std::vector<std::unique_ptr<Field>> fields)
       : id_{std::move(id)}, fields_{std::move(fields)} {}
+
+  bool IsMember(const std::string& id) const noexcept override;
+  std::unique_ptr<Type> MemberType(
+      const std::string& id) const noexcept override;
 
   bool IsUnion() const noexcept override {
     return true;
