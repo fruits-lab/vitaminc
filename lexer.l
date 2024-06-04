@@ -49,6 +49,7 @@ integer [0-9]+
 
 "," { return yy::parser::make_COMMA(yylloc); }
 "." { return yy::parser::make_DOT(yylloc); }
+"->" { return yy::parser::make_ARROW(yylloc); }
 
   /* operators */
 "-" { return yy::parser::make_MINUS(yylloc); }

@@ -79,7 +79,7 @@ std::unique_ptr<Type> ResolveType(std::unique_ptr<Type> resolved_type,
 
 %token MINUS PLUS STAR DIV MOD ASSIGN
 %token EXCLAMATION TILDE AMPERSAND QUESTION
-%token COMMA DOT SEMICOLON COLON
+%token COMMA DOT ARROW SEMICOLON COLON
 // (), {}, []
 %token LEFT_PAREN RIGHT_PAREN LEFT_CURLY RIGHT_CURLY LEFT_SQUARE RIGHT_SQUARE
 
@@ -273,6 +273,9 @@ postfix_expr: primary_expr { $$ = $1; }
   /* 6.5.2.4 Postfix increment and decrement operators */
   | postfix_expr INCR { $$ = std::make_unique<PostfixArithExprNode>(Loc(@1), PostfixOperator::kIncr, $1); }
   | postfix_expr DECR { $$ = std::make_unique<PostfixArithExprNode>(Loc(@1), PostfixOperator::kDecr, $1); }
+  /* 6.5.2.3 Structure and union members */
+  | postfix_expr DOT ID
+  | postfix_expr ARROW ID
   ;
 
 /* 6.5.3 Unary operators */
