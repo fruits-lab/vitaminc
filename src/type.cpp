@@ -154,6 +154,27 @@ std::unique_ptr<Type> FuncType::Clone() const {
                                     std::move(cloned_param_types));
 }
 
+bool StructType::IsMember(const std::string& id) const noexcept {
+  for (const auto& field : fields_) {
+    if (field->id == id) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+std::unique_ptr<Type> StructType::MemberType(
+    const std::string& id) const noexcept {
+  for (const auto& field : fields_) {
+    if (field->id == id) {
+      return std::move(field->type->Clone());
+    }
+  }
+
+  return std::make_unique<PrimType>(PrimitiveType::kUnknown);
+}
+
 bool StructType::IsEqual(const Type& that) const noexcept {
   if (const auto* that_struct = dynamic_cast<const StructType*>(&that)) {
     if (that_struct->size() != size()) {
@@ -193,6 +214,27 @@ std::unique_ptr<Type> StructType::Clone() const {
     cloned_fields.push_back(std::move(cloned_field));
   }
   return std::make_unique<StructType>(id_, std::move(cloned_fields));
+}
+
+bool UnionType::IsMember(const std::string& id) const noexcept {
+  for (const auto& field : fields_) {
+    if (field->id == id) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+std::unique_ptr<Type> UnionType::MemberType(
+    const std::string& id) const noexcept {
+  for (const auto& field : fields_) {
+    if (field->id == id) {
+      return std::move(field->type->Clone());
+    }
+  }
+
+  return std::make_unique<PrimType>(PrimitiveType::kUnknown);
 }
 
 bool UnionType::IsEqual(const Type& that) const noexcept {
