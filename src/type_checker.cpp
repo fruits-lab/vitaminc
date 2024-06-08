@@ -200,8 +200,8 @@ void TypeChecker::Visit(LoopInitNode& loop_init) {
 
 void TypeChecker::Visit(CompoundStmtNode& compound_stmt) {
   env_.PushScope(ScopeKind::kBlock);
-  for (auto& item : compound_stmt.items) {
-    item->Accept(*this);
+  for (auto& stmt : compound_stmt.stmts) {
+    stmt->Accept(*this);
   }
   env_.PopScope();
 }
