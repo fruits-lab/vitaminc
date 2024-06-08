@@ -178,8 +178,8 @@ void AstDumper::Visit(const CompoundStmtNode& compound_stmt) {
   std::cout << indenter_.Indent() << "CompoundStmtNode <" << compound_stmt.loc
             << ">\n";
   indenter_.IncreaseLevel();
-  for (const auto& item : compound_stmt.items) {
-    item->Accept(*this);
+  for (const auto& stmt : compound_stmt.stmts) {
+    stmt->Accept(*this);
   }
   indenter_.DecreaseLevel();
 }

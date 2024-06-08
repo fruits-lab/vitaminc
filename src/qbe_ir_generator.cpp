@@ -273,8 +273,8 @@ void QbeIrGenerator::Visit(const CompoundStmtNode& compound_stmt) {
   // because it doesn't know whether it is a if statement body or a function.
   // Thus, by moving label creation to an upper level, each block can have its
   // correct starting label.
-  for (const auto& item : compound_stmt.items) {
-    item->Accept(*this);
+  for (const auto& stmt : compound_stmt.stmts) {
+    stmt->Accept(*this);
   }
 }
 

@@ -211,14 +211,13 @@ struct LoopInitNode : public AstNode {
 };
 
 struct CompoundStmtNode : public StmtNode {
-  using Item = std::unique_ptr<StmtNode>;
-  CompoundStmtNode(Location loc, std::vector<Item> items)
-      : StmtNode{loc}, items{std::move(items)} {}
+  CompoundStmtNode(Location loc, std::vector<std::unique_ptr<StmtNode>> stmts)
+      : StmtNode{loc}, stmts{std::move(stmts)} {}
 
   void Accept(NonModifyingVisitor&) const override;
   void Accept(ModifyingVisitor&) override;
 
-  std::vector<Item> items;
+  std::vector<std::unique_ptr<StmtNode>> stmts;
 };
 
 /// @brief Root of the entire program.

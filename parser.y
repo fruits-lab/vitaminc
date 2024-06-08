@@ -131,7 +131,7 @@ std::unique_ptr<Type> ResolveType(std::unique_ptr<Type> resolved_type,
 %nterm <std::unique_ptr<LoopInitNode>> loop_init
 %nterm <std::unique_ptr<StmtNode>> stmt jump_stmt selection_stmt labeled_stmt block_item
 %nterm <std::unique_ptr<CompoundStmtNode>> compound_stmt
-%nterm <std::vector<CompoundStmtNode::Item>> block_item_list block_item_list_opt
+%nterm <std::vector<std::unique_ptr<StmtNode>>> block_item_list block_item_list_opt
 
 // Resolve the ambiguity in the "dangling-else" grammar.
 // Example: IF LEFT_PAREN expr RIGHT_PAREN IF LEFT_PAREN expr RIGHT_PAREN stmt • ELSE stmt
@@ -198,12 +198,12 @@ compound_stmt: LEFT_CURLY block_item_list_opt RIGHT_CURLY {
 
 block_item_list_opt: block_item_list { $$ = $1; }
   | epsilon {
-    $$ = std::vector<CompoundStmtNode::Item>{};
+    $$ = std::vector<std::unique_ptr<StmtNode>>{};
   }
   ;
 
 block_item_list: block_item {
-    $$ = std::vector<CompoundStmtNode::Item>{};
+    $$ = std::vector<std::unique_ptr<StmtNode>>{};
     $$.push_back($1);
   }
   | block_item_list block_item {
