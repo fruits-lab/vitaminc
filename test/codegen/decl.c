@@ -7,5 +7,7 @@ int main() {
   int i;
   int j = 2;
   __builtin_print(j);
+  int a = 3, b;
+  __builtin_print(a);
   return 0;
 }

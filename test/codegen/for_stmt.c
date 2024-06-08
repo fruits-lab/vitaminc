@@ -12,7 +12,7 @@ int main() {
   // Nested for loop
   //
   int k = 0;
-  for (int i = 0; i < 5; i = i + 1) {
+  for (int i = 0, e = 5; i < e; i = i + 1) {
     for (int j = 0; j < 5; j = j + 1) {
       k = k + 1;
     }
