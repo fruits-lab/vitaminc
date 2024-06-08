@@ -1,7 +1,6 @@
 int main() {
   int a = 10;
-  int* b = &a;
-  int* c;
+  int *b = &a, *c;
   __builtin_print(a);
 
   *b = 5;

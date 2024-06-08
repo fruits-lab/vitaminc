@@ -11,9 +11,7 @@ int main() {
   a[3] = 2 + a[2];
   __builtin_print(a[3]);
 
-  int b = 2;
-  int c = 0;
-  int d[4] = {1, b, c = 3, 4};
+  int b = 2, c = 0, d[4] = {1, b, c = 3, 4};
   __builtin_print(d[0]);
   __builtin_print(d[1]);
   __builtin_print(d[2]);
