@@ -11,6 +11,7 @@ struct StmtNode;
 struct ExprNode;
 struct DeclNode;
 struct DesNode;
+struct DeclStmtNode;
 struct VarDeclNode;
 struct ArrDeclNode;
 struct RecordDeclNode;
@@ -69,6 +70,7 @@ class Visitor {
   virtual void Visit(CondMut<AstNode>&){};
   virtual void Visit(CondMut<StmtNode>&){};
   virtual void Visit(CondMut<ExprNode>&){};
+  virtual void Visit(CondMut<DeclStmtNode>&){};
   virtual void Visit(CondMut<DeclNode>&){};
   virtual void Visit(CondMut<DesNode>&){};
   virtual void Visit(CondMut<VarDeclNode>&){};

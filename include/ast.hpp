@@ -105,6 +105,17 @@ struct DesNode  // NOLINT(cppcoreguidelines-special-member-functions)
       std::make_unique<PrimType>(PrimitiveType::kUnknown);
 };
 
+/// @brief A declaration statement may declare multiple identifiers.
+struct DeclStmtNode : public StmtNode {
+  DeclStmtNode(Location loc, std::vector<std::unique_ptr<DeclNode>> decls)
+      : StmtNode{loc}, decls{std::move(decls)} {}
+
+  void Accept(NonModifyingVisitor&) const override;
+  void Accept(ModifyingVisitor&) override;
+
+  std::vector<std::unique_ptr<DeclNode>> decls;
+};
+
 struct VarDeclNode : public DeclNode {
   VarDeclNode(Location loc, std::string id, std::unique_ptr<Type> type,
               std::unique_ptr<ExprNode> init = {})
@@ -189,18 +200,18 @@ struct FuncDefNode : public DeclNode {
 struct LoopInitNode : public AstNode {
   LoopInitNode(
       Location loc,
-      std::variant<std::unique_ptr<DeclNode>, std::unique_ptr<ExprNode>> clause)
+      std::variant<std::unique_ptr<DeclStmtNode>, std::unique_ptr<ExprNode>>
+          clause)
       : AstNode{loc}, clause{std::move(clause)} {}
 
   void Accept(NonModifyingVisitor&) const override;
   void Accept(ModifyingVisitor&) override;
 
-  std::variant<std::unique_ptr<DeclNode>, std::unique_ptr<ExprNode>> clause;
+  std::variant<std::unique_ptr<DeclStmtNode>, std::unique_ptr<ExprNode>> clause;
 };
 
 struct CompoundStmtNode : public StmtNode {
-  using Item =
-      std::variant<std::unique_ptr<DeclNode>, std::unique_ptr<StmtNode>>;
+  using Item = std::unique_ptr<StmtNode>;
   CompoundStmtNode(Location loc, std::vector<Item> items)
       : StmtNode{loc}, items{std::move(items)} {}
 

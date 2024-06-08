@@ -23,5 +23,7 @@ int main() {
 
   struct birth bd3[3] = {[0].date = 4, [1].year = 1999};
 
+  struct birth a, *b, c[3];
+
   return 0;
 }

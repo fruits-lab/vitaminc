@@ -1,42 +1,43 @@
 ProgramNode <1:1>
   FuncDefNode <1:5> main: int ()
     CompoundStmtNode <1:12>
-      RecordDeclNode <2:10> struct ss definition
-      RecordDeclNode <4:10> struct birth definition
-        FieldNode <5:9> date: int
-        FieldNode <6:9> month: int
-        FieldNode <7:9> year: int
-      RecordDeclNode <10:9> struct definition
-        FieldNode <11:9> quarter: int
-        FieldNode <12:9> dime: int
-        FieldNode <13:9> penny: int
-      RecordVarDeclNode <16:16> bd1: struct birth
-        InitExprNode <17:5>
-          IdDesNode <17:6> date
-          IntConstExprNode <17:13> 1: int
-        InitExprNode <17:5>
-          IdDesNode <18:6> month
-          IntConstExprNode <18:14> 1: int
-        InitExprNode <17:5>
-          IdDesNode <19:6> year
-          IntConstExprNode <19:13> 1995: int
-      RecordVarDeclNode <22:16> bd2: struct birth
-        InitExprNode <22:23>
-          IntConstExprNode <22:23> 3: int
-        InitExprNode <22:23>
-          IntConstExprNode <22:26> 3: int
-        InitExprNode <22:23>
-          IntConstExprNode <22:29> 1998: int
-      ArrDeclNode <24:16> bd3: struct birth[3]
-        InitExprNode <24:26>
-          ArrDesNode <24:27>
-            IntConstExprNode <24:27> 0: int
-          IdDesNode <24:30> date
-          IntConstExprNode <24:37> 4: int
-        InitExprNode <24:26>
-          ArrDesNode <24:41>
-            IntConstExprNode <24:41> 1: int
-          IdDesNode <24:44> year
-          IntConstExprNode <24:51> 1999: int
-      ReturnStmtNode <26:3>
-        IntConstExprNode <26:10> 0: int
+      DeclStmtNode <2:3>
+      DeclStmtNode <4:3>
+      DeclStmtNode <10:3>
+      DeclStmtNode <16:3>
+        RecordVarDeclNode <16:16> bd1: struct birth
+          InitExprNode <17:5>
+            IdDesNode <17:6> date
+            IntConstExprNode <17:13> 1: int
+          InitExprNode <17:5>
+            IdDesNode <18:6> month
+            IntConstExprNode <18:14> 1: int
+          InitExprNode <17:5>
+            IdDesNode <19:6> year
+            IntConstExprNode <19:13> 1995: int
+      DeclStmtNode <22:3>
+        RecordVarDeclNode <22:16> bd2: struct birth
+          InitExprNode <22:23>
+            IntConstExprNode <22:23> 3: int
+          InitExprNode <22:23>
+            IntConstExprNode <22:26> 3: int
+          InitExprNode <22:23>
+            IntConstExprNode <22:29> 1998: int
+      DeclStmtNode <24:3>
+        ArrDeclNode <24:16> bd3: struct birth[3]
+          InitExprNode <24:26>
+            ArrDesNode <24:27>
+              IntConstExprNode <24:27> 0: int
+            IdDesNode <24:30> date
+            IntConstExprNode <24:37> 4: int
+          InitExprNode <24:26>
+            ArrDesNode <24:41>
+              IntConstExprNode <24:41> 1: int
+            IdDesNode <24:44> year
+            IntConstExprNode <24:51> 1999: int
+      DeclStmtNode <26:3>
+        VarDeclNode <26:16> a: struct birth
+        VarDeclNode <26:20> b: struct birth*
+        ArrDeclNode <26:23> c: struct birth[3]
+      ReturnStmtNode <28:3>
+        IntConstExprNode <28:10> 0: int

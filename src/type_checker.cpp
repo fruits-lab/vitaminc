@@ -40,6 +40,12 @@ bool IsInBodyOf(BodyType type) {
 
 }  // namespace
 
+void TypeChecker::Visit(DeclStmtNode& decl_stmt) {
+  for (auto& decl : decl_stmt.decls) {
+    decl->Accept(*this);
+  }
+}
+
 void TypeChecker::Visit(VarDeclNode& decl) {
   if (decl.init) {
     decl.init->Accept(*this);
@@ -195,7 +201,7 @@ void TypeChecker::Visit(LoopInitNode& loop_init) {
 void TypeChecker::Visit(CompoundStmtNode& compound_stmt) {
   env_.PushScope(ScopeKind::kBlock);
   for (auto& item : compound_stmt.items) {
-    std::visit([this](auto&& item) { item->Accept(*this); }, item);
+    item->Accept(*this);
   }
   env_.PopScope();
 }

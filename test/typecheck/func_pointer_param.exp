@@ -28,8 +28,9 @@ ProgramNode <1:1>
         IntConstExprNode <12:10> 0: int
   FuncDefNode <15:5> main: int ()
     CompoundStmtNode <15:12>
-      VarDeclNode <16:9> c: int (*)(int (*)(int, int), int, int)
-        IdExprNode <16:43> call: int (int (*)(int, int), int, int)
+      DeclStmtNode <16:3>
+        VarDeclNode <16:9> c: int (*)(int (*)(int, int), int, int)
+          IdExprNode <16:43> call: int (int (*)(int, int), int, int)
       ExprStmtNode <17:3>
         FuncCallExprNode <17:3> int
           IdExprNode <17:3> c: int (*)(int (*)(int, int), int, int)

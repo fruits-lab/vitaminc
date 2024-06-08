@@ -135,6 +135,12 @@ auto
 
 }  // namespace
 
+void QbeIrGenerator::Visit(const DeclStmtNode& decl_stmt) {
+  for (const auto& decl : decl_stmt.decls) {
+    decl->Accept(*this);
+  }
+}
+
 void QbeIrGenerator::Visit(const VarDeclNode& decl) {
   int id_num = NextLocalNum();
   WriteInstr_("{} =l alloc{} {}", FuncScopeTemp{id_num}, decl.type->size(),
@@ -268,7 +274,7 @@ void QbeIrGenerator::Visit(const CompoundStmtNode& compound_stmt) {
   // Thus, by moving label creation to an upper level, each block can have its
   // correct starting label.
   for (const auto& item : compound_stmt.items) {
-    std::visit([this](auto&& item) { item->Accept(*this); }, item);
+    item->Accept(*this);
   }
 }
 
