@@ -102,13 +102,15 @@ std::unique_ptr<Type> ResolveType(std::unique_ptr<Type> resolved_type,
 %nterm <std::unique_ptr<ExprNode>> expr assign_expr expr_opt unary_expr postfix_expr primary_expr
 %nterm <std::unique_ptr<ExprNode>> const_expr cond_expr logic_or_expr logic_and_expr inclusive_or_expr exclusive_or_expr
 %nterm <std::unique_ptr<ExprNode>> and_expr eq_expr relational_expr shift_expr add_expr mul_expr cast_expr
-%nterm <std::unique_ptr<DeclNode>> decl id_opt
+%nterm <std::unique_ptr<DeclNode>> id_opt
+%nterm <std::unique_ptr<DeclStmtNode>> decl
 %nterm <std::unique_ptr<ParamNode>> parameter_declaration
 %nterm <std::vector<std::unique_ptr<ParamNode>>> parameter_type_list_opt parameter_type_list parameter_list
 %nterm <std::unique_ptr<FieldNode>> struct_declaration struct_declarator struct_declarator_list
 %nterm <std::vector<std::unique_ptr<FieldNode>>> struct_declaration_list
 // The followings also declare an identifier, however, their types are not yet fully resolved.
-%nterm <std::unique_ptr<DeclNode>> declarator direct_declarator init_declarator_opt init_declarator
+%nterm <std::unique_ptr<DeclNode>> declarator direct_declarator init_declarator
+%nterm <std::vector<std::unique_ptr<DeclNode>>> init_declarator_list_opt init_declarator_list
 // The abstract declarator is a declarator without an identifier, which are actually types.
 %nterm <std::unique_ptr<Type>> abstract_declarator_opt abstract_declarator direct_abstract_declarator_opt direct_abstract_declarator
 %nterm <std::unique_ptr<Type>> struct_or_union specifier_qualifier_list
@@ -127,10 +129,9 @@ std::unique_ptr<Type> ResolveType(std::unique_ptr<Type> resolved_type,
 %nterm <std::unique_ptr<FuncDefNode>> func_def
 %nterm <std::vector<std::unique_ptr<FuncDefNode>>> func_def_list_opt
 %nterm <std::unique_ptr<LoopInitNode>> loop_init
-%nterm <std::unique_ptr<StmtNode>> stmt jump_stmt selection_stmt labeled_stmt
+%nterm <std::unique_ptr<StmtNode>> stmt jump_stmt selection_stmt labeled_stmt block_item
 %nterm <std::unique_ptr<CompoundStmtNode>> compound_stmt
 %nterm <std::vector<CompoundStmtNode::Item>> block_item_list block_item_list_opt
-%nterm <CompoundStmtNode::Item> block_item
 
 // Resolve the ambiguity in the "dangling-else" grammar.
 // Example: IF LEFT_PAREN expr RIGHT_PAREN IF LEFT_PAREN expr RIGHT_PAREN stmt • ELSE stmt
@@ -387,30 +388,47 @@ arg: expr {
 
 /* 6.7 Declarations */
 /* Declaration specifiers can be either a 'type' or a 'declaration of type'. */
-/* TODO: init declarator list */
-decl: declaration_specifiers init_declarator_opt SEMICOLON {
-    auto decl_specifers = $1;
-    auto init_decl = $2;
-    if (std::holds_alternative<std::unique_ptr<Type>>(decl_specifers)) {
-      auto type = std::move(std::get<std::unique_ptr<Type>>(decl_specifers));
-      if (init_decl) {
-        init_decl->type = ResolveType(std::move(type), std::move(init_decl->type));
-      } else { // unnamed primitive type
-        init_decl = std::make_unique<VarDeclNode>(Loc(@1), "", std::move(type));
+decl: declaration_specifiers init_declarator_list_opt SEMICOLON {
+    auto decl_specifiers = $1;
+    auto init_decl_list = $2;
+    // A single declaration may declare multiple identifiers.
+    auto decl_list = std::vector<std::unique_ptr<DeclNode>>{};
+    if (std::holds_alternative<std::unique_ptr<Type>>(decl_specifiers)) {
+      auto type = std::move(std::get<std::unique_ptr<Type>>(decl_specifiers));
+      for (auto& init_decl : init_decl_list) {
+        if (init_decl) {
+          init_decl->type = ResolveType(type->Clone(), std::move(init_decl->type));
+        } else { // unnamed primitive type
+          init_decl = std::make_unique<VarDeclNode>(Loc(@1), "", type->Clone());
+        }
+        decl_list.push_back(std::move(init_decl));
       }
-
-      $$ = std::move(init_decl);
     } else {
-      auto decl = std::move(std::get<std::unique_ptr<DeclNode>>(decl_specifers));
+      auto decl = std::move(std::get<std::unique_ptr<DeclNode>>(decl_specifiers));
       auto* rec_decl = dynamic_cast<RecordDeclNode*>(decl.get());
-      assert(rec_decl);
-      if (init_decl) {
-        init_decl->type = ResolveType(std::move(rec_decl->type), std::move(init_decl->type));
-        decl = std::move(init_decl);
+      for (auto& init_decl : init_decl_list) {
+        if (init_decl) {
+          init_decl->type = ResolveType(rec_decl->type->Clone(), std::move(init_decl->type));
+        }
+        decl_list.push_back(std::move(init_decl));
       }
-
-      $$ = std::move(decl);
     }
+    $$ = std::make_unique<DeclStmtNode>(Loc(@1), std::move(decl_list));
+  }
+  ;
+
+init_declarator_list_opt: init_declarator_list { $$ = $1; }
+  | epsilon { $$ = std::vector<std::unique_ptr<DeclNode>>{}; }
+  ;
+
+init_declarator_list: init_declarator {
+    $$ = std::vector<std::unique_ptr<DeclNode>>{};
+    $$.push_back($1);
+  }
+  | init_declarator_list COMMA init_declarator {
+    auto init_decl_list = $1;
+    init_decl_list.push_back($3);
+    $$ = std::move(init_decl_list);
   }
   ;
 
@@ -421,10 +439,6 @@ declaration_specifiers: type_specifier declaration_specifiers {
     $$ = $1;
   }
   | type_specifier { $$ = $1; }
-  ;
-
-init_declarator_opt: init_declarator { $$ = $1; }
-  | epsilon { $$ = nullptr; }
   ;
 
 /* A init declarator is a declarator with an optional initializer. */

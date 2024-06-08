@@ -52,6 +52,14 @@ void DesNode::Accept(ModifyingVisitor& v) {
 
 DesNode::~DesNode() = default;
 
+void DeclStmtNode::Accept(NonModifyingVisitor& v) const {
+  v.Visit(*this);
+}
+
+void DeclStmtNode::Accept(ModifyingVisitor& v) {
+  v.Visit(*this);
+}
+
 void VarDeclNode::Accept(NonModifyingVisitor& v) const {
   v.Visit(*this);
 }

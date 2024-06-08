@@ -10,6 +10,7 @@ class TypeChecker : public ModifyingVisitor {
  public:
   TypeChecker(ScopeStack& env) : env_{env} {}
 
+  void Visit(DeclStmtNode&) override;
   void Visit(LoopInitNode&) override;
   void Visit(VarDeclNode&) override;
   void Visit(ArrDeclNode&) override;

@@ -5,5 +5,7 @@ int main() {
   b = c;
   *c = 5;
 
+  int *x, y, *z = &c;
+
   return *c;
 }

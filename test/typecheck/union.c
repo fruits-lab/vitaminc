@@ -22,5 +22,7 @@ int main() {
   union shape circle = {.circle = 1};
   union shape puzzles[3] = {[0].circle = 1, [1].triangle = 2, [2].square = 4};
 
+  union shape a, *b, c[3];
+
   return 0;
 }
