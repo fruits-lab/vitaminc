@@ -11,5 +11,6 @@ int main() {
   __builtin_print(0 && 2);
   __builtin_print(5 || 0);
   __builtin_print(0 || 0);
+  __builtin_print((1, 2));
   return 0;
 }
