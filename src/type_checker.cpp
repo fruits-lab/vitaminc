@@ -501,6 +501,15 @@ void TypeChecker::Visit(UnaryExprNode& unary_expr) {
 void TypeChecker::Visit(BinaryExprNode& bin_expr) {
   bin_expr.lhs->Accept(*this);
   bin_expr.rhs->Accept(*this);
+
+  // NOTE: The left operand of a comma operator is evaluated as a void
+  // expression; there is a sequence point after its evaluation. Then the right
+  // operand is evaluated; the result has its type and value.
+  if (bin_expr.op == BinaryOperator::kComma) {
+    bin_expr.type = bin_expr.rhs->type->Clone();
+    return;
+  }
+
   if (!bin_expr.lhs->type->IsEqual(*bin_expr.rhs->type)) {
     // TODO: invalid operands to binary +
   } else {
