@@ -1,0 +1,16 @@
+ProgramNode <1:1>
+  FuncDefNode <1:5> main: int ()
+    CompoundStmtNode <1:12>
+      VarDeclNode <2:7> i: int
+      VarDeclNode <3:8> p: int*
+      ReturnStmtNode <5:3>
+        BinaryExprNode <5:24> int ,
+          BinaryExprNode <5:17> int ,
+            SimpleAssignmentExprNode <5:13> int*
+              IdExprNode <5:11> p: int*
+              UnaryExprNode <5:15> int* &
+                IdExprNode <5:16> i: int
+            SimpleAssignmentExprNode <5:21> int
+              IdExprNode <5:19> i: int
+              IntConstExprNode <5:23> 0: int
+          IntConstExprNode <5:26> 3: int
