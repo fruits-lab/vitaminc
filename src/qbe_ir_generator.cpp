@@ -862,6 +862,17 @@ void QbeIrGenerator::Visit(const UnaryExprNode& unary_expr) {
 
 void QbeIrGenerator::Visit(const BinaryExprNode& bin_expr) {
   bin_expr.lhs->Accept(*this);
+
+  if (bin_expr.op == BinaryOperator::kComma) {
+    // For the comma operator, the value of its left operand is not used and can
+    // be eliminated if it has no side effects or if its definition is
+    // immediately dead. However, we leave these optimizations to QBE.
+    bin_expr.rhs->Accept(*this);
+    const int right_num = num_recorder.NumOfPrevExpr();
+    num_recorder.Record(right_num);
+    return;
+  }
+
   const int left_num = num_recorder.NumOfPrevExpr();
   // Due to the lack of direct support for logical operators in QBE, we
   // implement logical expressions using comparison and jump instructions.
