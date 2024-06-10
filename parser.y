@@ -358,7 +358,7 @@ cond_expr: logic_or_expr { $$ = $1; }
 /* 6.5.16 Assignment operators */
 /* TODO: support multiple assignment operators */
 assign_expr: cond_expr { $$ = $1; }
-  | unary_expr ASSIGN expr { $$ = std::make_unique<SimpleAssignmentExprNode>(Loc(@2), $1, $3); }
+  | unary_expr ASSIGN assign_expr { $$ = std::make_unique<SimpleAssignmentExprNode>(Loc(@2), $1, $3); }
   ;
 
 /* 6.6 Constant Expressions*/
@@ -380,7 +380,7 @@ arg_list: arg_list COMMA arg {
   }
   ;
 
-arg: expr {
+arg: assign_expr {
     $$ = std::make_unique<ArgExprNode>(Loc(@1), $1);
   }
   ;
@@ -710,13 +710,13 @@ initializer: LEFT_CURLY initializer_list comma_opt RIGHT_CURLY { $$ = $2; }
   | assign_expr { $$ = std::make_unique<InitExprNode>(Loc(@1), std::vector<std::unique_ptr<DesNode>>{}, $1); }
   ;
 
-/* TODO: the initializer may be nested (change expr to initializer) */
-initializer_list: designation_opt expr {
+/* TODO: the initializer may be nested (change assign_expr to initializer) */
+initializer_list: designation_opt assign_expr {
     auto init = std::make_unique<InitExprNode>(Loc(@1), $1, $2);
     $$ = std::vector<std::unique_ptr<InitExprNode>>{};
     $$.push_back(std::move(init));
   }
-  | initializer_list COMMA designation_opt expr {
+  | initializer_list COMMA designation_opt assign_expr {
     auto initializer_list = $1;
     auto init = std::make_unique<InitExprNode>(Loc(@1), $3, $4);
     initializer_list.push_back(std::move(init));
