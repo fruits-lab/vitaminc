@@ -256,8 +256,8 @@ expr_opt: expr { $$ = $1; }
     ;
 
 /* 6.5 Expressions */
-/* TODO: implement "expr , assign_expr" */
 expr: assign_expr { $$ = $1; }
+    | expr COMMA assign_expr { $$ = std::make_unique<BinaryExprNode>(Loc(@2), BinaryOperator::kComma, $1, $3); }
     ;
 
 /* 6.5.1 Primary expressions */

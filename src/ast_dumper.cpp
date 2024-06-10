@@ -49,6 +49,8 @@ std::string GetBinaryOperator(BinaryOperator op) {
       return "&&";
     case BinaryOperator::kLor:
       return "||";
+    case BinaryOperator::kComma:
+      return ",";
     default:
       return "Unknown";
   }

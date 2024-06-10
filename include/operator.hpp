@@ -22,6 +22,7 @@ enum class BinaryOperator : std::uint8_t {
   kShr,
   kLor,
   kLand,
+  kComma,
 };
 
 enum class UnaryOperator : std::uint8_t {
