@@ -1,8 +1,10 @@
 ProgramNode <1:1>
   FuncDefNode <1:5> main: int ()
     CompoundStmtNode <1:12>
-      VarDeclNode <2:7> i: int
-      VarDeclNode <3:8> p: int*
+      DeclStmtNode <2:3>
+        VarDeclNode <2:7> i: int
+      DeclStmtNode <3:3>
+        VarDeclNode <3:8> p: int*
       ReturnStmtNode <5:3>
         BinaryExprNode <5:24> int ,
           BinaryExprNode <5:17> int ,
