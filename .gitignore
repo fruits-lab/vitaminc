@@ -47,6 +47,9 @@ lex.yy.*
 # QBE IR files
 *.ssa
 
+# LLVM IR files
+*.ll
+
 # Python environments
 .env
 .venv
