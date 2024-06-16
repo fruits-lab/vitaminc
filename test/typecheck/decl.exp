@@ -7,6 +7,7 @@ ProgramNode <1:1>
       DeclStmtNode <3:3>
         VarDeclNode <3:7> j: int
       DeclStmtNode <4:3>
+        VarDeclNode <4:3> : int
       DeclStmtNode <5:3>
         VarDeclNode <5:7> a: int
         VarDeclNode <5:10> b: int

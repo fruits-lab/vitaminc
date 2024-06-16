@@ -2,8 +2,17 @@ ProgramNode <1:1>
   FuncDefNode <1:5> main: int ()
     CompoundStmtNode <1:12>
       DeclStmtNode <2:3>
+        RecordDeclNode <2:10> struct ss definition
       DeclStmtNode <4:3>
+        RecordDeclNode <4:10> struct birth definition
+          FieldNode <5:9> date: int
+          FieldNode <6:9> month: int
+          FieldNode <7:9> year: int
       DeclStmtNode <10:3>
+        RecordDeclNode <10:9> struct definition
+          FieldNode <11:9> quarter: int
+          FieldNode <12:9> dime: int
+          FieldNode <13:9> penny: int
       DeclStmtNode <16:3>
         RecordVarDeclNode <16:16> bd1: struct birth
           InitExprNode <17:5>
