@@ -1,2 +1,7 @@
+[envs.qbe]
 command = """../../vitaminc -o {filename}.o {filename} && ./{filename}.o"""
 output.exp = "-"
+
+[envs.llvm]
+command = """../../vitaminc --target llvm {filename}"""
+return_code = 0

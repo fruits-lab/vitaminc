@@ -22,6 +22,12 @@ extern FILE*
 extern void yylex_destroy();  // NOLINT(readability-identifier-naming): extern
                               // from flex generated code.
 
+int QbeBuilder(std::unique_ptr<AstNode> program, std::string& input_basename,
+               std::string& output_name);
+
+int LlvmBuilder(std::unique_ptr<AstNode> program, std::string& input_basename,
+                std::string& output_name);
+
 int main(  // NOLINT(bugprone-exception-escape): Using a big try-catch block to
            // catch all exceptions isn't reasonable.
     int argc, char** argv)
@@ -37,7 +43,7 @@ int main(  // NOLINT(bugprone-exception-escape): Using a big try-catch block to
       ("o, output", "Write output to <file>", cxxopts::value<std::string>()->default_value("a.out"), "<file>")
       ("d, dump", "Dump the abstract syntax tree", cxxopts::value<bool>()->default_value("false"))
       // TODO: support LLVM IR
-      ("t, target", "Specify target IR", cxxopts::value<std::string>()->default_value("qbe"), "[qbe]")
+      ("t, target", "Specify target IR", cxxopts::value<std::string>()->default_value("qbe"), "[qbe|llvm]")
       ("h, help", "Display available options")
       ;
   // clang-format on
@@ -93,8 +99,23 @@ int main(  // NOLINT(bugprone-exception-escape): Using a big try-catch block to
     trans_unit->Accept(ast_dumper);
   }
 
-  // generate intermediate representation
   auto input_basename = input_path.stem().string();
+  auto output = opts["output"].as<std::string>();
+  // generate intermediate representation based on target option
+  if (opts["target"].as<std::string>() == "qbe") {
+    return QbeBuilder(std::move(program), input_basename, output);
+  } else if (opts["target"].as<std::string>() == "llvm") {
+    return LlvmBuilder(std::move(program), input_basename, output);
+  } else {
+    std::cerr << "unknown target" << '\n';
+    std::exit(0);
+  }
+
+  return 0;
+}
+
+int QbeBuilder(std::unique_ptr<AstNode> program, std::string& input_basename,
+               std::string& output_name) {
   auto output_ir = std::ofstream{fmt::format("{}.ssa", input_basename)};
   QbeIrGenerator code_generator{output_ir};
   trans_unit->Accept(code_generator);
@@ -102,27 +123,25 @@ int main(  // NOLINT(bugprone-exception-escape): Using a big try-catch block to
   output_ir.close();
 
   // generate assembly
-  if (opts["target"].as<std::string>() == "qbe") {
-    std::string qbe_command =
-        fmt::format("qbe -o {0}.s {0}.ssa", input_basename);
-    auto qbe_ret = std::system(qbe_command.c_str());
-    // 0 on success, 1 otherwise
-    if (qbe_ret) {
-      return qbe_ret;
-    }
-  } else {
-    std::cerr << "unknown target" << '\n';
-    std::exit(0);
+  std::string qbe_command = fmt::format("qbe -o {0}.s {0}.ssa", input_basename);
+  auto qbe_ret = std::system(qbe_command.c_str());
+  // 0 on success, 1 otherwise
+  if (qbe_ret) {
+    return qbe_ret;
   }
-
   // generate executable
-  auto output = opts["output"].as<std::string>();
-  std::string cc_command = fmt::format("cc -o {} {}.s", output, input_basename);
+  std::string cc_command =
+      fmt::format("cc -o {} {}.s", output_name, input_basename);
   auto cc_ret = std::system(cc_command.c_str());
   // 0 on success, 1 otherwise
   if (cc_ret) {
     return cc_ret;
   }
 
+  return 0;
+}
+
+int LlvmBuilder(std::unique_ptr<AstNode> program, std::string& input_basename,
+                std::string& output_name) {
   return 0;
 }
