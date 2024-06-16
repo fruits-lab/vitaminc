@@ -1,6 +1,13 @@
 #ifndef LLVM_IR_GENERATOR_HPP_
 #define LLVM_IR_GENERATOR_HPP_
 
+#include <llvm/IR/IRBuilder.h>
+#include <llvm/Support/raw_os_ostream.h>
+
+#include <memory>
+#include <utility>
+#include <vector>
+
 #include "ast.hpp"
 #include "visitor.hpp"
 
@@ -44,10 +51,26 @@ class LLVMIRGenerator : public NonModifyingVisitor {
   void Visit(const BinaryExprNode&) override;
   void Visit(const SimpleAssignmentExprNode&) override;
 
-  LLVMIRGenerator(std::ostream& output) : output_{output} {}
+  LLVMIRGenerator(std::ostream& output, std::string& filename)
+      : output_{output},
+        context_{std::make_unique<llvm::LLVMContext>()},
+        builder_{llvm::IRBuilder<>(*context_)},
+        module_{std::make_unique<llvm::Module>(filename, *context_)} {}
+
+  /// @brief Print LLVM IR to output_.
+  void PrintIR() {
+    module_->print(output_, nullptr);
+  }
 
  private:
-  std::ostream& output_;
+  /// @brief A LLVM ostream wrapper for writing to output.
+  llvm::raw_os_ostream output_;
+  /// @brief A LLVM core object.
+  std::unique_ptr<llvm::LLVMContext> context_;
+  /// @brief Provides LLVM Builder API for constructing IR.
+  llvm::IRBuilder<> builder_;
+  /// @brief Stores LLVM related information, including the constructed IR.
+  std::unique_ptr<llvm::Module> module_;
 };
 
 #endif  // LLVM_IR_GENERATOR_HPP_

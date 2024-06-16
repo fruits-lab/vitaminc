@@ -10,6 +10,7 @@
 
 #include "ast.hpp"
 #include "ast_dumper.hpp"
+#include "llvm_ir_generator.hpp"
 #include "qbe_ir_generator.hpp"
 #include "scope.hpp"
 #include "type_checker.hpp"
@@ -25,7 +26,7 @@ extern void yylex_destroy();  // NOLINT(readability-identifier-naming): extern
 int QbeBuilder(std::unique_ptr<AstNode> program, std::string& input_basename,
                std::string& output_name);
 
-int LlvmBuilder(std::unique_ptr<AstNode> program, std::string& input_basename,
+int LLVMBuilder(std::unique_ptr<AstNode> program, std::string& input_basename,
                 std::string& output_name);
 
 int main(  // NOLINT(bugprone-exception-escape): Using a big try-catch block to
@@ -105,7 +106,7 @@ int main(  // NOLINT(bugprone-exception-escape): Using a big try-catch block to
   if (opts["target"].as<std::string>() == "qbe") {
     return QbeBuilder(std::move(program), input_basename, output);
   } else if (opts["target"].as<std::string>() == "llvm") {
-    return LlvmBuilder(std::move(program), input_basename, output);
+    return LLVMBuilder(std::move(program), input_basename, output);
   } else {
     std::cerr << "unknown target" << '\n';
     std::exit(0);
@@ -141,7 +142,15 @@ int QbeBuilder(std::unique_ptr<AstNode> program, std::string& input_basename,
   return 0;
 }
 
-int LlvmBuilder(std::unique_ptr<AstNode> program, std::string& input_basename,
+int LLVMBuilder(std::unique_ptr<AstNode> program, std::string& input_basename,
                 std::string& output_name) {
+  auto output_ir = std::ofstream{fmt::format("{}.ll", input_basename)};
+  LLVMIRGenerator code_generator{output_ir, input_basename};
+  program->Accept(code_generator);
+  // TODO: Write to stdout based on cxxopts.
+  // Write LLVM IR to output file "*.ll".
+  code_generator.PrintIR();
+
+  output_ir.close();
   return 0;
 }
