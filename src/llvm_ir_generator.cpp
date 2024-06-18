@@ -75,9 +75,10 @@ void LLVMIRGenerator::Visit(const ProgramNode& program) {
   // Generate builtin print function.
   auto i32 = builder_.getInt32Ty();
   auto prototype = FunctionType::get(i32, false);
-  auto* main_fn = Function::Create(prototype, Function::ExternalLinkage,
-                                   "__builtin_print__", module_.get());
-  auto* body = BasicBlock::Create(*context_, "body", main_fn);
+  auto* printf_fn = Function::Create(prototype, Function::ExternalLinkage,
+                                     "printf", module_.get());
+
+  auto* body = BasicBlock::Create(*context_, "body", printf_fn);
   builder_.SetInsertPoint(body);
   // Every basic block must have terminator instruction.
   builder_.CreateUnreachable();
