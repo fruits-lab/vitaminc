@@ -1,16 +1,17 @@
 ProgramNode <1:1>
-  FuncDefNode <1:5> main: int ()
-    CompoundStmtNode <1:12>
-      DeclStmtNode <2:3>
-        VarDeclNode <2:7> i: int
-          IntConstExprNode <2:11> 2: int
-      IfStmtNode <3:3>
-        BinaryExprNode <3:9> int >
-          IdExprNode <3:7> i: int
-          IntConstExprNode <3:11> 0: int
-        // Then
-        CompoundStmtNode <3:14>
-          ReturnStmtNode <4:5>
-            IdExprNode <4:12> i: int
-      ReturnStmtNode <7:3>
-        IntConstExprNode <7:10> 0: int
+  ExternDeclNode <1:1>
+    FuncDefNode <1:5> main: int ()
+      CompoundStmtNode <1:12>
+        DeclStmtNode <2:3>
+          VarDeclNode <2:7> i: int
+            IntConstExprNode <2:11> 2: int
+        IfStmtNode <3:3>
+          BinaryExprNode <3:9> int >
+            IdExprNode <3:7> i: int
+            IntConstExprNode <3:11> 0: int
+          // Then
+          CompoundStmtNode <3:14>
+            ReturnStmtNode <4:5>
+              IdExprNode <4:12> i: int
+        ReturnStmtNode <7:3>
+          IntConstExprNode <7:10> 0: int

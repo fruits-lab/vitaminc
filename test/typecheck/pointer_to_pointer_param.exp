@@ -1,38 +1,40 @@
 ProgramNode <1:1>
-  FuncDefNode <1:5> add: int (int**, int**)
-    ParamNode <1:15> x: int**
-    ParamNode <1:24> y: int**
-    CompoundStmtNode <1:27>
-      ReturnStmtNode <2:3>
-        BinaryExprNode <2:14> int +
-          UnaryExprNode <2:10> int *
-            UnaryExprNode <2:11> int* *
-              IdExprNode <2:12> x: int**
-          UnaryExprNode <2:16> int *
-            UnaryExprNode <2:17> int* *
-              IdExprNode <2:18> y: int**
-  FuncDefNode <5:5> main: int ()
-    CompoundStmtNode <5:12>
-      DeclStmtNode <6:3>
-        VarDeclNode <6:7> a: int
-          IntConstExprNode <6:11> 3: int
-      DeclStmtNode <7:3>
-        VarDeclNode <7:7> b: int
-          IntConstExprNode <7:11> 5: int
-      DeclStmtNode <8:3>
-        VarDeclNode <8:8> c: int*
-          UnaryExprNode <8:12> int* &
-            IdExprNode <8:13> a: int
-      DeclStmtNode <9:3>
-        VarDeclNode <9:8> d: int*
-          UnaryExprNode <9:12> int* &
-            IdExprNode <9:13> b: int
-      ReturnStmtNode <10:3>
-        FuncCallExprNode <10:10> int
-          IdExprNode <10:10> add: int (int**, int**)
-          ArgExprNode <10:14> int**
-            UnaryExprNode <10:14> int** &
-              IdExprNode <10:15> c: int*
-          ArgExprNode <10:18> int**
-            UnaryExprNode <10:18> int** &
-              IdExprNode <10:19> d: int*
+  ExternDeclNode <1:1>
+    FuncDefNode <1:5> add: int (int**, int**)
+      ParamNode <1:15> x: int**
+      ParamNode <1:24> y: int**
+      CompoundStmtNode <1:27>
+        ReturnStmtNode <2:3>
+          BinaryExprNode <2:14> int +
+            UnaryExprNode <2:10> int *
+              UnaryExprNode <2:11> int* *
+                IdExprNode <2:12> x: int**
+            UnaryExprNode <2:16> int *
+              UnaryExprNode <2:17> int* *
+                IdExprNode <2:18> y: int**
+  ExternDeclNode <5:1>
+    FuncDefNode <5:5> main: int ()
+      CompoundStmtNode <5:12>
+        DeclStmtNode <6:3>
+          VarDeclNode <6:7> a: int
+            IntConstExprNode <6:11> 3: int
+        DeclStmtNode <7:3>
+          VarDeclNode <7:7> b: int
+            IntConstExprNode <7:11> 5: int
+        DeclStmtNode <8:3>
+          VarDeclNode <8:8> c: int*
+            UnaryExprNode <8:12> int* &
+              IdExprNode <8:13> a: int
+        DeclStmtNode <9:3>
+          VarDeclNode <9:8> d: int*
+            UnaryExprNode <9:12> int* &
+              IdExprNode <9:13> b: int
+        ReturnStmtNode <10:3>
+          FuncCallExprNode <10:10> int
+            IdExprNode <10:10> add: int (int**, int**)
+            ArgExprNode <10:14> int**
+              UnaryExprNode <10:14> int** &
+                IdExprNode <10:15> c: int*
+            ArgExprNode <10:18> int**
+              UnaryExprNode <10:18> int** &
+                IdExprNode <10:19> d: int*

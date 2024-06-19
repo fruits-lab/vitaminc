@@ -1,21 +1,22 @@
 ProgramNode <1:1>
-  FuncDefNode <1:5> main: int ()
-    CompoundStmtNode <1:12>
-      DeclStmtNode <2:3>
-        VarDeclNode <2:7> _: int
-      DeclStmtNode <3:3>
-        VarDeclNode <3:7> __: int
-      DeclStmtNode <4:3>
-        VarDeclNode <4:7> i: int
-      DeclStmtNode <5:3>
-        VarDeclNode <5:7> _1: int
-      DeclStmtNode <6:3>
-        VarDeclNode <6:7> _i: int
-      DeclStmtNode <7:3>
-        VarDeclNode <7:7> _i1: int
-      DeclStmtNode <8:3>
-        VarDeclNode <8:7> _i1_: int
-      DeclStmtNode <9:3>
-        VarDeclNode <9:7> _I: int
-      DeclStmtNode <10:3>
-        VarDeclNode <10:7> _I1: int
+  ExternDeclNode <1:1>
+    FuncDefNode <1:5> main: int ()
+      CompoundStmtNode <1:12>
+        DeclStmtNode <2:3>
+          VarDeclNode <2:7> _: int
+        DeclStmtNode <3:3>
+          VarDeclNode <3:7> __: int
+        DeclStmtNode <4:3>
+          VarDeclNode <4:7> i: int
+        DeclStmtNode <5:3>
+          VarDeclNode <5:7> _1: int
+        DeclStmtNode <6:3>
+          VarDeclNode <6:7> _i: int
+        DeclStmtNode <7:3>
+          VarDeclNode <7:7> _i1: int
+        DeclStmtNode <8:3>
+          VarDeclNode <8:7> _i1_: int
+        DeclStmtNode <9:3>
+          VarDeclNode <9:7> _I: int
+        DeclStmtNode <10:3>
+          VarDeclNode <10:7> _I1: int

@@ -1,52 +1,53 @@
 ProgramNode <1:1>
-  FuncDefNode <1:5> main: int ()
-    CompoundStmtNode <1:12>
-      DeclStmtNode <2:3>
-        VarDeclNode <2:7> j: int
-          IntConstExprNode <2:11> 0: int
-      DeclStmtNode <3:3>
-        VarDeclNode <3:7> i: int
-      ForStmtNode <4:3>
-        LoopInitNode <4:8>
-          SimpleAssignmentExprNode <4:10> int
-            IdExprNode <4:8> i: int
-            IntConstExprNode <4:12> 0: int
-        BinaryExprNode <4:28> int <
-          IdExprNode <4:26> i: int
-          IntConstExprNode <4:30> 5: int
-        SimpleAssignmentExprNode <4:35> int
-          IdExprNode <4:33> i: int
-          BinaryExprNode <4:39> int +
-            IdExprNode <4:37> i: int
-            IntConstExprNode <4:41> 1: int
-        CompoundStmtNode <4:44>
-          ExprStmtNode <5:5>
-            SimpleAssignmentExprNode <5:7> int
-              IdExprNode <5:5> j: int
-              BinaryExprNode <5:11> int +
-                IdExprNode <5:9> j: int
-                IntConstExprNode <5:13> 1: int
-      ForStmtNode <7:3>
-        LoopInitNode <7:8>
-          DeclStmtNode <7:8>
-            VarDeclNode <7:12> a: int
-              IntConstExprNode <7:16> 0: int
-            VarDeclNode <7:19> b: int
-              IntConstExprNode <7:23> 5: int
-        BinaryExprNode <7:39> int <
-          IdExprNode <7:37> a: int
-          IdExprNode <7:41> b: int
-        SimpleAssignmentExprNode <7:46> int
-          IdExprNode <7:44> a: int
-          BinaryExprNode <7:50> int +
-            IdExprNode <7:48> a: int
-            IntConstExprNode <7:52> 1: int
-        CompoundStmtNode <7:55>
-          ExprStmtNode <8:5>
-            SimpleAssignmentExprNode <8:7> int
-              IdExprNode <8:5> j: int
-              BinaryExprNode <8:11> int +
-                IdExprNode <8:9> j: int
-                IntConstExprNode <8:13> 1: int
-      ReturnStmtNode <11:3>
-        IntConstExprNode <11:10> 0: int
+  ExternDeclNode <1:1>
+    FuncDefNode <1:5> main: int ()
+      CompoundStmtNode <1:12>
+        DeclStmtNode <2:3>
+          VarDeclNode <2:7> j: int
+            IntConstExprNode <2:11> 0: int
+        DeclStmtNode <3:3>
+          VarDeclNode <3:7> i: int
+        ForStmtNode <4:3>
+          LoopInitNode <4:8>
+            SimpleAssignmentExprNode <4:10> int
+              IdExprNode <4:8> i: int
+              IntConstExprNode <4:12> 0: int
+          BinaryExprNode <4:28> int <
+            IdExprNode <4:26> i: int
+            IntConstExprNode <4:30> 5: int
+          SimpleAssignmentExprNode <4:35> int
+            IdExprNode <4:33> i: int
+            BinaryExprNode <4:39> int +
+              IdExprNode <4:37> i: int
+              IntConstExprNode <4:41> 1: int
+          CompoundStmtNode <4:44>
+            ExprStmtNode <5:5>
+              SimpleAssignmentExprNode <5:7> int
+                IdExprNode <5:5> j: int
+                BinaryExprNode <5:11> int +
+                  IdExprNode <5:9> j: int
+                  IntConstExprNode <5:13> 1: int
+        ForStmtNode <7:3>
+          LoopInitNode <7:8>
+            DeclStmtNode <7:8>
+              VarDeclNode <7:12> a: int
+                IntConstExprNode <7:16> 0: int
+              VarDeclNode <7:19> b: int
+                IntConstExprNode <7:23> 5: int
+          BinaryExprNode <7:39> int <
+            IdExprNode <7:37> a: int
+            IdExprNode <7:41> b: int
+          SimpleAssignmentExprNode <7:46> int
+            IdExprNode <7:44> a: int
+            BinaryExprNode <7:50> int +
+              IdExprNode <7:48> a: int
+              IntConstExprNode <7:52> 1: int
+          CompoundStmtNode <7:55>
+            ExprStmtNode <8:5>
+              SimpleAssignmentExprNode <8:7> int
+                IdExprNode <8:5> j: int
+                BinaryExprNode <8:11> int +
+                  IdExprNode <8:9> j: int
+                  IntConstExprNode <8:13> 1: int
+        ReturnStmtNode <11:3>
+          IntConstExprNode <11:10> 0: int

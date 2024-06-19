@@ -1,41 +1,44 @@
 ProgramNode <1:1>
-  FuncDefNode <1:5> sum: int (int, int, int)
-    ParamNode <1:13> a: int
-    ParamNode <1:20> b: int
-    ParamNode <1:27> c: int
-    CompoundStmtNode <1:30>
-      ReturnStmtNode <2:3>
-        BinaryExprNode <2:16> int +
-          BinaryExprNode <2:12> int +
-            IdExprNode <2:10> a: int
-            IdExprNode <2:14> b: int
-          IdExprNode <2:18> c: int
-  FuncDefNode <5:5> add_five: int (int)
-    ParamNode <5:18> d: int
-    CompoundStmtNode <5:21>
-      ReturnStmtNode <6:3>
-        BinaryExprNode <6:12> int +
-          IdExprNode <6:10> d: int
-          IntConstExprNode <6:14> 5: int
-  FuncDefNode <9:5> main: int ()
-    CompoundStmtNode <9:12>
-      DeclStmtNode <10:3>
-        VarDeclNode <10:7> a: int
-          FuncCallExprNode <10:11> int
-            IdExprNode <10:11> sum: int (int, int, int)
-            ArgExprNode <10:15> int
-              IntConstExprNode <10:15> 1: int
-            ArgExprNode <10:18> int
-              IntConstExprNode <10:18> 2: int
-            ArgExprNode <10:21> int
-              IntConstExprNode <10:21> 3: int
-      DeclStmtNode <11:3>
-        VarDeclNode <11:7> b: int
-          BinaryExprNode <11:13> int +
-            IdExprNode <11:11> a: int
-            IntConstExprNode <11:15> 4: int
-      ReturnStmtNode <12:3>
-        FuncCallExprNode <12:10> int
-          IdExprNode <12:10> add_five: int (int)
-          ArgExprNode <12:19> int
-            IdExprNode <12:19> b: int
+  ExternDeclNode <1:1>
+    FuncDefNode <1:5> sum: int (int, int, int)
+      ParamNode <1:13> a: int
+      ParamNode <1:20> b: int
+      ParamNode <1:27> c: int
+      CompoundStmtNode <1:30>
+        ReturnStmtNode <2:3>
+          BinaryExprNode <2:16> int +
+            BinaryExprNode <2:12> int +
+              IdExprNode <2:10> a: int
+              IdExprNode <2:14> b: int
+            IdExprNode <2:18> c: int
+  ExternDeclNode <5:1>
+    FuncDefNode <5:5> add_five: int (int)
+      ParamNode <5:18> d: int
+      CompoundStmtNode <5:21>
+        ReturnStmtNode <6:3>
+          BinaryExprNode <6:12> int +
+            IdExprNode <6:10> d: int
+            IntConstExprNode <6:14> 5: int
+  ExternDeclNode <9:1>
+    FuncDefNode <9:5> main: int ()
+      CompoundStmtNode <9:12>
+        DeclStmtNode <10:3>
+          VarDeclNode <10:7> a: int
+            FuncCallExprNode <10:11> int
+              IdExprNode <10:11> sum: int (int, int, int)
+              ArgExprNode <10:15> int
+                IntConstExprNode <10:15> 1: int
+              ArgExprNode <10:18> int
+                IntConstExprNode <10:18> 2: int
+              ArgExprNode <10:21> int
+                IntConstExprNode <10:21> 3: int
+        DeclStmtNode <11:3>
+          VarDeclNode <11:7> b: int
+            BinaryExprNode <11:13> int +
+              IdExprNode <11:11> a: int
+              IntConstExprNode <11:15> 4: int
+        ReturnStmtNode <12:3>
+          FuncCallExprNode <12:10> int
+            IdExprNode <12:10> add_five: int (int)
+            ArgExprNode <12:19> int
+              IdExprNode <12:19> b: int

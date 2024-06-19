@@ -1,30 +1,31 @@
 ProgramNode <1:1>
-  FuncDefNode <1:5> main: int ()
-    CompoundStmtNode <1:12>
-      DeclStmtNode <2:3>
-        VarDeclNode <2:7> a: int
-          IntConstExprNode <2:11> 10: int
-      DeclStmtNode <3:3>
-        VarDeclNode <3:8> b: int*
-      DeclStmtNode <4:3>
-        VarDeclNode <4:8> c: int*
-          UnaryExprNode <4:12> int* &
-            IdExprNode <4:13> a: int
-      ExprStmtNode <5:3>
-        SimpleAssignmentExprNode <5:5> int*
-          IdExprNode <5:3> b: int*
-          IdExprNode <5:7> c: int*
-      ExprStmtNode <6:3>
-        SimpleAssignmentExprNode <6:6> int
-          UnaryExprNode <6:3> int *
-            IdExprNode <6:4> c: int*
-          IntConstExprNode <6:8> 5: int
-      DeclStmtNode <8:3>
-        VarDeclNode <8:8> x: int*
-        VarDeclNode <8:11> y: int
-        VarDeclNode <8:15> z: int*
-          UnaryExprNode <8:19> int** &
-            IdExprNode <8:20> c: int*
-      ReturnStmtNode <10:3>
-        UnaryExprNode <10:10> int *
-          IdExprNode <10:11> c: int*
+  ExternDeclNode <1:1>
+    FuncDefNode <1:5> main: int ()
+      CompoundStmtNode <1:12>
+        DeclStmtNode <2:3>
+          VarDeclNode <2:7> a: int
+            IntConstExprNode <2:11> 10: int
+        DeclStmtNode <3:3>
+          VarDeclNode <3:8> b: int*
+        DeclStmtNode <4:3>
+          VarDeclNode <4:8> c: int*
+            UnaryExprNode <4:12> int* &
+              IdExprNode <4:13> a: int
+        ExprStmtNode <5:3>
+          SimpleAssignmentExprNode <5:5> int*
+            IdExprNode <5:3> b: int*
+            IdExprNode <5:7> c: int*
+        ExprStmtNode <6:3>
+          SimpleAssignmentExprNode <6:6> int
+            UnaryExprNode <6:3> int *
+              IdExprNode <6:4> c: int*
+            IntConstExprNode <6:8> 5: int
+        DeclStmtNode <8:3>
+          VarDeclNode <8:8> x: int*
+          VarDeclNode <8:11> y: int
+          VarDeclNode <8:15> z: int*
+            UnaryExprNode <8:19> int** &
+              IdExprNode <8:20> c: int*
+        ReturnStmtNode <10:3>
+          UnaryExprNode <10:10> int *
+            IdExprNode <10:11> c: int*

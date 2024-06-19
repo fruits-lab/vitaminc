@@ -220,17 +220,33 @@ struct CompoundStmtNode : public StmtNode {
   std::vector<std::unique_ptr<StmtNode>> stmts;
 };
 
-/// @brief Root of the entire program.
-struct ProgramNode : public AstNode {
-  /// @note vector of move-only elements are move-only
-  ProgramNode(Location loc,
-              std::vector<std::unique_ptr<FuncDefNode>> func_def_list)
-      : AstNode{loc}, func_def_list{std::move(func_def_list)} {}
+/// @brief An external definition is an external declaration that is also a
+/// definition of a function(other than an inline definition) or an object.
+struct ExternDeclNode : public AstNode {
+  ExternDeclNode(
+      Location loc,
+      std::variant<std::unique_ptr<FuncDefNode>, std::unique_ptr<DeclStmtNode>>
+          decl)
+      : AstNode{loc}, decl{std::move(decl)} {}
 
   void Accept(NonModifyingVisitor&) const override;
   void Accept(ModifyingVisitor&) override;
 
-  std::vector<std::unique_ptr<FuncDefNode>> func_def_list;
+  std::variant<std::unique_ptr<FuncDefNode>, std::unique_ptr<DeclStmtNode>>
+      decl;
+};
+
+/// @brief Root of the entire program.
+struct ProgramNode : public AstNode {
+  /// @note vector of move-only elements are move-only
+  ProgramNode(Location loc,
+              std::vector<std::unique_ptr<ExternDeclNode>> trans_unit)
+      : AstNode{loc}, trans_unit{std::move(trans_unit)} {}
+
+  void Accept(NonModifyingVisitor&) const override;
+  void Accept(ModifyingVisitor&) override;
+
+  std::vector<std::unique_ptr<ExternDeclNode>> trans_unit;
 };
 
 struct IfStmtNode : public StmtNode {

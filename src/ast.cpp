@@ -140,6 +140,14 @@ void ProgramNode::Accept(ModifyingVisitor& v) {
   v.Visit(*this);
 }
 
+void ExternDeclNode::Accept(NonModifyingVisitor& v) const {
+  v.Visit(*this);
+}
+
+void ExternDeclNode::Accept(ModifyingVisitor& v) {
+  v.Visit(*this);
+}
+
 void IfStmtNode::Accept(NonModifyingVisitor& v) const {
   v.Visit(*this);
 }

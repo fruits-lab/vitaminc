@@ -190,11 +190,20 @@ void AstDumper::Visit(const CompoundStmtNode& compound_stmt) {
   indenter_.DecreaseLevel();
 }
 
+void AstDumper::Visit(const ExternDeclNode& extern_decl) {
+  std::cout << indenter_.Indent() << "ExternDeclNode <" << extern_decl.loc
+            << ">\n";
+  indenter_.IncreaseLevel();
+  std::visit([this](auto&& extern_decl) { extern_decl->Accept(*this); },
+             extern_decl.decl);
+  indenter_.DecreaseLevel();
+}
+
 void AstDumper::Visit(const ProgramNode& program) {
   std::cout << indenter_.Indent() << "ProgramNode <" << program.loc << ">\n";
   indenter_.IncreaseLevel();
-  for (const auto& func_def : program.func_def_list) {
-    func_def->Accept(*this);
+  for (const auto& trans_unit : program.trans_unit) {
+    trans_unit->Accept(*this);
   }
   indenter_.DecreaseLevel();
 }
