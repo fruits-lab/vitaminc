@@ -1,24 +1,25 @@
 ProgramNode <1:1>
-  FuncDefNode <1:5> main: int ()
-    CompoundStmtNode <1:12>
-      DeclStmtNode <2:3>
-        VarDeclNode <2:7> a: int
-          IntConstExprNode <2:11> 0: int
-      ExprStmtNode <3:3>
-        PostfixArithExprNode <3:3> int ++
-          IdExprNode <3:3> a: int
-      ExprStmtNode <4:3>
-        PostfixArithExprNode <4:3> int --
-          IdExprNode <4:3> a: int
-      DeclStmtNode <6:3>
-        VarDeclNode <6:8> b: int*
-          UnaryExprNode <6:12> int* &
-            IdExprNode <6:13> a: int
-      ExprStmtNode <7:3>
-        PostfixArithExprNode <7:3> int* ++
-          IdExprNode <7:3> b: int*
-      ExprStmtNode <9:3>
-        PostfixArithExprNode <9:3> int* --
-          IdExprNode <9:3> b: int*
-      ReturnStmtNode <12:3>
-        IdExprNode <12:10> a: int
+  ExternDeclNode <1:1>
+    FuncDefNode <1:5> main: int ()
+      CompoundStmtNode <1:12>
+        DeclStmtNode <2:3>
+          VarDeclNode <2:7> a: int
+            IntConstExprNode <2:11> 0: int
+        ExprStmtNode <3:3>
+          PostfixArithExprNode <3:3> int ++
+            IdExprNode <3:3> a: int
+        ExprStmtNode <4:3>
+          PostfixArithExprNode <4:3> int --
+            IdExprNode <4:3> a: int
+        DeclStmtNode <6:3>
+          VarDeclNode <6:8> b: int*
+            UnaryExprNode <6:12> int* &
+              IdExprNode <6:13> a: int
+        ExprStmtNode <7:3>
+          PostfixArithExprNode <7:3> int* ++
+            IdExprNode <7:3> b: int*
+        ExprStmtNode <9:3>
+          PostfixArithExprNode <9:3> int* --
+            IdExprNode <9:3> b: int*
+        ReturnStmtNode <12:3>
+          IdExprNode <12:10> a: int

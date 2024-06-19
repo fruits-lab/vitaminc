@@ -1,0 +1,6 @@
+ProgramNode <3:1>
+  ExternDeclNode <3:1>
+    FuncDefNode <3:5> main: int ()
+      CompoundStmtNode <3:12>
+        ReturnStmtNode <4:3>
+          IntConstExprNode <4:10> 0: int

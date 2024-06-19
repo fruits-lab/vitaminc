@@ -1,30 +1,31 @@
 ProgramNode <1:1>
-  FuncDefNode <1:5> main: int ()
-    CompoundStmtNode <1:12>
-      DeclStmtNode <2:3>
-        VarDeclNode <2:7> a: int
-          IntConstExprNode <2:11> 1: int
-      SwitchStmtNode <3:3>
-        IdExprNode <3:11> a: int
-        CompoundStmtNode <3:14>
-          CaseStmtNode <4:5>
-            IntConstExprNode <4:10> 1: int
-            ExprStmtNode <5:7>
-              SimpleAssignmentExprNode <5:9> int
-                IdExprNode <5:7> a: int
-                IntConstExprNode <5:11> 2: int
-          BreakStmtNode <6:7>
-          CaseStmtNode <7:5>
-            IntConstExprNode <7:10> 2: int
-            ExprStmtNode <8:7>
-              SimpleAssignmentExprNode <8:9> int
-                IdExprNode <8:7> a: int
-                IntConstExprNode <8:11> 3: int
-          BreakStmtNode <9:7>
-          DefaultStmtNode <10:5>
-            ExprStmtNode <11:7>
-              SimpleAssignmentExprNode <11:9> int
-                IdExprNode <11:7> a: int
-                IntConstExprNode <11:11> 4: int
-      ReturnStmtNode <13:3>
-        IdExprNode <13:10> a: int
+  ExternDeclNode <1:1>
+    FuncDefNode <1:5> main: int ()
+      CompoundStmtNode <1:12>
+        DeclStmtNode <2:3>
+          VarDeclNode <2:7> a: int
+            IntConstExprNode <2:11> 1: int
+        SwitchStmtNode <3:3>
+          IdExprNode <3:11> a: int
+          CompoundStmtNode <3:14>
+            CaseStmtNode <4:5>
+              IntConstExprNode <4:10> 1: int
+              ExprStmtNode <5:7>
+                SimpleAssignmentExprNode <5:9> int
+                  IdExprNode <5:7> a: int
+                  IntConstExprNode <5:11> 2: int
+            BreakStmtNode <6:7>
+            CaseStmtNode <7:5>
+              IntConstExprNode <7:10> 2: int
+              ExprStmtNode <8:7>
+                SimpleAssignmentExprNode <8:9> int
+                  IdExprNode <8:7> a: int
+                  IntConstExprNode <8:11> 3: int
+            BreakStmtNode <9:7>
+            DefaultStmtNode <10:5>
+              ExprStmtNode <11:7>
+                SimpleAssignmentExprNode <11:9> int
+                  IdExprNode <11:7> a: int
+                  IntConstExprNode <11:11> 4: int
+        ReturnStmtNode <13:3>
+          IdExprNode <13:10> a: int

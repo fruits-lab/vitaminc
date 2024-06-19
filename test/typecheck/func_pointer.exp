@@ -1,41 +1,43 @@
 ProgramNode <1:1>
-  FuncDefNode <1:5> add: int (int, int)
-    ParamNode <1:13> a: int
-    ParamNode <1:20> b: int
-    CompoundStmtNode <1:23>
-      ReturnStmtNode <2:3>
-        BinaryExprNode <2:12> int +
-          IdExprNode <2:10> a: int
-          IdExprNode <2:14> b: int
-  FuncDefNode <5:5> main: int ()
-    CompoundStmtNode <5:12>
-      DeclStmtNode <6:3>
-        VarDeclNode <6:9> p: int (*)(int, int)
-      ExprStmtNode <7:3>
-        SimpleAssignmentExprNode <7:5> int (*)(int, int)
-          IdExprNode <7:3> p: int (*)(int, int)
-          IdExprNode <7:7> add: int (int, int)
-      DeclStmtNode <8:3>
-        VarDeclNode <8:7> c: int
-          FuncCallExprNode <8:11> int
-            IdExprNode <8:11> p: int (*)(int, int)
-            ArgExprNode <8:13> int
-              IntConstExprNode <8:13> 2: int
-            ArgExprNode <8:16> int
-              IntConstExprNode <8:16> 3: int
-      ExprStmtNode <9:3>
-        SimpleAssignmentExprNode <9:5> int (*)(int, int)
-          IdExprNode <9:3> p: int (*)(int, int)
-          UnaryExprNode <9:7> int (*)(int, int) &
-            IdExprNode <9:8> add: int (int, int)
-      DeclStmtNode <10:3>
-        VarDeclNode <10:7> d: int
-          FuncCallExprNode <10:11> int
-            UnaryExprNode <10:12> int (int, int) *
-              IdExprNode <10:13> p: int (*)(int, int)
-            ArgExprNode <10:16> int
-              IntConstExprNode <10:16> 1: int
-            ArgExprNode <10:19> int
-              IntConstExprNode <10:19> 2: int
-      ReturnStmtNode <11:3>
-        IntConstExprNode <11:10> 0: int
+  ExternDeclNode <1:1>
+    FuncDefNode <1:5> add: int (int, int)
+      ParamNode <1:13> a: int
+      ParamNode <1:20> b: int
+      CompoundStmtNode <1:23>
+        ReturnStmtNode <2:3>
+          BinaryExprNode <2:12> int +
+            IdExprNode <2:10> a: int
+            IdExprNode <2:14> b: int
+  ExternDeclNode <5:1>
+    FuncDefNode <5:5> main: int ()
+      CompoundStmtNode <5:12>
+        DeclStmtNode <6:3>
+          VarDeclNode <6:9> p: int (*)(int, int)
+        ExprStmtNode <7:3>
+          SimpleAssignmentExprNode <7:5> int (*)(int, int)
+            IdExprNode <7:3> p: int (*)(int, int)
+            IdExprNode <7:7> add: int (int, int)
+        DeclStmtNode <8:3>
+          VarDeclNode <8:7> c: int
+            FuncCallExprNode <8:11> int
+              IdExprNode <8:11> p: int (*)(int, int)
+              ArgExprNode <8:13> int
+                IntConstExprNode <8:13> 2: int
+              ArgExprNode <8:16> int
+                IntConstExprNode <8:16> 3: int
+        ExprStmtNode <9:3>
+          SimpleAssignmentExprNode <9:5> int (*)(int, int)
+            IdExprNode <9:3> p: int (*)(int, int)
+            UnaryExprNode <9:7> int (*)(int, int) &
+              IdExprNode <9:8> add: int (int, int)
+        DeclStmtNode <10:3>
+          VarDeclNode <10:7> d: int
+            FuncCallExprNode <10:11> int
+              UnaryExprNode <10:12> int (int, int) *
+                IdExprNode <10:13> p: int (*)(int, int)
+              ArgExprNode <10:16> int
+                IntConstExprNode <10:16> 1: int
+              ArgExprNode <10:19> int
+                IntConstExprNode <10:19> 2: int
+        ReturnStmtNode <11:3>
+          IntConstExprNode <11:10> 0: int

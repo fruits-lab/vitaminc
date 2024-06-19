@@ -1,57 +1,61 @@
 ProgramNode <1:1>
-  FuncDefNode <1:5> add: int (int, int)
-    ParamNode <1:13> a: int
-    ParamNode <1:20> b: int
-    CompoundStmtNode <1:23>
-      ReturnStmtNode <2:3>
-        BinaryExprNode <2:12> int +
-          IdExprNode <2:10> a: int
-          IdExprNode <2:14> b: int
-  FuncDefNode <5:5> call: int (int (*)(int, int), int, int)
-    ParamNode <5:16> p: int (*)(int, int)
-    ParamNode <5:34> a: int
-    ParamNode <5:41> b: int
-    CompoundStmtNode <5:44>
-      ReturnStmtNode <6:3>
-        FuncCallExprNode <6:10> int
-          IdExprNode <6:10> p: int (*)(int, int)
-          ArgExprNode <6:12> int
-            IdExprNode <6:12> a: int
-          ArgExprNode <6:15> int
-            IdExprNode <6:15> b: int
-  FuncDefNode <10:5> call_decay: int (int (*)(int, int), int, int)
-    ParamNode <10:20> p: int (*)(int, int)
-    ParamNode <10:37> a: int
-    ParamNode <10:44> b: int
-    CompoundStmtNode <10:47>
-      ReturnStmtNode <12:3>
-        IntConstExprNode <12:10> 0: int
-  FuncDefNode <15:5> main: int ()
-    CompoundStmtNode <15:12>
-      DeclStmtNode <16:3>
-        VarDeclNode <16:9> c: int (*)(int (*)(int, int), int, int)
-          IdExprNode <16:43> call: int (int (*)(int, int), int, int)
-      ExprStmtNode <17:3>
-        FuncCallExprNode <17:3> int
-          IdExprNode <17:3> c: int (*)(int (*)(int, int), int, int)
-          ArgExprNode <17:5> int (int, int)
-            IdExprNode <17:5> add: int (int, int)
-          ArgExprNode <17:10> int
-            IntConstExprNode <17:10> 1: int
-          ArgExprNode <17:13> int
-            IntConstExprNode <17:13> 2: int
-      ExprStmtNode <18:3>
-        SimpleAssignmentExprNode <18:5> int (*)(int (*)(int, int), int, int)
-          IdExprNode <18:3> c: int (*)(int (*)(int, int), int, int)
-          IdExprNode <18:7> call_decay: int (int (*)(int, int), int, int)
-      ExprStmtNode <19:3>
-        FuncCallExprNode <19:3> int
-          IdExprNode <19:3> c: int (*)(int (*)(int, int), int, int)
-          ArgExprNode <19:5> int (int, int)
-            IdExprNode <19:5> add: int (int, int)
-          ArgExprNode <19:10> int
-            IntConstExprNode <19:10> 1: int
-          ArgExprNode <19:13> int
-            IntConstExprNode <19:13> 2: int
-      ReturnStmtNode <20:3>
-        IntConstExprNode <20:10> 0: int
+  ExternDeclNode <1:1>
+    FuncDefNode <1:5> add: int (int, int)
+      ParamNode <1:13> a: int
+      ParamNode <1:20> b: int
+      CompoundStmtNode <1:23>
+        ReturnStmtNode <2:3>
+          BinaryExprNode <2:12> int +
+            IdExprNode <2:10> a: int
+            IdExprNode <2:14> b: int
+  ExternDeclNode <5:1>
+    FuncDefNode <5:5> call: int (int (*)(int, int), int, int)
+      ParamNode <5:16> p: int (*)(int, int)
+      ParamNode <5:34> a: int
+      ParamNode <5:41> b: int
+      CompoundStmtNode <5:44>
+        ReturnStmtNode <6:3>
+          FuncCallExprNode <6:10> int
+            IdExprNode <6:10> p: int (*)(int, int)
+            ArgExprNode <6:12> int
+              IdExprNode <6:12> a: int
+            ArgExprNode <6:15> int
+              IdExprNode <6:15> b: int
+  ExternDeclNode <10:1>
+    FuncDefNode <10:5> call_decay: int (int (*)(int, int), int, int)
+      ParamNode <10:20> p: int (*)(int, int)
+      ParamNode <10:37> a: int
+      ParamNode <10:44> b: int
+      CompoundStmtNode <10:47>
+        ReturnStmtNode <12:3>
+          IntConstExprNode <12:10> 0: int
+  ExternDeclNode <15:1>
+    FuncDefNode <15:5> main: int ()
+      CompoundStmtNode <15:12>
+        DeclStmtNode <16:3>
+          VarDeclNode <16:9> c: int (*)(int (*)(int, int), int, int)
+            IdExprNode <16:43> call: int (int (*)(int, int), int, int)
+        ExprStmtNode <17:3>
+          FuncCallExprNode <17:3> int
+            IdExprNode <17:3> c: int (*)(int (*)(int, int), int, int)
+            ArgExprNode <17:5> int (int, int)
+              IdExprNode <17:5> add: int (int, int)
+            ArgExprNode <17:10> int
+              IntConstExprNode <17:10> 1: int
+            ArgExprNode <17:13> int
+              IntConstExprNode <17:13> 2: int
+        ExprStmtNode <18:3>
+          SimpleAssignmentExprNode <18:5> int (*)(int (*)(int, int), int, int)
+            IdExprNode <18:3> c: int (*)(int (*)(int, int), int, int)
+            IdExprNode <18:7> call_decay: int (int (*)(int, int), int, int)
+        ExprStmtNode <19:3>
+          FuncCallExprNode <19:3> int
+            IdExprNode <19:3> c: int (*)(int (*)(int, int), int, int)
+            ArgExprNode <19:5> int (int, int)
+              IdExprNode <19:5> add: int (int, int)
+            ArgExprNode <19:10> int
+              IntConstExprNode <19:10> 1: int
+            ArgExprNode <19:13> int
+              IntConstExprNode <19:13> 2: int
+        ReturnStmtNode <20:3>
+          IntConstExprNode <20:10> 0: int

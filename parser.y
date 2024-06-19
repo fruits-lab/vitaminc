@@ -104,6 +104,7 @@ std::unique_ptr<Type> ResolveType(std::unique_ptr<Type> resolved_type,
 %nterm <std::unique_ptr<ExprNode>> and_expr eq_expr relational_expr shift_expr add_expr mul_expr cast_expr
 %nterm <std::unique_ptr<DeclNode>> id_opt
 %nterm <std::unique_ptr<DeclStmtNode>> decl
+%nterm <std::vector<std::unique_ptr<DeclStmtNode>>> decls decls_opt
 %nterm <std::unique_ptr<ParamNode>> parameter_declaration
 %nterm <std::vector<std::unique_ptr<ParamNode>>> parameter_type_list_opt parameter_type_list parameter_list
 %nterm <std::unique_ptr<FieldNode>> struct_declaration struct_declarator struct_declarator_list
@@ -127,7 +128,8 @@ std::unique_ptr<Type> ResolveType(std::unique_ptr<Type> resolved_type,
 %nterm <std::unique_ptr<ArgExprNode>> arg
 %nterm <std::vector<std::unique_ptr<ArgExprNode>>> arg_list_opt arg_list
 %nterm <std::unique_ptr<FuncDefNode>> func_def
-%nterm <std::vector<std::unique_ptr<FuncDefNode>>> func_def_list_opt
+%nterm <std::unique_ptr<ExternDeclNode>> external_decl
+%nterm <std::vector<std::unique_ptr<ExternDeclNode>>> trans_unit
 %nterm <std::unique_ptr<LoopInitNode>> loop_init
 %nterm <std::unique_ptr<StmtNode>> stmt jump_stmt selection_stmt labeled_stmt block_item
 %nterm <std::unique_ptr<CompoundStmtNode>> compound_stmt
@@ -154,18 +156,25 @@ std::unique_ptr<Type> ResolveType(std::unique_ptr<Type> resolved_type,
 %start entry
 
 %%
-// TODO: support global variables
-entry: func_def_list_opt {
+entry: trans_unit {
     program = std::make_unique<ProgramNode>(Loc(@1), $1);
   }
   ;
 
-func_def_list_opt: func_def_list_opt func_def {
-    auto func_def_list_opt = $1;
-    func_def_list_opt.push_back($2);
-    $$ = std::move(func_def_list_opt);
+// TODO: support global variables
+trans_unit: external_decl {
+    $$ = std::vector<std::unique_ptr<ExternDeclNode>>{};
+    $$.push_back($1);
   }
-  | epsilon { $$ = std::vector<std::unique_ptr<FuncDefNode>>{}; }
+  | trans_unit external_decl {
+    auto trans_unit = $1;
+    trans_unit.push_back($2);
+    $$ = std::move(trans_unit);
+  }
+  ;
+
+external_decl: func_def { $$ = std::make_unique<ExternDeclNode>(Loc(@1), $1); }
+  | decl { $$ = std::make_unique<ExternDeclNode>(Loc(@1), $1); }
   ;
 
 /* 6.9.1 Function definitions */
