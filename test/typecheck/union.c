@@ -24,5 +24,7 @@ int main() {
 
   union shape a, *b, c[3];
 
+  s.circle;
+
   return 0;
 }

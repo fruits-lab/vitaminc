@@ -49,5 +49,8 @@ ProgramNode <1:1>
         VarDeclNode <25:15> a: union shape
         VarDeclNode <25:19> b: union shape*
         ArrDeclNode <25:22> c: union shape[3]
-      ReturnStmtNode <27:3>
-        IntConstExprNode <27:10> 0: int
+      ExprStmtNode <27:3>
+        RecordMemExprNode <27:3> .circle: int
+          IdExprNode <27:3> s: union shape
+      ReturnStmtNode <29:3>
+        IntConstExprNode <29:10> 0: int

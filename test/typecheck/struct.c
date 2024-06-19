@@ -25,5 +25,7 @@ int main() {
 
   struct birth a, *b, c[3];
 
+  bd1.date;
+
   return 0;
 }

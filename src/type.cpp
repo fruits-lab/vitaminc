@@ -154,6 +154,10 @@ std::unique_ptr<Type> FuncType::Clone() const {
                                     std::move(cloned_param_types));
 }
 
+std::string StructType::GetId() const noexcept {
+  return id_;
+}
+
 bool StructType::IsMember(const std::string& id) const noexcept {
   for (const auto& field : fields_) {
     if (field->id == id) {
@@ -214,6 +218,10 @@ std::unique_ptr<Type> StructType::Clone() const {
     cloned_fields.push_back(std::move(cloned_field));
   }
   return std::make_unique<StructType>(id_, std::move(cloned_fields));
+}
+
+std::string UnionType::GetId() const noexcept {
+  return id_;
 }
 
 bool UnionType::IsMember(const std::string& id) const noexcept {
