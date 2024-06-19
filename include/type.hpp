@@ -185,8 +185,13 @@ struct Field {
 
 class RecordType : public Type {
  public:
-  virtual std::string GetId() const noexcept = 0;
+  /// @return The type id.
+  virtual std::string id()
+      const noexcept = 0;  // // NOLINT(readability-identifier-naming)
+  /// @brief Checks if `id` is a member of the record type.
   virtual bool IsMember(const std::string& id) const noexcept = 0;
+  /// @return The type of a member in struct or union. The unknown type if the
+  /// `id` is not a member of the record type.
   virtual std::unique_ptr<Type> MemberType(
       const std::string& id) const noexcept = 0;
 };
@@ -198,7 +203,8 @@ class StructType : public RecordType {
   StructType(std::string id, std::vector<std::unique_ptr<Field>> fields)
       : id_{std::move(id)}, fields_{std::move(fields)} {}
 
-  std::string GetId() const noexcept override;
+  std::string id()
+      const noexcept override;  // NOLINT(readability-identifier-naming)
   bool IsMember(const std::string& id) const noexcept override;
   std::unique_ptr<Type> MemberType(
       const std::string& id) const noexcept override;
@@ -224,7 +230,8 @@ class UnionType : public RecordType {
   UnionType(std::string id, std::vector<std::unique_ptr<Field>> fields)
       : id_{std::move(id)}, fields_{std::move(fields)} {}
 
-  std::string GetId() const noexcept override;
+  std::string id()
+      const noexcept override;  // NOLINT(readability-identifier-naming)
   bool IsMember(const std::string& id) const noexcept override;
   std::unique_ptr<Type> MemberType(
       const std::string& id) const noexcept override;
