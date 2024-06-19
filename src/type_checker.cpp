@@ -38,6 +38,20 @@ bool IsInBodyOf(BodyType type) {
                      [type](auto&& t) { return t == type; });
 }
 
+/// @note Struct and union type id should be mangled when adding/looking up from
+/// the type table to avoid same name but different types.
+std::string MangleRecordTypeId(const std::string& id,
+                               const std::unique_ptr<Type>& type) {
+  // We simply prefix them with their record kind.
+  if (type->IsStruct()) {
+    return "struct_" + id;
+  } else if (type->IsUnion()) {
+    return "union_" + id;
+  } else {
+    throw "unknown record type";
+  }
+}
+
 }  // namespace
 
 void TypeChecker::Visit(DeclStmtNode& decl_stmt) {
@@ -94,8 +108,9 @@ void TypeChecker::Visit(RecordDeclNode& record_decl) {
     // };
     // If no, then it is the redefinition of 'id'.
   } else {
+    auto type_id = MangleRecordTypeId(record_decl.id, record_decl.type);
     auto decl_type =
-        std::make_unique<TypeEntry>(record_decl.id, record_decl.type->Clone());
+        std::make_unique<TypeEntry>(type_id, record_decl.type->Clone());
 
     // TODO: May be file scope once we support global variables.
     env_.AddType(std::move(decl_type), ScopeKind::kBlock);
@@ -118,9 +133,12 @@ void TypeChecker::Visit(RecordVarDeclNode& record_decl) {
     //
     // struct birth bd1 { .date = 1 }; // RecordVarDeclNode -> search type entry
     // to update its type.
-    // record_type->id() is "birth" in the above example.
-    auto record_type = env_.LookUpType(
-        dynamic_cast<RecordType*>(record_decl.type.get())->id());
+    // record_type_id is "struct_birth" in the above example.
+    auto record_type_id =
+        dynamic_cast<RecordType*>(record_decl.type.get())->id();
+    auto record_type =
+        env_.LookUpType(MangleRecordTypeId(record_type_id, record_decl.type));
+    assert(record_type);
     auto symbol = std::make_unique<SymbolEntry>(record_decl.id,
                                                 record_type->type->Clone());
 
@@ -488,13 +506,10 @@ void TypeChecker::Visit(PostfixArithExprNode& postfix_expr) {
 
 void TypeChecker::Visit(RecordMemExprNode& mem_expr) {
   mem_expr.expr->Accept(*this);
-  // id_expr->id is a record variable id.
-  const auto* id_expr = dynamic_cast<IdExprNode*>((mem_expr.expr).get());
-  assert(id_expr);
-  auto symbol = env_.LookUpSymbol(id_expr->id);
-  if (auto* record_type = dynamic_cast<RecordType*>((symbol->type).get())) {
+  if (auto* record_type =
+          dynamic_cast<RecordType*>((mem_expr.expr->type).get())) {
     if (record_type->IsMember(mem_expr.id)) {
-      mem_expr.type = record_type->MemberType(mem_expr.id)->Clone();
+      mem_expr.type = record_type->MemberType(mem_expr.id);
     } else {
       assert(false);
       // TODO: Throw error if mem_expr.id is not a symbol's member.
