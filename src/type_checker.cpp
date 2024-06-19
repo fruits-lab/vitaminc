@@ -110,8 +110,20 @@ void TypeChecker::Visit(RecordVarDeclNode& record_decl) {
   if (env_.ProbeSymbol(record_decl.id)) {
     // TODO: redefinition of 'id'
   } else {
-    auto symbol = std::make_unique<SymbolEntry>(record_decl.id,
-                                                record_decl.type->Clone());
+    // NOTE: record_decl doesn't know its own type, it needs to look up in the
+    // type table to update its type.
+    // struct birth { // RecordDeclNode -> stores type entry in type table
+    //   int date;
+    // };
+    //
+    // struct birth bd1 { .date = 1 }; // RecordVarDeclNode -> search type entry
+    // to update its type.
+    auto record_type = dynamic_cast<RecordType*>(record_decl.type.get());
+    assert(record_type);
+    // record_type->GetId() is "birth" in the above example.
+    auto real_record_type = env_.LookUpType(record_type->GetId());
+    auto symbol = std::make_unique<SymbolEntry>(
+        record_decl.id, real_record_type->type->Clone());
 
     // TODO: type check between fields and initialized members.
     for (auto& init : record_decl.inits) {
@@ -475,7 +487,26 @@ void TypeChecker::Visit(PostfixArithExprNode& postfix_expr) {
   postfix_expr.type = postfix_expr.operand->type->Clone();
 }
 
-void TypeChecker::Visit(RecordMemExprNode& mem_expr) {}
+void TypeChecker::Visit(RecordMemExprNode& mem_expr) {
+  mem_expr.expr->Accept(*this);
+  // id_expr->id is a record variable id.
+  const auto* id_expr = dynamic_cast<IdExprNode*>((mem_expr.expr).get());
+  assert(id_expr);
+  auto symbol = env_.LookUpSymbol(id_expr->id);
+  if (!symbol) {
+    // TODO: struct or union 'id' undeclared
+    assert(false);
+  }
+
+  if (auto* record_type = dynamic_cast<RecordType*>((symbol->type).get())) {
+    if (record_type->IsMember(mem_expr.id)) {
+      mem_expr.type = record_type->MemberType(mem_expr.id)->Clone();
+    } else {
+      assert(false);
+      // TODO: Throw error if mem_expr.id is not a symbol's member.
+    }
+  }
+}
 
 void TypeChecker::Visit(UnaryExprNode& unary_expr) {
   unary_expr.operand->Accept(*this);

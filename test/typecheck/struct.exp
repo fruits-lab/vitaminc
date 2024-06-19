@@ -48,5 +48,8 @@ ProgramNode <1:1>
         VarDeclNode <26:16> a: struct birth
         VarDeclNode <26:20> b: struct birth*
         ArrDeclNode <26:23> c: struct birth[3]
-      ReturnStmtNode <28:3>
-        IntConstExprNode <28:10> 0: int
+      ExprStmtNode <28:3>
+        RecordMemExprNode <28:3> .date: int
+          IdExprNode <28:3> bd1: struct birth
+      ReturnStmtNode <30:3>
+        IntConstExprNode <30:10> 0: int

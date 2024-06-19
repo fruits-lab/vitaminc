@@ -505,9 +505,9 @@ struct_or_union_specifier: struct_or_union id_opt LEFT_CURLY struct_declaration_
 
     auto type_id = decl_id ? decl_id->id : "";
     if (type->IsStruct()) {
-      type = std::make_unique<StructType>(type_id, std::move(field_types));
+      type = std::make_unique<StructType>(type_id, std::move(fields));
     } else {
-      type = std::make_unique<UnionType>(type_id, std::move(field_types));
+      type = std::make_unique<UnionType>(type_id, std::move(fields));
     }
 
     $$ = std::make_unique<RecordDeclNode>(Loc(@2), std::move(type_id), std::move(type), std::move(field_list));
@@ -519,9 +519,9 @@ struct_or_union_specifier: struct_or_union id_opt LEFT_CURLY struct_declaration_
     auto fields = std::vector<std::unique_ptr<Field>>{};
 
     if (type->IsStruct()) {
-      type = std::make_unique<StructType>(decl_id, std::move(field_types));
+      type = std::make_unique<StructType>(decl_id, std::move(fields));
     } else {
-      type = std::make_unique<UnionType>(decl_id, std::move(field_types));
+      type = std::make_unique<UnionType>(decl_id, std::move(fields));
     }
 
     $$ = std::make_unique<RecordDeclNode>(Loc(@2), std::move(decl_id), std::move(type), std::move(field_list));

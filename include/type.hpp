@@ -185,6 +185,7 @@ struct Field {
 
 class RecordType : public Type {
  public:
+  virtual std::string GetId() const noexcept = 0;
   virtual bool IsMember(const std::string& id) const noexcept = 0;
   virtual std::unique_ptr<Type> MemberType(
       const std::string& id) const noexcept = 0;
@@ -197,6 +198,7 @@ class StructType : public RecordType {
   StructType(std::string id, std::vector<std::unique_ptr<Field>> fields)
       : id_{std::move(id)}, fields_{std::move(fields)} {}
 
+  std::string GetId() const noexcept override;
   bool IsMember(const std::string& id) const noexcept override;
   std::unique_ptr<Type> MemberType(
       const std::string& id) const noexcept override;
@@ -222,6 +224,7 @@ class UnionType : public RecordType {
   UnionType(std::string id, std::vector<std::unique_ptr<Field>> fields)
       : id_{std::move(id)}, fields_{std::move(fields)} {}
 
+  std::string GetId() const noexcept override;
   bool IsMember(const std::string& id) const noexcept override;
   std::unique_ptr<Type> MemberType(
       const std::string& id) const noexcept override;

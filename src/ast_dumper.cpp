@@ -390,7 +390,14 @@ void AstDumper::Visit(const PostfixArithExprNode& postfix_expr) {
   indenter_.DecreaseLevel();
 }
 
-void AstDumper::Visit(const RecordMemExprNode& mem_expr) {}
+void AstDumper::Visit(const RecordMemExprNode& mem_expr) {
+  std::cout << indenter_.Indent() << "RecordMemExprNode <" << mem_expr.loc
+            << "> " << GetPostfixOperator(mem_expr.op) << mem_expr.id << ": "
+            << mem_expr.type->ToString() << '\n';
+  indenter_.IncreaseLevel();
+  mem_expr.expr->Accept(*this);
+  indenter_.DecreaseLevel();
+}
 
 void AstDumper::Visit(const UnaryExprNode& unary_expr) {
   std::cout << indenter_.Indent() << "UnaryExprNode <" << unary_expr.loc << "> "
