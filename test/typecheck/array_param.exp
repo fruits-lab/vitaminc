@@ -8,11 +8,11 @@ ProgramNode <1:1>
     CompoundStmtNode <7:12>
       DeclStmtNode <8:3>
         ArrDeclNode <8:7> a: int[3]
-          InitExprNode <8:15>
+          InitExprNode <8:15> int
             IntConstExprNode <8:15> 1: int
-          InitExprNode <8:15>
+          InitExprNode <8:15> int
             IntConstExprNode <8:18> 2: int
-          InitExprNode <8:15>
+          InitExprNode <8:15> int
             IntConstExprNode <8:21> 3: int
       ExprStmtNode <9:3>
         FuncCallExprNode <9:3> int
