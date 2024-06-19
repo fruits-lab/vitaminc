@@ -29,15 +29,15 @@ ProgramNode <1:1>
         VarDeclNode <8:7> b: int
           IntConstExprNode <8:11> 0: int
         ArrDeclNode <8:14> c: int[4]
-          InitExprNode <8:22>
+          InitExprNode <8:22> int
             IntConstExprNode <8:22> 1: int
-          InitExprNode <8:22>
+          InitExprNode <8:22> int
             SimpleAssignmentExprNode <8:27> int
               IdExprNode <8:25> b: int
               IntConstExprNode <8:29> 2: int
-          InitExprNode <8:22>
+          InitExprNode <8:22> int
             IntConstExprNode <8:32> 3: int
-          InitExprNode <8:22>
+          InitExprNode <8:22> int
             IntConstExprNode <8:35> 4: int
       ReturnStmtNode <10:3>
         IntConstExprNode <10:10> 0: int

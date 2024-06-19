@@ -307,7 +307,8 @@ void AstDumper::Visit(const ExprStmtNode& expr_stmt) {
 }
 
 void AstDumper::Visit(const InitExprNode& init_expr) {
-  std::cout << indenter_.Indent() << "InitExprNode <" << init_expr.loc << ">\n";
+  std::cout << indenter_.Indent() << "InitExprNode <" << init_expr.loc << "> "
+            << init_expr.type->ToString() << "\n";
   indenter_.IncreaseLevel();
   for (const auto& des : init_expr.des) {
     des->Accept(*this);

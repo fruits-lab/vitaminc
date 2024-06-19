@@ -17,30 +17,30 @@ ProgramNode <1:1>
           FieldNode <15:9> e: int
       DeclStmtNode <20:3>
         RecordVarDeclNode <20:15> s: union shape
-          InitExprNode <20:20>
+          InitExprNode <20:20> int
             IntConstExprNode <20:20> 3: int
-          InitExprNode <20:20>
+          InitExprNode <20:20> int
             IntConstExprNode <20:23> 4: int
-          InitExprNode <20:20>
+          InitExprNode <20:20> int
             IntConstExprNode <20:26> 5: int
       DeclStmtNode <22:3>
         RecordVarDeclNode <22:15> circle: union shape
-          InitExprNode <22:25>
+          InitExprNode <22:25> int
             IdDesNode <22:26> circle
             IntConstExprNode <22:35> 1: int
       DeclStmtNode <23:3>
         ArrDeclNode <23:15> puzzles: union shape[3]
-          InitExprNode <23:29>
+          InitExprNode <23:29> int
             ArrDesNode <23:30>
               IntConstExprNode <23:30> 0: int
             IdDesNode <23:33> circle
             IntConstExprNode <23:42> 1: int
-          InitExprNode <23:29>
+          InitExprNode <23:29> int
             ArrDesNode <23:46>
               IntConstExprNode <23:46> 1: int
             IdDesNode <23:49> triangle
             IntConstExprNode <23:60> 2: int
-          InitExprNode <23:29>
+          InitExprNode <23:29> int
             ArrDesNode <23:64>
               IntConstExprNode <23:64> 2: int
             IdDesNode <23:67> square
