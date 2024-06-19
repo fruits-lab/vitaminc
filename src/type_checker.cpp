@@ -118,12 +118,11 @@ void TypeChecker::Visit(RecordVarDeclNode& record_decl) {
     //
     // struct birth bd1 { .date = 1 }; // RecordVarDeclNode -> search type entry
     // to update its type.
-    auto record_type = dynamic_cast<RecordType*>(record_decl.type.get());
-    assert(record_type);
-    // record_type->GetId() is "birth" in the above example.
-    auto real_record_type = env_.LookUpType(record_type->GetId());
-    auto symbol = std::make_unique<SymbolEntry>(
-        record_decl.id, real_record_type->type->Clone());
+    // record_type->id() is "birth" in the above example.
+    auto record_type = env_.LookUpType(
+        dynamic_cast<RecordType*>(record_decl.type.get())->id());
+    auto symbol = std::make_unique<SymbolEntry>(record_decl.id,
+                                                record_type->type->Clone());
 
     // TODO: type check between fields and initialized members.
     for (auto& init : record_decl.inits) {
@@ -493,11 +492,6 @@ void TypeChecker::Visit(RecordMemExprNode& mem_expr) {
   const auto* id_expr = dynamic_cast<IdExprNode*>((mem_expr.expr).get());
   assert(id_expr);
   auto symbol = env_.LookUpSymbol(id_expr->id);
-  if (!symbol) {
-    // TODO: struct or union 'id' undeclared
-    assert(false);
-  }
-
   if (auto* record_type = dynamic_cast<RecordType*>((symbol->type).get())) {
     if (record_type->IsMember(mem_expr.id)) {
       mem_expr.type = record_type->MemberType(mem_expr.id)->Clone();
@@ -505,6 +499,8 @@ void TypeChecker::Visit(RecordMemExprNode& mem_expr) {
       assert(false);
       // TODO: Throw error if mem_expr.id is not a symbol's member.
     }
+  } else {
+    // TODO: Throw error since symbol is not struct nor union type.
   }
 }
 
