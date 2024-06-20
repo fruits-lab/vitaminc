@@ -158,6 +158,17 @@ std::string StructType::id() const noexcept {
   return id_;
 }
 
+std::size_t StructType::offset(const std::string& id) const noexcept {
+  for (auto i = std::size_t{0}, e = fields_.size(); i < e; ++i) {
+    const auto& field = fields_.at(i);
+    if (field->id == id) {
+      return i * field->type->size();
+    }
+  }
+
+  return -1;
+}
+
 bool StructType::IsMember(const std::string& id) const noexcept {
   for (const auto& field : fields_) {
     if (field->id == id) {
@@ -218,6 +229,11 @@ std::unique_ptr<Type> StructType::Clone() const {
     cloned_fields.push_back(std::move(cloned_field));
   }
   return std::make_unique<StructType>(id_, std::move(cloned_fields));
+}
+
+std::size_t UnionType::offset(const std::string& id) const noexcept {
+  // Every member in union shares the same starting location.
+  return 0;
 }
 
 std::string UnionType::id() const noexcept {

@@ -214,14 +214,23 @@ void QbeIrGenerator::Visit(const FieldNode& field) {
 }
 
 void QbeIrGenerator::Visit(const RecordVarDeclNode& record_var_decl) {
-  const auto num = NextLocalNum();
+  const auto base_addr = NextLocalNum();
   // TODO: support different data types. We have `int` type for now.
-  WriteInstr_("{} =l alloc4 {}", FuncScopeTemp{num},
+  WriteInstr_("{} =l alloc4 {}", FuncScopeTemp{base_addr},
               record_var_decl.type->size());
-  id_to_num[record_var_decl.id] = num;
+  id_to_num[record_var_decl.id] = base_addr;
 
-  for (const auto& init : record_var_decl.inits) {
+  for (auto i = std::size_t{0}, e = record_var_decl.inits.size(); i < e; ++i) {
+    const auto& init = record_var_decl.inits.at(i);
     init->Accept(*this);
+    const auto init_num = num_recorder.NumOfPrevExpr();
+
+    // res_addr = base_addr + offset
+    const int res_addr_num = NextLocalNum();
+    WriteInstr_("{} =l add {}, {}", FuncScopeTemp{res_addr_num},
+                FuncScopeTemp{base_addr}, i * init->type->size());
+    WriteInstr_("storew {}, {}", FuncScopeTemp{init_num},
+                FuncScopeTemp{res_addr_num});
   }
 }
 
@@ -779,7 +788,23 @@ void QbeIrGenerator::Visit(const PostfixArithExprNode& postfix_expr) {
               FuncScopeTemp{id_to_num.at(id_expr->id)});
 }
 
-void QbeIrGenerator::Visit(const RecordMemExprNode& mem_expr) {}
+void QbeIrGenerator::Visit(const RecordMemExprNode& mem_expr) {
+  mem_expr.expr->Accept(*this);
+  const auto num = num_recorder.NumOfPrevExpr();
+  const auto id_num = reg_num_to_id_num.at(num);
+  auto* record_type = dynamic_cast<RecordType*>(mem_expr.expr->type.get());
+  assert(record_type);
+
+  const auto res_addr_num = NextLocalNum();
+  WriteInstr_("{} =l add {}, {}", FuncScopeTemp{res_addr_num},
+              FuncScopeTemp{id_num}, record_type->offset(mem_expr.id));
+
+  const int res_num = NextLocalNum();
+  WriteInstr_("{} =w loadw {}", FuncScopeTemp{res_num},
+              FuncScopeTemp{res_addr_num});
+  reg_num_to_id_num[res_num] = res_addr_num;
+  num_recorder.Record(res_num);
+}
 
 void QbeIrGenerator::Visit(const UnaryExprNode& unary_expr) {
   unary_expr.operand->Accept(*this);
