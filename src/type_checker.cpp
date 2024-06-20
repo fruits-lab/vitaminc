@@ -148,6 +148,8 @@ void TypeChecker::Visit(RecordVarDeclNode& record_var_decl) {
     }
     // TODO: May be file scope once we support global variables.
     env_.AddSymbol(std::move(symbol), ScopeKind::kBlock);
+
+    record_var_decl.type = record_type->type->Clone();
   }
 }
 

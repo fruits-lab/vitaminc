@@ -205,11 +205,25 @@ void QbeIrGenerator::Visit(const ArrDeclNode& arr_decl) {
   }
 }
 
-void QbeIrGenerator::Visit(const RecordDeclNode& struct_def) {}
+void QbeIrGenerator::Visit(const RecordDeclNode& record_decl) {
+  /* Do nothing because this node only declares a type. */
+}
 
-void QbeIrGenerator::Visit(const FieldNode& field) {}
+void QbeIrGenerator::Visit(const FieldNode& field) {
+  /* Do nothing because this node only declares a member type in a record. */
+}
 
-void QbeIrGenerator::Visit(const RecordVarDeclNode& struct_def) {}
+void QbeIrGenerator::Visit(const RecordVarDeclNode& record_var_decl) {
+  const auto num = NextLocalNum();
+  // TODO: support different data types. We have `int` type for now.
+  WriteInstr_("{} =l alloc4 {}", FuncScopeTemp{num},
+              record_var_decl.type->size());
+  id_to_num[record_var_decl.id] = num;
+
+  for (const auto& init : record_var_decl.inits) {
+    init->Accept(*this);
+  }
+}
 
 void QbeIrGenerator::Visit(const ParamNode& parameter) {
   int id_num = NextLocalNum();
