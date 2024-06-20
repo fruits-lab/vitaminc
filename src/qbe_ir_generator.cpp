@@ -225,10 +225,18 @@ void QbeIrGenerator::Visit(const RecordVarDeclNode& record_var_decl) {
     init->Accept(*this);
     const auto init_num = num_recorder.NumOfPrevExpr();
 
+    // NOTE: Every member shares the same starting memory location in union.
+    // Abort if initializing more than one element.
+    if (record_var_decl.type->IsUnion() && i > 0) {
+      break;
+    }
+
     // res_addr = base_addr + offset
     const int res_addr_num = NextLocalNum();
+    auto* record_type = dynamic_cast<RecordType*>(record_var_decl.type.get());
+    assert(record_type);
     WriteInstr_("{} =l add {}, {}", FuncScopeTemp{res_addr_num},
-                FuncScopeTemp{base_addr}, i * init->type->size());
+                FuncScopeTemp{base_addr}, record_type->offset(i));
     WriteInstr_("storew {}, {}", FuncScopeTemp{init_num},
                 FuncScopeTemp{res_addr_num});
   }

@@ -158,15 +158,32 @@ std::string StructType::id() const noexcept {
   return id_;
 }
 
-std::size_t StructType::offset(const std::string& id) const noexcept {
+std::size_t StructType::offset(const std::string& id) const {
+  std::size_t offset = 0;
   for (auto i = std::size_t{0}, e = fields_.size(); i < e; ++i) {
     const auto& field = fields_.at(i);
     if (field->id == id) {
-      return i * field->type->size();
+      return offset;
     }
+
+    offset += field->type->size();
   }
 
-  return -1;
+  throw "member not found in struct!";
+}
+
+std::size_t StructType::offset(const std::size_t index) const {
+  std::size_t offset = 0;
+  for (auto i = std::size_t{0}, e = fields_.size(); i < e; ++i) {
+    const auto& field = fields_.at(i);
+    if (i == index) {
+      return offset;
+    }
+
+    offset += field->type->size();
+  }
+
+  throw "member not found in struct!";
 }
 
 bool StructType::IsMember(const std::string& id) const noexcept {
@@ -231,7 +248,12 @@ std::unique_ptr<Type> StructType::Clone() const {
   return std::make_unique<StructType>(id_, std::move(cloned_fields));
 }
 
-std::size_t UnionType::offset(const std::string& id) const noexcept {
+std::size_t UnionType::offset(const std::string& id) const {
+  // Every member in union shares the same starting location.
+  return 0;
+}
+
+std::size_t UnionType::offset(const std::size_t index) const {
   // Every member in union shares the same starting location.
   return 0;
 }

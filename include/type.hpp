@@ -188,9 +188,12 @@ class RecordType : public Type {
   /// @return The type id.
   virtual std::string id()  // NOLINT(readability-identifier-naming)
       const noexcept = 0;
-  /// @return The type offset in the record.
+  /// @return The type offset in the record based on `id`.
   virtual std::size_t offset(  // NOLINT(readability-identifier-naming)
-      const std::string& id) const noexcept = 0;
+      const std::string& id) const = 0;
+  /// @return The type offset in the record based on `index`.
+  virtual std::size_t offset(  // NOLINT(readability-identifier-naming)
+      const std::size_t index) const = 0;
   /// @brief Checks if `id` is a member of the record type.
   virtual bool IsMember(const std::string& id) const noexcept = 0;
   /// @return The type of a member in struct or union. The unknown type if the
@@ -209,7 +212,9 @@ class StructType : public RecordType {
   std::string id()  // NOLINT(readability-identifier-naming)
       const noexcept override;
   std::size_t offset(  // NOLINT(readability-identifier-naming)
-      const std::string& id) const noexcept override;
+      const std::string& id) const override;
+  std::size_t offset(  // NOLINT(readability-identifier-naming)
+      const std::size_t index) const override;
   bool IsMember(const std::string& id) const noexcept override;
   std::unique_ptr<Type> MemberType(
       const std::string& id) const noexcept override;
@@ -238,7 +243,9 @@ class UnionType : public RecordType {
   std::string id()  // NOLINT(readability-identifier-naming)
       const noexcept override;
   std::size_t offset(  // NOLINT(readability-identifier-naming)
-      const std::string& id) const noexcept override;
+      const std::string& id) const override;
+  std::size_t offset(  // NOLINT(readability-identifier-naming)
+      const std::size_t index) const override;
   bool IsMember(const std::string& id) const noexcept override;
   std::unique_ptr<Type> MemberType(
       const std::string& id) const noexcept override;
