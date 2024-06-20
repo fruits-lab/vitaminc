@@ -121,12 +121,12 @@ void TypeChecker::Visit(FieldNode& field) {
   // NOTE: Do nothing since record_decl 'Clone' already copies every field.
 }
 
-void TypeChecker::Visit(RecordVarDeclNode& record_decl) {
-  if (env_.ProbeSymbol(record_decl.id)) {
+void TypeChecker::Visit(RecordVarDeclNode& record_var_decl) {
+  if (env_.ProbeSymbol(record_var_decl.id)) {
     // TODO: redefinition of 'id'
   } else {
-    // NOTE: record_decl doesn't know its own type, it needs to look up in the
-    // type table to update its type.
+    // NOTE: record_var_decl doesn't know its own type, it needs to look up in
+    // the type table to update its type.
     // struct birth { // RecordDeclNode -> stores type entry in type table
     //   int date;
     // };
@@ -135,15 +135,15 @@ void TypeChecker::Visit(RecordVarDeclNode& record_decl) {
     // to update its type.
     // record_type_id is "struct_birth" in the above example.
     auto record_type_id =
-        dynamic_cast<RecordType*>(record_decl.type.get())->id();
-    auto record_type =
-        env_.LookUpType(MangleRecordTypeId(record_type_id, record_decl.type));
+        dynamic_cast<RecordType*>(record_var_decl.type.get())->id();
+    auto record_type = env_.LookUpType(
+        MangleRecordTypeId(record_type_id, record_var_decl.type));
     assert(record_type);
-    auto symbol = std::make_unique<SymbolEntry>(record_decl.id,
+    auto symbol = std::make_unique<SymbolEntry>(record_var_decl.id,
                                                 record_type->type->Clone());
 
     // TODO: type check between fields and initialized members.
-    for (auto& init : record_decl.inits) {
+    for (auto& init : record_var_decl.inits) {
       init->Accept(*this);
     }
     // TODO: May be file scope once we support global variables.
