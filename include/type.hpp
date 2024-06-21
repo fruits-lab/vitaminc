@@ -188,27 +188,23 @@ class RecordType : public Type {
   /// @return The type id.
   virtual std::string id()  // NOLINT(readability-identifier-naming)
       const noexcept = 0;
-  /// @note Every member in union shares the same offset 0.
-  /// @return The type offset in the record based on `id`.
-  /// @throw `std::runtime_error` if the `id` is not a member of the record.
-  virtual std::size_t offset(  // NOLINT(readability-identifier-naming)
-      const std::string& id) const = 0;
-  /// @note Every member in union shares the same offset 0.
-  /// @return The type offset in the record based on `index`.
-  /// @throw `std::out_of_range` if the `index` is out of range.
-  virtual std::size_t offset(  // NOLINT(readability-identifier-naming)
-      std::size_t index) const = 0;
-  /// @note For union type, if the total number of members is greater than or
-  /// equal to 1, return 1. Otherwise, return 0.
-  /// @return The total number of members in the record.
-  virtual std::size_t member_count()  // NOLINT(readability-identifier-naming)
-      const noexcept = 0;
   /// @brief Checks if `id` is a member of the record type.
   virtual bool IsMember(const std::string& id) const noexcept = 0;
   /// @return The type of a member in struct or union. The unknown type if the
   /// `id` is not a member of the record type.
   virtual std::unique_ptr<Type> MemberType(
       const std::string& id) const noexcept = 0;
+  /// @note Every member in union shares the same offset 0.
+  /// @return The type offset in the record based on `id`.
+  /// @throw `std::runtime_error` if the `id` is not a member of the record.
+  virtual std::size_t OffsetOf(const std::string& id) const = 0;
+  /// @note Every member in union shares the same offset 0.
+  /// @return The type offset in the record based on `index`.
+  /// @throw `std::out_of_range` if the `index` is out of range.
+  virtual std::size_t OffsetOf(std::size_t index) const = 0;
+  /// @return The total number of members a record can hold.
+  /// @note For union type, there's at most one slot.
+  virtual std::size_t SlotCount() const noexcept = 0;
 };
 
 class StructType : public RecordType {
@@ -219,12 +215,12 @@ class StructType : public RecordType {
       : id_{std::move(id)}, fields_{std::move(fields)} {}
 
   std::string id() const noexcept override;
-  std::size_t offset(const std::string& id) const override;
-  std::size_t offset(std::size_t index) const override;
-  std::size_t member_count() const noexcept override;
   bool IsMember(const std::string& id) const noexcept override;
   std::unique_ptr<Type> MemberType(
       const std::string& id) const noexcept override;
+  std::size_t OffsetOf(const std::string& id) const override;
+  std::size_t OffsetOf(std::size_t index) const override;
+  std::size_t SlotCount() const noexcept override;
 
   bool IsStruct() const noexcept override {
     return true;
@@ -248,12 +244,12 @@ class UnionType : public RecordType {
       : id_{std::move(id)}, fields_{std::move(fields)} {}
 
   std::string id() const noexcept override;
-  std::size_t offset(const std::string& id) const override;
-  std::size_t offset(std::size_t index) const override;
-  std::size_t member_count() const noexcept override;
   bool IsMember(const std::string& id) const noexcept override;
   std::unique_ptr<Type> MemberType(
       const std::string& id) const noexcept override;
+  std::size_t OffsetOf(const std::string& id) const override;
+  std::size_t OffsetOf(std::size_t index) const override;
+  std::size_t SlotCount() const noexcept override;
 
   bool IsUnion() const noexcept override {
     return true;

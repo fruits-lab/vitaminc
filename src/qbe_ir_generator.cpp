@@ -226,15 +226,15 @@ void QbeIrGenerator::Visit(const RecordVarDeclNode& record_var_decl) {
   // exceed the total number of members in a record. Also, it gurantees
   // that accessing element in the initializers will not go out of bound.
   for (auto i = std::size_t{0}, e = record_var_decl.inits.size(),
-            member_count = record_type->member_count();
-       i < member_count && i < e; ++i) {
+            slot_count = record_type->SlotCount();
+       i < slot_count && i < e; ++i) {
     const auto& init = record_var_decl.inits.at(i);
     init->Accept(*this);
     const auto init_num = num_recorder.NumOfPrevExpr();
 
     // res_addr = base_addr + offset
     const int res_addr_num = NextLocalNum();
-    const auto offset = record_type->offset(i);
+    const auto offset = record_type->OffsetOf(i);
     WriteInstr_("{} =l add {}, {}", FuncScopeTemp{res_addr_num},
                 FuncScopeTemp{base_addr}, offset);
     WriteInstr_("storew {}, {}", FuncScopeTemp{init_num},
@@ -805,7 +805,7 @@ void QbeIrGenerator::Visit(const RecordMemExprNode& mem_expr) {
 
   const auto res_addr_num = NextLocalNum();
   WriteInstr_("{} =l add {}, {}", FuncScopeTemp{res_addr_num},
-              FuncScopeTemp{id_num}, record_type->offset(mem_expr.id));
+              FuncScopeTemp{id_num}, record_type->OffsetOf(mem_expr.id));
 
   const int res_num = NextLocalNum();
   WriteInstr_("{} =w loadw {}", FuncScopeTemp{res_num},
