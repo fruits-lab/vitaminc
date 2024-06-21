@@ -180,7 +180,8 @@ std::size_t StructType::offset(std::size_t index) const {
   }
 
   return std::accumulate(
-      fields_.cbegin(), std::next(fields_.cbegin(), index), std::size_t{0},
+      fields_.cbegin(), std::next(fields_.cbegin(), (long)index),
+      std::size_t{0},
       [](auto&& size, auto&& field) { return size + field->type->size(); });
 }
 
