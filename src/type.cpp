@@ -171,17 +171,17 @@ std::size_t StructType::offset(const std::string& id) const {
     offset += field->type->size();
   }
 
-  throw std::runtime_error("member not found in struct!");
+  throw std::runtime_error{"member not found in struct!"};
 }
 
-std::size_t StructType::offset(std::size_t index) const {
+std::size_t StructType::offset(const std::size_t index) const {
   if (index >= fields_.size()) {
-    throw std::runtime_error("index out of bound!");
+    throw std::out_of_range{"index out of bound!"};
   }
 
+  auto end = std::next(fields_.cbegin(), (long)index);
   return std::accumulate(
-      fields_.cbegin(), std::next(fields_.cbegin(), (long)index),
-      std::size_t{0},
+      fields_.cbegin(), end, std::size_t{0},
       [](auto&& size, auto&& field) { return size + field->type->size(); });
 }
 
@@ -252,17 +252,15 @@ std::unique_ptr<Type> StructType::Clone() const {
 }
 
 std::size_t UnionType::offset(const std::string& id) const {
-  // Every member in union shares the same starting location.
   return 0;
 }
 
-std::size_t UnionType::offset(std::size_t index) const {
-  // Every member in union shares the same starting location.
+std::size_t UnionType::offset(const std::size_t index) const {
   return 0;
 }
 
 std::size_t UnionType::member_count() const noexcept {
-  return fields_.size();
+  return fields_.size() > 0 ? 1 : 0;
 }
 
 std::string UnionType::id() const noexcept {

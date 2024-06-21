@@ -228,11 +228,6 @@ void QbeIrGenerator::Visit(const RecordVarDeclNode& record_var_decl) {
   for (auto i = std::size_t{0}, e = record_var_decl.inits.size(),
             member_count = record_type->member_count();
        i < member_count && i < e; ++i) {
-    // Special case for union since UnionType::offset always return index 0,
-    // which means that we cannot exit the loop early based on offset.
-    if (record_type->IsUnion() && i > 0) {
-      break;
-    }
     const auto& init = record_var_decl.inits.at(i);
     init->Accept(*this);
     const auto init_num = num_recorder.NumOfPrevExpr();
