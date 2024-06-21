@@ -220,23 +220,28 @@ void QbeIrGenerator::Visit(const RecordVarDeclNode& record_var_decl) {
               record_var_decl.type->size());
   id_to_num[record_var_decl.id] = base_addr;
 
-  for (auto i = std::size_t{0}, e = record_var_decl.inits.size(); i < e; ++i) {
+  auto* record_type = dynamic_cast<RecordType*>(record_var_decl.type.get());
+  assert(record_type);
+  // NOTE: This predicate will make sure that we don't initialize members that
+  // exceed the total number of members in a record. Also, it gurantees
+  // that accessing element in the initializers will not go out of bound.
+  for (auto i = std::size_t{0}, e = record_var_decl.inits.size(),
+            member_count = record_type->member_count();
+       i < member_count && i < e; ++i) {
+    // Special case for union since UnionType::offset always return index 0,
+    // which means that we cannot exit the loop early based on offset.
+    if (record_type->IsUnion() && i > 0) {
+      break;
+    }
     const auto& init = record_var_decl.inits.at(i);
     init->Accept(*this);
     const auto init_num = num_recorder.NumOfPrevExpr();
 
-    // NOTE: Every member shares the same starting memory location in union.
-    // Abort if initializing more than one element.
-    if (record_var_decl.type->IsUnion() && i > 0) {
-      break;
-    }
-
     // res_addr = base_addr + offset
     const int res_addr_num = NextLocalNum();
-    auto* record_type = dynamic_cast<RecordType*>(record_var_decl.type.get());
-    assert(record_type);
+    const auto offset = record_type->offset(i);
     WriteInstr_("{} =l add {}, {}", FuncScopeTemp{res_addr_num},
-                FuncScopeTemp{base_addr}, record_type->offset(i));
+                FuncScopeTemp{base_addr}, offset);
     WriteInstr_("storew {}, {}", FuncScopeTemp{init_num},
                 FuncScopeTemp{res_addr_num});
   }
