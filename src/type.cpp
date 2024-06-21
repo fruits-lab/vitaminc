@@ -160,35 +160,6 @@ std::string StructType::id() const noexcept {
   return id_;
 }
 
-std::size_t StructType::offset(const std::string& id) const {
-  std::size_t offset = 0;
-  for (auto i = std::size_t{0}, e = fields_.size(); i < e; ++i) {
-    const auto& field = fields_.at(i);
-    if (field->id == id) {
-      return offset;
-    }
-
-    offset += field->type->size();
-  }
-
-  throw std::runtime_error{"member not found in struct!"};
-}
-
-std::size_t StructType::offset(const std::size_t index) const {
-  if (index >= fields_.size()) {
-    throw std::out_of_range{"index out of bound!"};
-  }
-
-  auto end = std::next(fields_.cbegin(), (long)index);
-  return std::accumulate(
-      fields_.cbegin(), end, std::size_t{0},
-      [](auto&& size, auto&& field) { return size + field->type->size(); });
-}
-
-std::size_t StructType::member_count() const noexcept {
-  return fields_.size();
-}
-
 bool StructType::IsMember(const std::string& id) const noexcept {
   for (const auto& field : fields_) {
     if (field->id == id) {
@@ -208,6 +179,35 @@ std::unique_ptr<Type> StructType::MemberType(
   }
 
   return std::make_unique<PrimType>(PrimitiveType::kUnknown);
+}
+
+std::size_t StructType::OffsetOf(const std::string& id) const {
+  std::size_t offset = 0;
+  for (auto i = std::size_t{0}, e = fields_.size(); i < e; ++i) {
+    const auto& field = fields_.at(i);
+    if (field->id == id) {
+      return offset;
+    }
+
+    offset += field->type->size();
+  }
+
+  throw std::runtime_error{"member not found in struct!"};
+}
+
+std::size_t StructType::OffsetOf(const std::size_t index) const {
+  if (index >= fields_.size()) {
+    throw std::out_of_range{"index out of bound!"};
+  }
+
+  auto end = std::next(fields_.cbegin(), (long)index);
+  return std::accumulate(
+      fields_.cbegin(), end, std::size_t{0},
+      [](auto&& size, auto&& field) { return size + field->type->size(); });
+}
+
+std::size_t StructType::SlotCount() const noexcept {
+  return fields_.size();
 }
 
 bool StructType::IsEqual(const Type& that) const noexcept {
@@ -251,18 +251,6 @@ std::unique_ptr<Type> StructType::Clone() const {
   return std::make_unique<StructType>(id_, std::move(cloned_fields));
 }
 
-std::size_t UnionType::offset(const std::string& id) const {
-  return 0;
-}
-
-std::size_t UnionType::offset(const std::size_t index) const {
-  return 0;
-}
-
-std::size_t UnionType::member_count() const noexcept {
-  return fields_.size() > 0 ? 1 : 0;
-}
-
 std::string UnionType::id() const noexcept {
   return id_;
 }
@@ -286,6 +274,18 @@ std::unique_ptr<Type> UnionType::MemberType(
   }
 
   return std::make_unique<PrimType>(PrimitiveType::kUnknown);
+}
+
+std::size_t UnionType::OffsetOf(const std::string& id) const {
+  return 0;
+}
+
+std::size_t UnionType::OffsetOf(const std::size_t index) const {
+  return 0;
+}
+
+std::size_t UnionType::SlotCount() const noexcept {
+  return fields_.size() > 0 ? 1 : 0;
 }
 
 bool UnionType::IsEqual(const Type& that) const noexcept {
