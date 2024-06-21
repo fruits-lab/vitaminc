@@ -3,6 +3,8 @@
 #include <algorithm>
 #include <cstddef>
 #include <memory>
+#include <numeric>
+#include <stdexcept>
 #include <string>
 #include <utility>
 #include <vector>
@@ -169,21 +171,21 @@ std::size_t StructType::offset(const std::string& id) const {
     offset += field->type->size();
   }
 
-  throw "member not found in struct!";
+  throw std::runtime_error("member not found in struct!");
 }
 
-std::size_t StructType::offset(const std::size_t index) const {
-  std::size_t offset = 0;
-  for (auto i = std::size_t{0}, e = fields_.size(); i < e; ++i) {
-    const auto& field = fields_.at(i);
-    if (i == index) {
-      return offset;
-    }
-
-    offset += field->type->size();
+std::size_t StructType::offset(std::size_t index) const {
+  if (index >= fields_.size()) {
+    throw std::runtime_error("index out of bound!");
   }
 
-  throw "member not found in struct!";
+  return std::accumulate(
+      fields_.cbegin(), std::next(fields_.cbegin(), index), std::size_t{0},
+      [](auto&& size, auto&& field) { return size + field->type->size(); });
+}
+
+std::size_t StructType::member_count() const noexcept {
+  return fields_.size();
 }
 
 bool StructType::IsMember(const std::string& id) const noexcept {
@@ -253,9 +255,13 @@ std::size_t UnionType::offset(const std::string& id) const {
   return 0;
 }
 
-std::size_t UnionType::offset(const std::size_t index) const {
+std::size_t UnionType::offset(std::size_t index) const {
   // Every member in union shares the same starting location.
   return 0;
+}
+
+std::size_t UnionType::member_count() const noexcept {
+  return fields_.size();
 }
 
 std::string UnionType::id() const noexcept {
