@@ -189,11 +189,16 @@ class RecordType : public Type {
   virtual std::string id()  // NOLINT(readability-identifier-naming)
       const noexcept = 0;
   /// @return The type offset in the record based on `id`.
+  /// @throw `std::runtime_error` if the `id` is not a member of the record.
   virtual std::size_t offset(  // NOLINT(readability-identifier-naming)
       const std::string& id) const = 0;
   /// @return The type offset in the record based on `index`.
+  /// @throw `std::runtime_error` if the `index` is out of range.
   virtual std::size_t offset(  // NOLINT(readability-identifier-naming)
-      const std::size_t index) const = 0;
+      std::size_t index) const = 0;
+  /// @return The total number of members in the record.
+  virtual std::size_t member_count()  // NOLINT(readability-identifier-naming)
+      const noexcept = 0;
   /// @brief Checks if `id` is a member of the record type.
   virtual bool IsMember(const std::string& id) const noexcept = 0;
   /// @return The type of a member in struct or union. The unknown type if the
@@ -214,7 +219,9 @@ class StructType : public RecordType {
   std::size_t offset(  // NOLINT(readability-identifier-naming)
       const std::string& id) const override;
   std::size_t offset(  // NOLINT(readability-identifier-naming)
-      const std::size_t index) const override;
+      std::size_t index) const override;
+  std::size_t member_count()  // NOLINT(readability-identifier-naming)
+      const noexcept override;
   bool IsMember(const std::string& id) const noexcept override;
   std::unique_ptr<Type> MemberType(
       const std::string& id) const noexcept override;
@@ -245,7 +252,9 @@ class UnionType : public RecordType {
   std::size_t offset(  // NOLINT(readability-identifier-naming)
       const std::string& id) const override;
   std::size_t offset(  // NOLINT(readability-identifier-naming)
-      const std::size_t index) const override;
+      std::size_t index) const override;
+  std::size_t member_count()  // NOLINT(readability-identifier-naming)
+      const noexcept override;
   bool IsMember(const std::string& id) const noexcept override;
   std::unique_ptr<Type> MemberType(
       const std::string& id) const noexcept override;
