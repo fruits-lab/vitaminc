@@ -104,7 +104,6 @@ std::unique_ptr<Type> ResolveType(std::unique_ptr<Type> resolved_type,
 %nterm <std::unique_ptr<ExprNode>> and_expr eq_expr relational_expr shift_expr add_expr mul_expr cast_expr
 %nterm <std::unique_ptr<DeclNode>> id_opt
 %nterm <std::unique_ptr<DeclStmtNode>> decl
-%nterm <std::vector<std::unique_ptr<DeclStmtNode>>> decls decls_opt
 %nterm <std::unique_ptr<ParamNode>> parameter_declaration
 %nterm <std::vector<std::unique_ptr<ParamNode>>> parameter_type_list_opt parameter_type_list parameter_list
 %nterm <std::unique_ptr<FieldNode>> struct_declaration struct_declarator struct_declarator_list
@@ -161,7 +160,6 @@ entry: trans_unit {
   }
   ;
 
-// TODO: support global variables
 trans_unit: external_decl {
     $$ = std::vector<std::unique_ptr<ExternDeclNode>>{};
     $$.push_back($1);

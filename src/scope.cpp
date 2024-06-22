@@ -24,7 +24,7 @@ void ScopeStack::PopScope() {
   scopes_.pop_back();
 }
 
-ScopeKind ScopeStack::CurrentScope() {
+ScopeKind ScopeStack::CurrentScopeKind() {
   ThrowIfNotInScope_();
   return scopes_.back().kind;
 }

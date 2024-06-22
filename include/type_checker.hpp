@@ -8,7 +8,7 @@
 /// @brief A modifying pass; resolves the type of expressions.
 class TypeChecker : public ModifyingVisitor {
  public:
-  TypeChecker(ScopeStack& env) : env_{env}, has_main_func_{false} {}
+  TypeChecker(ScopeStack& env) : env_{env} {}
 
   void Visit(DeclStmtNode&) override;
   void Visit(LoopInitNode&) override;
@@ -52,7 +52,7 @@ class TypeChecker : public ModifyingVisitor {
 
  private:
   ScopeStack& env_;
-  bool has_main_func_;
+  bool has_main_func_{false};
 
   /// @brief Installs the built-in functions into the environment.
   void InstallBuiltins_(ScopeStack&);
