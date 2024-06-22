@@ -74,14 +74,13 @@ void LLVMIRGenerator::Visit(const CompoundStmtNode& compound_stmt) {
 void LLVMIRGenerator::Visit(const ProgramNode& program) {
   // Generate builtin print function.
   auto i32 = builder_.getInt32Ty();
-  auto prototype = FunctionType::get(i32, false);
-  auto* printf_fn = Function::Create(prototype, Function::ExternalLinkage,
-                                     "printf", module_.get());
-
-  auto* body = BasicBlock::Create(*context_, "body", printf_fn);
-  builder_.SetInsertPoint(body);
-  // Every basic block must have terminator instruction.
-  builder_.CreateUnreachable();
+  // pointer to char
+  auto ptr = builder_.getPtrTy();
+  std::vector<llvm::Type*> params;
+  params.push_back(ptr);
+  auto prototype = FunctionType::get(i32, params, true);
+  Function::Create(prototype, Function::ExternalLinkage, "printf",
+                   module_.get());
 
   for (const auto& func_def : program.func_def_list) {
     func_def->Accept(*this);

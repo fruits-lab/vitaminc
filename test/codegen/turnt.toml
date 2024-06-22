@@ -1,7 +1,7 @@
 [envs.qbe]
-command = """../../vitaminc -o {filename}.o {filename} && ./{filename}.o"""
+command = """../../vitaminc -o {base}.o {filename} && ./{base}.o"""
 output.exp = "-"
 
 [envs.llvm]
-command = """sed 's/__builtin_print/printf/g' {filename} > {filename}_llvm.c ; ../../vitaminc --target llvm {filename}_llvm.c && lli-18 {filename}.ll"""
+command = """sed 's/__builtin_print/printf/g' {filename} > {base}_llvm.c ; ../../vitaminc --target llvm {base}_llvm.c && lli-18 {base}.ll"""
 return_code = 0
