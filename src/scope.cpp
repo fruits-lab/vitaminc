@@ -24,6 +24,11 @@ void ScopeStack::PopScope() {
   scopes_.pop_back();
 }
 
+ScopeKind ScopeStack::CurrentScope() {
+  ThrowIfNotInScope_();
+  return scopes_.back().kind;
+}
+
 void ScopeStack::MergeWithNextScope() {
   ThrowIfNotInScope_();
   should_merge_with_next_scope_ = true;
