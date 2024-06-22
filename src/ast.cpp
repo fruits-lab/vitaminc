@@ -132,11 +132,11 @@ void CompoundStmtNode::Accept(ModifyingVisitor& v) {
   v.Visit(*this);
 }
 
-void ProgramNode::Accept(NonModifyingVisitor& v) const {
+void TransUnitNode::Accept(NonModifyingVisitor& v) const {
   v.Visit(*this);
 }
 
-void ProgramNode::Accept(ModifyingVisitor& v) {
+void TransUnitNode::Accept(ModifyingVisitor& v) {
   v.Visit(*this);
 }
 

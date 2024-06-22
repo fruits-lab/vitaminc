@@ -199,11 +199,12 @@ void AstDumper::Visit(const ExternDeclNode& extern_decl) {
   indenter_.DecreaseLevel();
 }
 
-void AstDumper::Visit(const ProgramNode& program) {
-  std::cout << indenter_.Indent() << "ProgramNode <" << program.loc << ">\n";
+void AstDumper::Visit(const TransUnitNode& trans_unit) {
+  std::cout << indenter_.Indent() << "TransUnitNode <" << trans_unit.loc
+            << ">\n";
   indenter_.IncreaseLevel();
-  for (const auto& trans_unit : program.trans_unit) {
-    trans_unit->Accept(*this);
+  for (const auto& extern_decl : trans_unit.extern_decls) {
+    extern_decl->Accept(*this);
   }
   indenter_.DecreaseLevel();
 }

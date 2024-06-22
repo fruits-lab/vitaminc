@@ -186,10 +186,6 @@ void TypeChecker::Visit(FuncDefNode& func_def) {
     // TODO: redefinition of function id
   }
 
-  if (func_def.id == "main") {
-    has_main_func_ = true;
-  }
-
   env_.PushScope(ScopeKind::kFunc);
   // NOTE: This block scope will be merged with the function body. Don't pop it.
   env_.PushScope(ScopeKind::kBlock);
@@ -255,17 +251,13 @@ void TypeChecker::Visit(ExternDeclNode& extern_decl) {
              extern_decl.decl);
 }
 
-void TypeChecker::Visit(ProgramNode& program) {
+void TypeChecker::Visit(TransUnitNode& trans_unit) {
   env_.PushScope(ScopeKind::kFile);
   InstallBuiltins_(env_);
-  for (auto& extern_decl : program.trans_unit) {
+  for (auto& extern_decl : trans_unit.extern_decls) {
     extern_decl->Accept(*this);
   }
 
-  if (!has_main_func_) {
-    // TODO: no main function
-    assert(false);
-  }
   env_.PopScope();
 }
 

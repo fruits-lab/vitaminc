@@ -69,8 +69,8 @@ int main(  // NOLINT(bugprone-exception-escape): Using a big try-catch block to
   }
 
   /// @brief The root node of the program.
-  auto program = std::unique_ptr<AstNode>{};
-  yy::parser parser{program};
+  auto trans_unit = std::unique_ptr<AstNode>{};
+  yy::parser parser{trans_unit};
   int ret = parser.parse();
 
   // NOLINTNEXTLINE(cppcoreguidelines-owning-memory)
@@ -85,19 +85,19 @@ int main(  // NOLINT(bugprone-exception-escape): Using a big try-catch block to
   // perform analyses and transformations on the ast
   auto scopes = ScopeStack{};
   TypeChecker type_checker{scopes};
-  program->Accept(type_checker);
+  trans_unit->Accept(type_checker);
   if (opts["dump"].as<bool>()) {
     const auto max_level = 80u;
     AstDumper ast_dumper{Indenter{' ', Indenter::SizePerLevel{2},
                                   Indenter::MaxLevel{max_level}}};
-    program->Accept(ast_dumper);
+    trans_unit->Accept(ast_dumper);
   }
 
   // generate intermediate representation
   auto input_basename = input_path.stem().string();
   auto output_ir = std::ofstream{fmt::format("{}.ssa", input_basename)};
   QbeIrGenerator code_generator{output_ir};
-  program->Accept(code_generator);
+  trans_unit->Accept(code_generator);
 
   output_ir.close();
 

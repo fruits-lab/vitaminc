@@ -22,7 +22,7 @@ struct FuncDefNode;
 struct LoopInitNode;
 struct CompoundStmtNode;
 struct ExternDeclNode;
-struct ProgramNode;
+struct TransUnitNode;
 struct IfStmtNode;
 struct WhileStmtNode;
 struct ForStmtNode;
@@ -85,7 +85,7 @@ class Visitor {
   virtual void Visit(CondMut<LoopInitNode>&){};
   virtual void Visit(CondMut<CompoundStmtNode>&){};
   virtual void Visit(CondMut<ExternDeclNode>&){};
-  virtual void Visit(CondMut<ProgramNode>&){};
+  virtual void Visit(CondMut<TransUnitNode>&){};
   virtual void Visit(CondMut<IfStmtNode>&){};
   virtual void Visit(CondMut<WhileStmtNode>&){};
   virtual void Visit(CondMut<ForStmtNode>&){};

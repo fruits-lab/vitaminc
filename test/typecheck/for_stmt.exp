@@ -1,4 +1,4 @@
-ProgramNode <1:1>
+TransUnitNode <1:1>
   ExternDeclNode <1:1>
     FuncDefNode <1:5> main: int ()
       CompoundStmtNode <1:12>

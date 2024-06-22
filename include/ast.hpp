@@ -220,8 +220,8 @@ struct CompoundStmtNode : public StmtNode {
   std::vector<std::unique_ptr<StmtNode>> stmts;
 };
 
-/// @brief An external definition is an external declaration that is also a
-/// definition of a function(other than an inline definition) or an object.
+/// @brief An external declaration can be a definition of a function or an
+/// object.
 struct ExternDeclNode : public AstNode {
   ExternDeclNode(
       Location loc,
@@ -236,17 +236,18 @@ struct ExternDeclNode : public AstNode {
       decl;
 };
 
-/// @brief Root of the entire program.
-struct ProgramNode : public AstNode {
+/// @brief A translation unit, which the compiler handles individually,
+/// representing a high-level entity in the compilation process.
+struct TransUnitNode : public AstNode {
   /// @note vector of move-only elements are move-only
-  ProgramNode(Location loc,
-              std::vector<std::unique_ptr<ExternDeclNode>> trans_unit)
-      : AstNode{loc}, trans_unit{std::move(trans_unit)} {}
+  TransUnitNode(Location loc,
+                std::vector<std::unique_ptr<ExternDeclNode>> extern_decls)
+      : AstNode{loc}, extern_decls{std::move(extern_decls)} {}
 
   void Accept(NonModifyingVisitor&) const override;
   void Accept(ModifyingVisitor&) override;
 
-  std::vector<std::unique_ptr<ExternDeclNode>> trans_unit;
+  std::vector<std::unique_ptr<ExternDeclNode>> extern_decls;
 };
 
 struct IfStmtNode : public StmtNode {
