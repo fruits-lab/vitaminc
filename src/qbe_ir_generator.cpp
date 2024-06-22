@@ -136,6 +136,8 @@ auto
 }  // namespace
 
 void QbeIrGenerator::Visit(const DeclStmtNode& decl_stmt) {
+  // TODO: code generation for global variables, VarDeclNode, ArrDeclNode,
+  // RecordVarDeclNode
   for (const auto& decl : decl_stmt.decls) {
     decl->Accept(*this);
   }

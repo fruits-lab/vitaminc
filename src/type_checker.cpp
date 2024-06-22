@@ -73,8 +73,7 @@ void TypeChecker::Visit(VarDeclNode& decl) {
     // TODO: redefinition of 'id'
   } else {
     auto symbol = std::make_unique<SymbolEntry>(decl.id, decl.type->Clone());
-    // TODO: May be file scope once we support global variables.
-    env_.AddSymbol(std::move(symbol), ScopeKind::kBlock);
+    env_.AddSymbol(std::move(symbol), env_.CurrentScope());
   }
 }
 
@@ -91,8 +90,7 @@ void TypeChecker::Visit(ArrDeclNode& arr_decl) {
         // TODO: element unmatches array element type
       }
     }
-    // TODO: May be file scope once we support global variables.
-    env_.AddSymbol(std::move(symbol), ScopeKind::kBlock);
+    env_.AddSymbol(std::move(symbol), env_.CurrentScope());
   }
 
   // TODO: Check initializer type
@@ -113,7 +111,7 @@ void TypeChecker::Visit(RecordDeclNode& record_decl) {
         std::make_unique<TypeEntry>(type_id, record_decl.type->Clone());
 
     // TODO: May be file scope once we support global variables.
-    env_.AddType(std::move(decl_type), ScopeKind::kBlock);
+    env_.AddType(std::move(decl_type), env_.CurrentScope());
   }
 }
 
@@ -146,8 +144,7 @@ void TypeChecker::Visit(RecordVarDeclNode& record_var_decl) {
     for (auto& init : record_var_decl.inits) {
       init->Accept(*this);
     }
-    // TODO: May be file scope once we support global variables.
-    env_.AddSymbol(std::move(symbol), ScopeKind::kBlock);
+    env_.AddSymbol(std::move(symbol), env_.CurrentScope());
 
     record_var_decl.type = record_type->type->Clone();
   }

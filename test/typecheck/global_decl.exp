@@ -1,6 +1,39 @@
-ProgramNode <3:1>
-  ExternDeclNode <3:1>
-    FuncDefNode <3:5> main: int ()
-      CompoundStmtNode <3:12>
-        ReturnStmtNode <4:3>
-          IntConstExprNode <4:10> 0: int
+ProgramNode <1:1>
+  ExternDeclNode <1:1>
+    DeclStmtNode <1:1>
+      VarDeclNode <1:5> c: int
+  ExternDeclNode <2:1>
+    DeclStmtNode <2:1>
+      ArrDeclNode <2:5> a: int[3]
+        InitExprNode <2:13> int
+          IntConstExprNode <2:13> 1: int
+        InitExprNode <2:13> int
+          IntConstExprNode <2:16> 2: int
+        InitExprNode <2:13> int
+          IntConstExprNode <2:19> 3: int
+  ExternDeclNode <4:1>
+    DeclStmtNode <4:1>
+      RecordDeclNode <4:8> struct animal definition
+        FieldNode <5:7> lion: int
+        FieldNode <6:7> tiger: int
+  ExternDeclNode <9:1>
+    FuncDefNode <9:5> main: int ()
+      CompoundStmtNode <9:12>
+        ExprStmtNode <10:3>
+          IdExprNode <10:3> c: int
+        ExprStmtNode <11:3>
+          SimpleAssignmentExprNode <11:8> int
+            ArrSubExprNode <11:3> int
+              IdExprNode <11:3> a: int[3]
+              IntConstExprNode <11:5> 0: int
+            IntConstExprNode <11:10> 2: int
+        DeclStmtNode <12:3>
+          RecordVarDeclNode <12:17> cat: struct animal
+            InitExprNode <12:25> int
+              IdDesNode <12:26> lion
+              IntConstExprNode <12:33> 1: int
+            InitExprNode <12:25> int
+              IdDesNode <12:37> tiger
+              IntConstExprNode <12:45> 1: int
+        ReturnStmtNode <13:3>
+          IntConstExprNode <13:10> 0: int
