@@ -1,4 +1,4 @@
-ProgramNode <2:1>
+TransUnitNode <2:1>
   ExternDeclNode <2:1>
     FuncDefNode <2:5> func: int (int*)
       ParamNode <2:14> a: int*

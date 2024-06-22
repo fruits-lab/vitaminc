@@ -1,4 +1,4 @@
-ProgramNode <1:1>
+TransUnitNode <1:1>
   ExternDeclNode <1:1>
     DeclStmtNode <1:1>
       VarDeclNode <1:5> c: int

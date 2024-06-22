@@ -54,7 +54,7 @@ std::unique_ptr<Type> ResolveType(std::unique_ptr<Type> resolved_type,
 %language "c++"
 %locations
 
-%parse-param {std::unique_ptr<AstNode>& program}
+%parse-param {std::unique_ptr<AstNode>& trans_unit}
 
 // Use complete symbols (parser::symbol_type).
 %define api.token.constructor
@@ -156,7 +156,7 @@ std::unique_ptr<Type> ResolveType(std::unique_ptr<Type> resolved_type,
 
 %%
 entry: trans_unit {
-    program = std::make_unique<ProgramNode>(Loc(@1), $1);
+    trans_unit = std::make_unique<TransUnitNode>(Loc(@1), $1);
   }
   ;
 

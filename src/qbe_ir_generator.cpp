@@ -316,12 +316,12 @@ void QbeIrGenerator::Visit(const ExternDeclNode& extern_decl) {
              extern_decl.decl);
 }
 
-void QbeIrGenerator::Visit(const ProgramNode& program) {
+void QbeIrGenerator::Visit(const TransUnitNode& trans_unit) {
   // Generate the data of builtin functions.
   Write_("data {} = align 1 {{ b \"%d\\012\\000\", }}\n",
          user_defined::GlobalPointer{"__builtin_print_format"});
 
-  for (const auto& extern_decl : program.trans_unit) {
+  for (const auto& extern_decl : trans_unit.extern_decls) {
     extern_decl->Accept(*this);
   }
 }
