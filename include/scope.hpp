@@ -49,7 +49,7 @@ class ScopeStack {
   void PopScope();
   /// @return Current scope kind.
   /// @throws `NotInScopeError`
-  ScopeKind CurrentScope();
+  ScopeKind CurrentScopeKind();
 
   /// @brief Merges the current scope with the next pushed scope.
   /// @throws `NotInScopeError` if currently not in any scope.
