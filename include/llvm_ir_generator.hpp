@@ -56,11 +56,11 @@ class LLVMIRGenerator : public NonModifyingVisitor {
       : output_{output},
         context_{std::make_unique<llvm::LLVMContext>()},
         builder_{llvm::IRBuilder<>(*context_)},
-        module_{llvm::Module(filename, *context_)} {}
+        module_{new llvm::Module(filename, *context_)} {}
 
   /// @brief Print LLVM IR to output_.
   void PrintIR() {
-    module_.print(output_, nullptr);
+    module_->print(output_, nullptr);
   }
 
  private:
@@ -71,7 +71,7 @@ class LLVMIRGenerator : public NonModifyingVisitor {
   /// @brief Provides LLVM Builder API for constructing IR.
   llvm::IRBuilder<> builder_;
   /// @brief Stores LLVM related information, including the constructed IR.
-  llvm::Module module_;
+  llvm::Module* module_;
 };
 
 #endif  // LLVM_IR_GENERATOR_HPP_

@@ -3,5 +3,5 @@ command = """../../vitaminc -o {base}.o {filename} && ./{base}.o"""
 output.exp = "-"
 
 [envs.llvm]
-command = """sed 's/__builtin_print/printf/g' {filename} > {base}_llvm.c ; ../../vitaminc --target llvm {base}_llvm.c && lli-18 {base}.ll"""
-return_code = 0
+command = """../../vitaminc --target llvm {filename} && lli-18 {base}.ll"""
+output.exp = "-"
