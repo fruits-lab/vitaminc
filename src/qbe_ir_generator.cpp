@@ -94,6 +94,12 @@ auto
                        // dependency.
     = std::map<int, int>{};
 
+auto
+    reg_num_to_id  // NOLINT(cppcoreguidelines-avoid-non-const-global-variables):
+                   // Accessible only within this translation unit; declaring as
+                   // a data member introduces unnecessary dependency.
+    = std::map<int, std::string>{};
+
 /// @brief Every expression generates a temporary. The local number of such
 /// temporary should be stored, so can propagate to later uses.
 class PrevExprNumRecorder {
@@ -157,7 +163,7 @@ void QbeIrGenerator::Visit(const VarDeclNode& decl) {
     if (decl.init) {
       global_var_init_val.clear();
       decl.init->Accept(*this);
-      Write_("export data {0} = align {1} {{ w {2} }}\n",
+      Write_("export data {} = align {} {{ w {} }}\n",
              user_defined::GlobalPointer{decl.id}, decl.type->size(),
              global_var_init_val.at(0).ival);
     } else {
@@ -197,35 +203,59 @@ void QbeIrGenerator::Visit(const VarDeclNode& decl) {
 }
 
 void QbeIrGenerator::Visit(const ArrDeclNode& arr_decl) {
-  int base_addr_num = NextLocalNum();
-  assert(arr_decl.type->IsArr());
-  const auto* arr_type = dynamic_cast<ArrType*>((arr_decl.type).get());
-  auto element_size = arr_type->element_type().size();
-  WriteInstr_("{} =l alloc{} {}", FuncScopeTemp{base_addr_num}, element_size,
-              arr_decl.type->size());
-  id_to_num[arr_decl.id] = base_addr_num;
-
-  for (auto i = std::size_t{0}, e = arr_type->len(); i < e; ++i) {
-    if (i < arr_decl.init_list.size()) {
-      auto& arr_init = arr_decl.init_list.at(i);
-      arr_init->Accept(*this);
-    }
-
-    const int offset = NextLocalNum();
-    WriteInstr_("{} =l extsw {}", FuncScopeTemp{offset}, i * element_size);
-
-    // res_addr = base_addr + offset
-    const int res_addr_num = NextLocalNum();
-    WriteInstr_("{} =l add {}, {}", FuncScopeTemp{res_addr_num},
-                FuncScopeTemp{base_addr_num}, FuncScopeTemp{offset});
-
-    if (i < arr_decl.init_list.size()) {
-      int init_val_num = num_recorder.NumOfPrevExpr();
-      WriteInstr_("storew {}, {}", FuncScopeTemp{init_val_num},
-                  FuncScopeTemp{res_addr_num});
+  if (arr_decl.is_global) {
+    const auto* arr_type = dynamic_cast<ArrType*>((arr_decl.type).get());
+    assert(arr_type);
+    if (arr_decl.init_list.size() != 0) {
+      global_var_init_val.clear();
+      Write_("export data {} = align {} {{ ",
+             user_defined::GlobalPointer{arr_decl.id},
+             arr_type->element_type().size());
+      for (auto i = std::size_t{0}, e = arr_type->len(); i < e; ++i) {
+        auto& arr_init = arr_decl.init_list.at(i);
+        arr_init->Accept(*this);
+        Write_("w {}", global_var_init_val.at(i).ival);
+        if (i != e - 1) {
+          Write_(", ");
+        }
+      }
+      Write_(" }}\n");
     } else {
-      // set remaining elements as 0
-      WriteInstr_("storew 0, {}", FuncScopeTemp{res_addr_num});
+      Write_("export data {} = align {} {{ z {} }}\n",
+             user_defined::GlobalPointer{arr_decl.id},
+             arr_type->element_type().size(), arr_decl.type->size());
+    }
+  } else {
+    int base_addr_num = NextLocalNum();
+    assert(arr_decl.type->IsArr());
+    const auto* arr_type = dynamic_cast<ArrType*>((arr_decl.type).get());
+    auto element_size = arr_type->element_type().size();
+    WriteInstr_("{} =l alloc{} {}", FuncScopeTemp{base_addr_num}, element_size,
+                arr_decl.type->size());
+    id_to_num[arr_decl.id] = base_addr_num;
+
+    for (auto i = std::size_t{0}, e = arr_type->len(); i < e; ++i) {
+      if (i < arr_decl.init_list.size()) {
+        auto& arr_init = arr_decl.init_list.at(i);
+        arr_init->Accept(*this);
+      }
+
+      const int offset = NextLocalNum();
+      WriteInstr_("{} =l extsw {}", FuncScopeTemp{offset}, i * element_size);
+
+      // res_addr = base_addr + offset
+      const int res_addr_num = NextLocalNum();
+      WriteInstr_("{} =l add {}, {}", FuncScopeTemp{res_addr_num},
+                  FuncScopeTemp{base_addr_num}, FuncScopeTemp{offset});
+
+      if (i < arr_decl.init_list.size()) {
+        int init_val_num = num_recorder.NumOfPrevExpr();
+        WriteInstr_("storew {}, {}", FuncScopeTemp{init_val_num},
+                    FuncScopeTemp{res_addr_num});
+      } else {
+        // set remaining elements as 0
+        WriteInstr_("storew 0, {}", FuncScopeTemp{res_addr_num});
+      }
     }
   }
 }
@@ -672,6 +702,7 @@ void QbeIrGenerator::Visit(const IdExprNode& id_expr) {
     WriteInstr_("{} =w loadw {}", FuncScopeTemp{reg_num},
                 user_defined::GlobalPointer{id_expr.id});
     num_recorder.Record(reg_num);
+    reg_num_to_id[reg_num] = id_expr.id;
   } else {
     assert(id_to_num.count(id_expr.id) != 0);
     /// @brief Plays the role of a "pointer". Its value has to be loaded to
@@ -710,8 +741,6 @@ void QbeIrGenerator::Visit(const ArgExprNode& arg_expr) {
 void QbeIrGenerator::Visit(const ArrSubExprNode& arr_sub_expr) {
   arr_sub_expr.arr->Accept(*this);
   const int reg_num = num_recorder.NumOfPrevExpr();
-  // address of the first element
-  const int base_addr = reg_num_to_id_num.at(reg_num);
   arr_sub_expr.index->Accept(*this);
   const int index_num = num_recorder.NumOfPrevExpr();
 
@@ -731,8 +760,16 @@ void QbeIrGenerator::Visit(const ArrSubExprNode& arr_sub_expr) {
 
   // res_addr = base_addr + offset
   const int res_addr_num = NextLocalNum();
-  WriteInstr_("{} =l add {}, {}", FuncScopeTemp{res_addr_num},
-              FuncScopeTemp{base_addr}, FuncScopeTemp{offset});
+  if (arr_sub_expr.is_global) {
+    const auto id = reg_num_to_id.at(reg_num);
+    WriteInstr_("{} =l add {}, {}", FuncScopeTemp{res_addr_num},
+                user_defined::GlobalPointer{id}, FuncScopeTemp{offset});
+  } else {
+    // address of the first element
+    const int base_addr = reg_num_to_id_num.at(reg_num);
+    WriteInstr_("{} =l add {}, {}", FuncScopeTemp{res_addr_num},
+                FuncScopeTemp{base_addr}, FuncScopeTemp{offset});
+  }
 
   // load value from res_addr
   const int res_num = NextLocalNum();
