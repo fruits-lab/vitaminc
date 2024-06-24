@@ -170,10 +170,7 @@ void LLVMIRGenerator::Visit(const IdExprNode& id_expr) {
 
 void LLVMIRGenerator::Visit(const IntConstExprNode& int_expr) {
   auto i32 = builder_.getInt32Ty();
-  auto addr = builder_.CreateAlloca(i32);
-  auto constant = llvm::ConstantInt::get(i32, int_expr.val, true);
-  builder_.CreateStore(constant, addr);
-  auto val = builder_.CreateLoad(i32, addr);
+  auto val = llvm::ConstantInt::get(i32, int_expr.val, true);
   val_recorder.Record(val);
 }
 
