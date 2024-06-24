@@ -80,7 +80,7 @@ void LLVMIRGenerator::Visit(const FuncDefNode& func_def) {
                                     func_def.id == "main"
                                         ? llvm::Function::ExternalLinkage
                                         : llvm::Function::InternalLinkage,
-                                    func_def.id, module_.get());
+                                    func_def.id, &module_);
   auto* body = llvm::BasicBlock::Create(*context_, "body", fn);
   builder_.SetInsertPoint(body);
   func_def.body->Accept(*this);
@@ -100,14 +100,7 @@ void LLVMIRGenerator::Visit(const ExternDeclNode& extern_decl) {
 
 void LLVMIRGenerator::Visit(const TransUnitNode& trans_unit) {
   // Generate builtin print function.
-  auto i32 = builder_.getInt32Ty();
-  // pointer to char
-  auto ptr = builder_.getPtrTy();
-  std::vector<llvm::Type*> params;
-  params.push_back(ptr);
-  auto prototype = llvm::FunctionType::get(i32, params, true);
-  llvm::Function::Create(prototype, llvm::Function::ExternalLinkage, "printf",
-                         module_.get());
+  builder_.CreateGlobalStringPtr("%d\n", "__builtin_print_format", 0, &module_);
 
   for (const auto& extern_decl : trans_unit.extern_decls) {
     extern_decl->Accept(*this);
