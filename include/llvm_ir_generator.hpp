@@ -9,6 +9,7 @@
 #include <vector>
 
 #include "ast.hpp"
+#include "llvm/util.hpp"
 #include "visitor.hpp"
 
 class LLVMIRGenerator : public NonModifyingVisitor {
@@ -55,8 +56,9 @@ class LLVMIRGenerator : public NonModifyingVisitor {
   LLVMIRGenerator(std::ostream& output, std::string& filename)
       : output_{output},
         context_{std::make_unique<llvm::LLVMContext>()},
-        builder_{llvm::IRBuilder<>(*context_)},
-        module_{new llvm::Module(filename, *context_)} {}
+        builder_{std::make_unique<llvm::IRBuilder<>>(*context_)},
+        module_{new llvm::Module(filename, *context_)},
+        util_{util::Util(builder_)} {}
 
   /// @brief Print LLVM IR to output_.
   void PrintIR() {
@@ -69,9 +71,11 @@ class LLVMIRGenerator : public NonModifyingVisitor {
   /// @brief A LLVM core object.
   std::unique_ptr<llvm::LLVMContext> context_;
   /// @brief Provides LLVM Builder API for constructing IR.
-  llvm::IRBuilder<> builder_;
+  std::unique_ptr<llvm::IRBuilder<>> builder_;
   /// @brief Stores LLVM related information, including the constructed IR.
   llvm::Module* module_;
+  /// @brief Handy LLVM types and functions for code generation.
+  util::Util util_;
 };
 
 #endif  // LLVM_IR_GENERATOR_HPP_
