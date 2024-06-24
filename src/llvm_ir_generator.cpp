@@ -69,12 +69,11 @@ void LLVMIRGenerator::Visit(const DeclStmtNode& decl_stmt) {
 }
 
 void LLVMIRGenerator::Visit(const VarDeclNode& decl) {
-  auto i32 = builder_.getInt32Ty();
-  auto addr = builder_.CreateAlloca(i32);
+  auto addr = builder_->CreateAlloca(util_.i32Ty);
   if (decl.init) {
     decl.init->Accept(*this);
     auto val = val_recorder.ValOfPrevExpr();
-    builder_.CreateStore(val, addr);
+    builder_->CreateStore(val, addr);
   }
   id_to_val[decl.id] = addr;
 }
@@ -90,15 +89,14 @@ void LLVMIRGenerator::Visit(const RecordVarDeclNode& struct_def) {}
 void LLVMIRGenerator::Visit(const ParamNode& parameter) {}
 
 void LLVMIRGenerator::Visit(const FuncDefNode& func_def) {
-  auto i32 = builder_.getInt32Ty();
-  auto prototype = llvm::FunctionType::get(i32, false);
+  auto prototype = llvm::FunctionType::get(util_.i32Ty, false);
   auto* fn = llvm::Function::Create(prototype,
                                     func_def.id == "main"
                                         ? llvm::Function::ExternalLinkage
                                         : llvm::Function::InternalLinkage,
                                     func_def.id, module_);
   auto* body = llvm::BasicBlock::Create(*context_, "body", fn);
-  builder_.SetInsertPoint(body);
+  builder_->SetInsertPoint(body);
   func_def.body->Accept(*this);
 }
 
@@ -116,19 +114,18 @@ void LLVMIRGenerator::Visit(const ExternDeclNode& extern_decl) {
 
 void LLVMIRGenerator::Visit(const TransUnitNode& trans_unit) {
   // Generate builtin print function.
-  auto i32 = builder_.getInt32Ty();
-  auto arg = llvm::ArrayRef<llvm::Type*>{i32};
-  auto builtin_print = llvm::FunctionType::get(i32, arg, false);
+  auto arg = llvm::ArrayRef<llvm::Type*>{util_.i32Ty};
+  auto builtin_print = llvm::FunctionType::get(util_.i32Ty, arg, false);
   llvm::Function::Create(builtin_print, llvm::Function::ExternalLinkage,
                          "__builtin_print", module_);
 
-  auto ptrTy = builder_.getPtrTy();
-  auto args = llvm::ArrayRef<llvm::Type*>{ptrTy, i32};
-  auto printf = llvm::FunctionType::get(i32, args, false);
+  auto ptrTy = builder_->getPtrTy();
+  auto args = llvm::ArrayRef<llvm::Type*>{ptrTy, util_.i32Ty};
+  auto printf = llvm::FunctionType::get(util_.i32Ty, args, false);
   llvm::Function::Create(printf, llvm::Function::ExternalLinkage, "printf",
                          module_);
 
-  builder_.CreateGlobalString("%d\n", "__builtin_print_format", 0, module_);
+  builder_->CreateGlobalString("%d\n", "__builtin_print_format", 0, module_);
 
   for (const auto& extern_decl : trans_unit.extern_decls) {
     extern_decl->Accept(*this);
@@ -144,7 +141,7 @@ void LLVMIRGenerator::Visit(const ForStmtNode& for_stmt) {}
 void LLVMIRGenerator::Visit(const ReturnStmtNode& ret_stmt) {
   ret_stmt.expr->Accept(*this);
   auto expr = val_recorder.ValOfPrevExpr();
-  builder_.CreateRet(expr);
+  builder_->CreateRet(expr);
 }
 
 void LLVMIRGenerator::Visit(const GotoStmtNode& goto_stmt) {}
@@ -186,15 +183,14 @@ void LLVMIRGenerator::Visit(const IdExprNode& id_expr) {
   if (id_expr.type->IsPtr() || id_expr.type->IsFunc()) {
     // TODO
   } else {
-    auto i32 = builder_.getInt32Ty();
-    auto res = builder_.CreateLoad(i32, id_val);
+    auto res = builder_->CreateLoad(util_.i32Ty, id_val, id_expr.id);
     val_recorder.Record(res);
   }
 }
 
 void LLVMIRGenerator::Visit(const IntConstExprNode& int_expr) {
-  auto i32 = builder_.getInt32Ty();
-  auto val = llvm::ConstantInt::get(i32, int_expr.val, true);
+  // NOTE: LLVM Constant does not generate IR code, it can be used directly.
+  auto val = llvm::ConstantInt::get(util_.i32Ty, int_expr.val, true);
   val_recorder.Record(val);
 }
 
@@ -218,7 +214,6 @@ void LLVMIRGenerator::Visit(const FuncCallExprNode& call_expr) {
   for (const auto& arg : call_expr.args) {
     arg->Accept(*this);
     auto* arg_val = val_recorder.ValOfPrevExpr();
-    llvm::outs() << arg_val->getName();
     arg_vals.push_back(arg_val);
   }
   if (func->getName() == "__builtin_print") {
@@ -232,7 +227,7 @@ void LLVMIRGenerator::Visit(const FuncCallExprNode& call_expr) {
     assert(print_format);
     print_args.push_back(print_format);
     print_args.insert(print_args.end(), arg_vals.begin(), arg_vals.end());
-    builder_.CreateCall(printf, print_args);
+    builder_->CreateCall(printf, print_args);
   } else {
   }
 }
@@ -242,14 +237,18 @@ void LLVMIRGenerator::Visit(const PostfixArithExprNode& postfix_expr) {}
 void LLVMIRGenerator::Visit(const UnaryExprNode& unary_expr) {
   unary_expr.operand->Accept(*this);
   switch (unary_expr.op) {
-    case UnaryOperator::kPos:
+    case UnaryOperator::kPos: {
       /* Do nothing. */
-      break;
+    } break;
     case UnaryOperator::kNeg: {
       auto val = val_recorder.ValOfPrevExpr();
-      auto i32 = builder_.getInt32Ty();
-      auto zero = llvm::ConstantInt::get(i32, 0, true);
-      auto res = builder_.CreateBinOp(llvm::BinaryOperator::Sub, zero, val);
+      auto zero = llvm::ConstantInt::get(util_.i32Ty, 0, true);
+      auto res = builder_->CreateBinOp(llvm::BinaryOperator::Sub, zero, val);
+      val_recorder.Record(res);
+    } break;
+    case UnaryOperator::kNot: {
+      auto val = val_recorder.ValOfPrevExpr();
+      auto res = util_.NotOperation(val);
       val_recorder.Record(res);
     } break;
     default:
@@ -275,7 +274,7 @@ void LLVMIRGenerator::Visit(const BinaryExprNode& bin_expr) {
     // TODO
   } else {
     auto* rhs = val_recorder.ValOfPrevExpr();
-    builder_.CreateBinOp(GetBinaryOperator(bin_expr.op), lhs, rhs);
+    builder_->CreateBinOp(GetBinaryOperator(bin_expr.op), lhs, rhs);
   }
 }
 
