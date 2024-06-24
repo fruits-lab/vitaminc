@@ -36,6 +36,7 @@ struct AstNode {
   AstNode& operator=(AstNode&&) = delete;
 
   Location loc;
+  bool is_global{false};
 };
 
 // NOLINTBEGIN(cppcoreguidelines-special-member-functions):
