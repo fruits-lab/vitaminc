@@ -139,13 +139,31 @@ auto
     label_views_of_jumpable_blocks  // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
     = std::vector<LabelViewPair>{};
 
-union GlobalVarInitVal {
-  int ival;
+struct GlobalVarInitVal {
+  // TODO: support other types, such as float, long, short
+  std::variant<int> value;
+  std::shared_ptr<Type> type;
 };
 
+/// @brief Stores values from bottom level nodes and pass them to upper leve
+/// nodes because global variables are required to initialize exact values at
+/// declaration.
 auto
-    global_var_init_val  // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
+    global_var_init_vals  // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
     = std::vector<GlobalVarInitVal>{};
+
+/// @brief Generate corresponding QBE string based on `type` and `value`.
+/// @return formatted QBE string with type and value, e.g. w 4 (word of value 4)
+std::string GenerateQBEInit(const GlobalVarInitVal& init) {
+  return std::visit(
+      [&init](auto&& arg) {
+        if (init.type->IsEqual(PrimitiveType::kInt)) {
+          return "w " + std::to_string(arg);
+        }
+        return std::string("");
+      },
+      init.value);
+}
 
 }  // namespace
 
@@ -161,11 +179,11 @@ void QbeIrGenerator::Visit(const VarDeclNode& decl) {
   if (decl.is_global) {
     // TODO: support different data types.
     if (decl.init) {
-      global_var_init_val.clear();
+      global_var_init_vals.clear();
       decl.init->Accept(*this);
-      Write_("export data {} = align {} {{ w {} }}\n",
+      Write_("export data {} = align {} {{ {} }}\n",
              user_defined::GlobalPointer{decl.id}, decl.type->size(),
-             global_var_init_val.at(0).ival);
+             GenerateQBEInit(global_var_init_vals.at(0)));
     } else {
       // `z` in QBE stands for allocating n bytes of memory space.
       Write_("export data {0} = align {1} {{ z {1} }}\n",
@@ -207,14 +225,14 @@ void QbeIrGenerator::Visit(const ArrDeclNode& arr_decl) {
     const auto* arr_type = dynamic_cast<ArrType*>((arr_decl.type).get());
     assert(arr_type);
     if (arr_decl.init_list.size() != 0) {
-      global_var_init_val.clear();
+      global_var_init_vals.clear();
       Write_("export data {} = align {} {{ ",
              user_defined::GlobalPointer{arr_decl.id},
              arr_type->element_type().size());
       for (auto i = std::size_t{0}, e = arr_type->len(); i < e; ++i) {
         auto& arr_init = arr_decl.init_list.at(i);
         arr_init->Accept(*this);
-        Write_("w {}", global_var_init_val.at(i).ival);
+        Write_("{}", GenerateQBEInit(global_var_init_vals.at(i)));
         if (i != e - 1) {
           Write_(", ");
         }
@@ -725,8 +743,8 @@ void QbeIrGenerator::Visit(const IdExprNode& id_expr) {
 
 void QbeIrGenerator::Visit(const IntConstExprNode& int_expr) {
   if (int_expr.is_global) {
-    GlobalVarInitVal val = {.ival = int_expr.val};
-    global_var_init_val.push_back(val);
+    global_var_init_vals.push_back(
+        {int_expr.val, std::make_shared<PrimType>(PrimitiveType::kInt)});
   } else {
     int num = NextLocalNum();
     WriteInstr_("{} =w copy {}", FuncScopeTemp{num}, int_expr.val);
