@@ -104,9 +104,9 @@ int main(  // NOLINT(bugprone-exception-escape): Using a big try-catch block to
   auto output = opts["output"].as<std::string>();
   // generate intermediate representation based on target option
   if (opts["target"].as<std::string>() == "qbe") {
-    return QbeBuilder(std::move(program), input_basename, output);
+    return QbeBuilder(std::move(trans_unit), input_basename, output);
   } else if (opts["target"].as<std::string>() == "llvm") {
-    return LLVMBuilder(std::move(program), input_basename, output);
+    return LLVMBuilder(std::move(trans_unit), input_basename, output);
   } else {
     std::cerr << "unknown target" << '\n';
     std::exit(0);
@@ -115,7 +115,7 @@ int main(  // NOLINT(bugprone-exception-escape): Using a big try-catch block to
   return 0;
 }
 
-int QbeBuilder(std::unique_ptr<AstNode> program, std::string& input_basename,
+int QbeBuilder(std::unique_ptr<AstNode> trans_unit, std::string& input_basename,
                std::string& output_name) {
   auto output_ir = std::ofstream{fmt::format("{}.ssa", input_basename)};
   QbeIrGenerator code_generator{output_ir};
@@ -142,11 +142,11 @@ int QbeBuilder(std::unique_ptr<AstNode> program, std::string& input_basename,
   return 0;
 }
 
-int LLVMBuilder(std::unique_ptr<AstNode> program, std::string& input_basename,
-                std::string& output_name) {
+int LLVMBuilder(std::unique_ptr<AstNode> trans_unit,
+                std::string& input_basename, std::string& output_name) {
   auto output_ir = std::ofstream{fmt::format("{}.ll", input_basename)};
   LLVMIRGenerator code_generator{output_ir, input_basename};
-  program->Accept(code_generator);
+  trans_unit->Accept(code_generator);
   // TODO: Write to stdout based on cxxopts.
   // Write LLVM IR to output file "*.ll".
   code_generator.PrintIR();
