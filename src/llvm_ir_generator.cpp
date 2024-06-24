@@ -93,8 +93,12 @@ void LLVMIRGenerator::Visit(const CompoundStmtNode& compound_stmt) {
     stmt->Accept(*this);
   }
 }
+void LLVMIRGenerator::Visit(const ExternDeclNode& extern_decl) {
+  std::visit([this](auto&& extern_decl) { extern_decl->Accept(*this); },
+             extern_decl.decl);
+}
 
-void LLVMIRGenerator::Visit(const ProgramNode& program) {
+void LLVMIRGenerator::Visit(const TransUnitNode& trans_unit) {
   // Generate builtin print function.
   auto i32 = builder_.getInt32Ty();
   // pointer to char
@@ -105,8 +109,8 @@ void LLVMIRGenerator::Visit(const ProgramNode& program) {
   llvm::Function::Create(prototype, llvm::Function::ExternalLinkage, "printf",
                          module_.get());
 
-  for (const auto& func_def : program.func_def_list) {
-    func_def->Accept(*this);
+  for (const auto& extern_decl : trans_unit.extern_decls) {
+    extern_decl->Accept(*this);
   }
 }
 
