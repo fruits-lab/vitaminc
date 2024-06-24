@@ -34,6 +34,11 @@ llvm::Instruction::BinaryOps GetBinaryOperator(BinaryOperator op) {
   }
 }
 
+auto id_to_val  // NOLINT(cppcoreguidelines-avoid-non-const-global-variables):
+                // Accessible only within this translation unit; declaring as a
+                // data member introduces unnecessary dependency.
+    = std::map<std::string, llvm::Value*>{};
+
 /// @brief Store LLVM Value class at the bottom level of AST node. Upper level
 /// AST node can use the information in Value directly.
 class PrevValueRecorder {
@@ -63,7 +68,16 @@ void LLVMIRGenerator::Visit(const DeclStmtNode& decl_stmt) {
   }
 }
 
-void LLVMIRGenerator::Visit(const VarDeclNode& decl) {}
+void LLVMIRGenerator::Visit(const VarDeclNode& decl) {
+  auto i32 = builder_.getInt32Ty();
+  auto addr = builder_.CreateAlloca(i32);
+  if (decl.init) {
+    decl.init->Accept(*this);
+    auto val = val_recorder.ValOfPrevExpr();
+    builder_.CreateStore(val, addr);
+  }
+  id_to_val[decl.id] = addr;
+}
 
 void LLVMIRGenerator::Visit(const ArrDeclNode& arr_decl) {}
 
@@ -165,6 +179,16 @@ void LLVMIRGenerator::Visit(const IdExprNode& id_expr) {
     assert(func);
     val_recorder.Record(func);
     return;
+  }
+  assert(id_to_val.count(id_expr.id) != 0);
+  auto id_val = id_to_val.at(id_expr.id);
+
+  if (id_expr.type->IsPtr() || id_expr.type->IsFunc()) {
+    // TODO
+  } else {
+    auto i32 = builder_.getInt32Ty();
+    auto res = builder_.CreateLoad(i32, id_val);
+    val_recorder.Record(res);
   }
 }
 
