@@ -86,6 +86,12 @@ auto id_to_val  // NOLINT(cppcoreguidelines-avoid-non-const-global-variables):
                 // data member introduces unnecessary dependency.
     = std::map<std::string, llvm::Value*>{};
 
+auto
+    val_to_id_addr  // NOLINT(cppcoreguidelines-avoid-non-const-global-variables):
+                    // Accessible only within this translation unit; declaring
+                    // as a data member introduces unnecessary dependency.
+    = std::map<llvm::Value*, llvm::Value*>{};
+
 /// @brief Store LLVM Value class at the bottom level of AST node. Upper level
 /// AST node can use the information in Value directly.
 class PrevValueRecorder {
@@ -230,8 +236,9 @@ void LLVMIRGenerator::Visit(const IdExprNode& id_expr) {
   if (id_expr.type->IsPtr() || id_expr.type->IsFunc()) {
     // TODO
   } else {
-    auto res = builder_->CreateLoad(util_.i32Ty, id_val, id_expr.id);
+    auto res = builder_->CreateLoad(util_.i32Ty, id_val);
     val_recorder.Record(res);
+    val_to_id_addr[res] = id_val;
   }
 }
 
@@ -330,4 +337,15 @@ void LLVMIRGenerator::Visit(const BinaryExprNode& bin_expr) {
   }
 }
 
-void LLVMIRGenerator::Visit(const SimpleAssignmentExprNode& assign_expr) {}
+void LLVMIRGenerator::Visit(const SimpleAssignmentExprNode& assign_expr) {
+  assign_expr.lhs->Accept(*this);
+  auto lhs = val_recorder.ValOfPrevExpr();
+  assign_expr.rhs->Accept(*this);
+  auto rhs = val_recorder.ValOfPrevExpr();
+  if (assign_expr.lhs->type->IsPtr()) {
+    // TODO
+  } else {
+    builder_->CreateStore(rhs, val_to_id_addr.at(lhs));
+  }
+  val_recorder.Record(rhs);
+}
