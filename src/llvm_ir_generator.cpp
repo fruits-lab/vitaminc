@@ -28,9 +28,56 @@ llvm::Instruction::BinaryOps GetBinaryOperator(BinaryOperator op) {
       return llvm::BinaryOperator::Xor;
     case BinaryOperator::kOr:
       return llvm::BinaryOperator::Or;
+    case BinaryOperator::kShl:
+      return llvm::BinaryOperator::Shl;
+    // NOTE: Arithmetic shift right (sar) is akin to dividing by a power of two
+    // for non-negative numbers. For negatives, it's implementation-defined, so
+    // we opt for arithmetic shifting.
+    case BinaryOperator::kShr:
+      return llvm::BinaryOperator::AShr;
     default:
-      // TODO
+      // TODO: unreachable
       return llvm::BinaryOperator::Xor;
+  }
+}
+
+llvm::CmpInst::Predicate GetCmpOperator(BinaryOperator op) {
+  switch (op) {
+    case BinaryOperator::kGt: {
+      return llvm::CmpInst::Predicate::ICMP_SGT;
+    } break;
+    case BinaryOperator::kGte: {
+      return llvm::CmpInst::Predicate::ICMP_SGE;
+    } break;
+    case BinaryOperator::kLt: {
+      return llvm::CmpInst::Predicate::ICMP_SLT;
+    } break;
+    case BinaryOperator::kLte: {
+      return llvm::CmpInst::Predicate::ICMP_SLE;
+    } break;
+    case BinaryOperator::kEq: {
+      return llvm::CmpInst::Predicate::ICMP_EQ;
+    } break;
+    case BinaryOperator::kNeq: {
+      return llvm::CmpInst::Predicate::ICMP_NE;
+    } break;
+    default:
+      return llvm::CmpInst::Predicate::BAD_ICMP_PREDICATE;
+  }
+}
+
+bool isCmpInst(BinaryOperator op) {
+  switch (op) {
+    case BinaryOperator::kGt:
+    case BinaryOperator::kGte:
+    case BinaryOperator::kLt:
+    case BinaryOperator::kLte:
+    case BinaryOperator::kEq:
+    case BinaryOperator::kNeq: {
+      return true;
+    } break;
+    default:
+      return false;
   }
 }
 
@@ -258,23 +305,28 @@ void LLVMIRGenerator::Visit(const UnaryExprNode& unary_expr) {
 
 void LLVMIRGenerator::Visit(const BinaryExprNode& bin_expr) {
   bin_expr.lhs->Accept(*this);
-  auto* lhs = val_recorder.ValOfPrevExpr();
+  auto lhs = val_recorder.ValOfPrevExpr();
 
   if (bin_expr.op == BinaryOperator::kComma) {
-    // For the comma operator, the value of its left operand is not used and can
-    // be eliminated if it has no side effects or if its definition is
-    // immediately dead. However, we leave these optimizations to QBE.
+    // For the comma operator, the value of its left operand is not used, so we
+    // passed right hand side operand to the upper level.
     bin_expr.rhs->Accept(*this);
-    auto* rhs = val_recorder.ValOfPrevExpr();
-    val_recorder.Record(rhs);
     return;
   }
   if (bin_expr.op == BinaryOperator::kLand ||
       bin_expr.op == BinaryOperator::kLor) {
     // TODO
+    bin_expr.rhs->Accept(*this);
+  } else if (isCmpInst(bin_expr.op)) {
+    bin_expr.rhs->Accept(*this);
+    auto rhs = val_recorder.ValOfPrevExpr();
+    auto res = builder_->CreateCmp(GetCmpOperator(bin_expr.op), lhs, rhs);
+    val_recorder.Record(res);
   } else {
-    auto* rhs = val_recorder.ValOfPrevExpr();
-    builder_->CreateBinOp(GetBinaryOperator(bin_expr.op), lhs, rhs);
+    bin_expr.rhs->Accept(*this);
+    auto rhs = val_recorder.ValOfPrevExpr();
+    auto res = builder_->CreateBinOp(GetBinaryOperator(bin_expr.op), lhs, rhs);
+    val_recorder.Record(res);
   }
 }
 
