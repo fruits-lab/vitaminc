@@ -27,7 +27,7 @@ class Util {
   }
 
  private:
-  /// @brief Stores a refernce from the original builder.
+  /// @brief Stores a reference from the original builder.
   std::unique_ptr<llvm::IRBuilder<>>& builder_;
 };
 
