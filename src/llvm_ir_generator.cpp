@@ -286,23 +286,39 @@ void LLVMIRGenerator::Visit(const FuncCallExprNode& call_expr) {
   }
 }
 
-void LLVMIRGenerator::Visit(const PostfixArithExprNode& postfix_expr) {}
+void LLVMIRGenerator::Visit(const PostfixArithExprNode& postfix_expr) {
+  // TODO
+}
 
 void LLVMIRGenerator::Visit(const UnaryExprNode& unary_expr) {
   unary_expr.operand->Accept(*this);
   switch (unary_expr.op) {
+    case UnaryOperator::kIncr:
+    case UnaryOperator::kDecr: {
+      // Equivalent to i += 1 or i -= 1.
+      auto operand = val_recorder.ValOfPrevExpr();
+      auto arith_op = unary_expr.op == UnaryOperator::kIncr
+                          ? BinaryOperator::kAdd
+                          : BinaryOperator::kSub;
+      auto one = llvm::ConstantInt::get(util_.i32Ty, 1, true);
+      auto res =
+          builder_->CreateBinOp(GetBinaryOperator(arith_op), operand, one);
+      builder_->CreateStore(res, val_to_id_addr.at(operand));
+      val_recorder.Record(res);
+    } break;
     case UnaryOperator::kPos: {
       /* Do nothing. */
     } break;
     case UnaryOperator::kNeg: {
-      auto val = val_recorder.ValOfPrevExpr();
+      auto operand = val_recorder.ValOfPrevExpr();
       auto zero = llvm::ConstantInt::get(util_.i32Ty, 0, true);
-      auto res = builder_->CreateBinOp(llvm::BinaryOperator::Sub, zero, val);
+      auto res =
+          builder_->CreateBinOp(llvm::BinaryOperator::Sub, zero, operand);
       val_recorder.Record(res);
     } break;
     case UnaryOperator::kNot: {
-      auto val = val_recorder.ValOfPrevExpr();
-      auto res = util_.NotOperation(val);
+      auto operand = val_recorder.ValOfPrevExpr();
+      auto res = util_.NotOperation(operand);
       val_recorder.Record(res);
     } break;
     default:
@@ -322,7 +338,7 @@ void LLVMIRGenerator::Visit(const BinaryExprNode& bin_expr) {
   }
   if (bin_expr.op == BinaryOperator::kLand ||
       bin_expr.op == BinaryOperator::kLor) {
-    // TODO
+    // TODO: 6/28
     bin_expr.rhs->Accept(*this);
   } else if (isCmpInst(bin_expr.op)) {
     bin_expr.rhs->Accept(*this);
