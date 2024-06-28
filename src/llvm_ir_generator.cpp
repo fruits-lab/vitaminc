@@ -334,12 +334,42 @@ void LLVMIRGenerator::Visit(const BinaryExprNode& bin_expr) {
     // For the comma operator, the value of its left operand is not used, so we
     // passed right hand side operand to the upper level.
     bin_expr.rhs->Accept(*this);
+    auto rhs = val_recorder.ValOfPrevExpr();
+    val_recorder.Record(rhs);
     return;
   }
   if (bin_expr.op == BinaryOperator::kLand ||
       bin_expr.op == BinaryOperator::kLor) {
-    // TODO: 6/28
+    // Get the current function we are in.
+    auto func = builder_->GetInsertBlock()->getParent();
+    auto rhs_BB = llvm::BasicBlock::Create(*context_, "logic_rhs", func);
+    auto short_circuit_BB =
+        llvm::BasicBlock::Create(*context_, "short_circuit", func);
+    auto end_BB = llvm::BasicBlock::Create(*context_, "logic_end", func);
+    auto zero = llvm::ConstantInt::get(util_.i32Ty, 0, true);
+    auto lhs_res = builder_->CreateCmp(bin_expr.op == BinaryOperator::kLand
+                                           ? llvm::CmpInst::Predicate::ICMP_NE
+                                           : llvm::CmpInst::Predicate::ICMP_EQ,
+                                       lhs, zero);
+    builder_->CreateCondBr(lhs_res, rhs_BB, short_circuit_BB);
+    builder_->SetInsertPoint(rhs_BB);
     bin_expr.rhs->Accept(*this);
+    auto res = val_recorder.ValOfPrevExpr();
+    auto rhs_res =
+        builder_->CreateCmp(llvm::CmpInst::Predicate::ICMP_NE, res, zero);
+    builder_->CreateBr(end_BB);
+    builder_->SetInsertPoint(short_circuit_BB);
+    auto false_val = llvm::ConstantInt::getFalse(*context_);
+    auto true_val = llvm::ConstantInt::getTrue(*context_);
+    auto short_circuit_res =
+        bin_expr.op == BinaryOperator::kLand ? false_val : true_val;
+    builder_->CreateBr(end_BB);
+    builder_->SetInsertPoint(end_BB);
+    // Merge results from rhs and short_circuit_res
+    auto phi_res = builder_->CreatePHI(builder_->getInt1Ty(), 2);
+    phi_res->addIncoming(rhs_res, rhs_BB);
+    phi_res->addIncoming(short_circuit_res, short_circuit_BB);
+    val_recorder.Record(phi_res);
   } else if (isCmpInst(bin_expr.op)) {
     bin_expr.rhs->Accept(*this);
     auto rhs = val_recorder.ValOfPrevExpr();
