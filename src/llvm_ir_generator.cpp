@@ -287,7 +287,19 @@ void LLVMIRGenerator::Visit(const FuncCallExprNode& call_expr) {
 }
 
 void LLVMIRGenerator::Visit(const PostfixArithExprNode& postfix_expr) {
-  // TODO
+  postfix_expr.operand->Accept(*this);
+  auto val = val_recorder.ValOfPrevExpr();
+  val_recorder.Record(val);
+
+  auto arith_op = postfix_expr.op == PostfixOperator::kIncr
+                      ? llvm::BinaryOperator::Add
+                      : llvm::BinaryOperator::Sub;
+
+  auto one = llvm::ConstantInt::get(util_.i32Ty, 1, true);
+  auto res = builder_->CreateBinOp(arith_op, val, one);
+  const auto* id_expr = dynamic_cast<IdExprNode*>((postfix_expr.operand).get());
+  assert(id_expr);
+  builder_->CreateStore(res, id_to_val.at(id_expr->id));
 }
 
 void LLVMIRGenerator::Visit(const UnaryExprNode& unary_expr) {
@@ -328,6 +340,10 @@ void LLVMIRGenerator::Visit(const UnaryExprNode& unary_expr) {
       auto res =
           builder_->CreateBinOp(llvm::BinaryOperator::Xor, operand, all_ones);
       val_recorder.Record(res);
+    } break;
+    case UnaryOperator::kAddr: {
+    } break;
+    case UnaryOperator::kDeref: {
     } break;
     default:
       break;
