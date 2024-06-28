@@ -318,7 +318,15 @@ void LLVMIRGenerator::Visit(const UnaryExprNode& unary_expr) {
     } break;
     case UnaryOperator::kNot: {
       auto operand = val_recorder.ValOfPrevExpr();
-      auto res = util_.NotOperation(operand);
+      auto zero = llvm::ConstantInt::get(util_.i32Ty, 0, true);
+      auto res = builder_->CreateICmpEQ(operand, zero);
+      val_recorder.Record(res);
+    } break;
+    case UnaryOperator::kBitComp: {
+      auto operand = val_recorder.ValOfPrevExpr();
+      auto all_ones = llvm::ConstantInt::get(util_.i32Ty, -1, true);
+      auto res =
+          builder_->CreateBinOp(llvm::BinaryOperator::Xor, operand, all_ones);
       val_recorder.Record(res);
     } break;
     default:
@@ -355,8 +363,7 @@ void LLVMIRGenerator::Visit(const BinaryExprNode& bin_expr) {
     builder_->SetInsertPoint(rhs_BB);
     bin_expr.rhs->Accept(*this);
     auto res = val_recorder.ValOfPrevExpr();
-    auto rhs_res =
-        builder_->CreateCmp(llvm::CmpInst::Predicate::ICMP_NE, res, zero);
+    auto rhs_res = builder_->CreateICmpNE(res, zero);
     builder_->CreateBr(end_BB);
     builder_->SetInsertPoint(short_circuit_BB);
     auto false_val = llvm::ConstantInt::getFalse(*context_);
