@@ -113,6 +113,18 @@ auto
                   // Accessible only within this translation unit; declaring as
                   // a data member introduces unnecessary dependency.
     = PrevValueRecorder{};
+
+struct LabelViewPair {
+  llvm::BasicBlock* entry;
+  llvm::BasicBlock* exit;
+};
+
+/// @note Blocks that allows jumping within or out of it should add its labels
+/// to this list
+auto
+    label_views_of_jumpable_blocks  // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
+    = std::vector<LabelViewPair>{};
+
 }  // namespace
 
 void LLVMIRGenerator::Visit(const DeclStmtNode& decl_stmt) {
@@ -198,13 +210,14 @@ void LLVMIRGenerator::Visit(const IfStmtNode& if_stmt) {
                      : nullptr;
   auto end_BB = llvm::BasicBlock::Create(*context_, "if_end", func);
 
-  auto zero = llvm::ConstantInt::get(util_.i32Ty, 0, true);
+  auto zero = llvm::ConstantInt::get(predicate_val->getType(), 0, true);
   auto predicate = builder_->CreateICmpNE(predicate_val, zero);
   builder_->CreateCondBr(predicate, then_BB,
                          if_stmt.or_else != nullptr ? else_BB : end_BB);
   builder_->SetInsertPoint(then_BB);
   if_stmt.then->Accept(*this);
-  builder_->CreateBr(end_BB);
+  util_.CreateBrIfNoBrBefore(end_BB);
+
   if (if_stmt.or_else) {
     builder_->SetInsertPoint(else_BB);
     if_stmt.or_else->Accept(*this);
@@ -240,8 +253,9 @@ void LLVMIRGenerator::Visit(const WhileStmtNode& while_stmt) {
     builder_->CreateBr(body_BB);
   }
   builder_->SetInsertPoint(body_BB);
-  // TODO: break, continue label
+  label_views_of_jumpable_blocks.push_back({.entry = pred_BB, .exit = end_BB});
   while_stmt.loop_body->Accept(*this);
+  label_views_of_jumpable_blocks.pop_back();
   builder_->CreateBr(pred_BB);
 
   if (while_stmt.is_do_while) {
@@ -271,7 +285,9 @@ void LLVMIRGenerator::Visit(const ForStmtNode& for_stmt) {
 
   builder_->SetInsertPoint(body_BB);
   // TODO: break, continue label
+  label_views_of_jumpable_blocks.push_back({.entry = step_BB, .exit = end_BB});
   for_stmt.loop_body->Accept(*this);
+  label_views_of_jumpable_blocks.pop_back();
   builder_->CreateBr(step_BB);
 
   builder_->SetInsertPoint(step_BB);
@@ -288,9 +304,15 @@ void LLVMIRGenerator::Visit(const ReturnStmtNode& ret_stmt) {
 
 void LLVMIRGenerator::Visit(const GotoStmtNode& goto_stmt) {}
 
-void LLVMIRGenerator::Visit(const BreakStmtNode& break_stmt) {}
+void LLVMIRGenerator::Visit(const BreakStmtNode& break_stmt) {
+  assert(!label_views_of_jumpable_blocks.empty());
+  builder_->CreateBr(label_views_of_jumpable_blocks.back().exit);
+}
 
-void LLVMIRGenerator::Visit(const ContinueStmtNode& continue_stmt) {}
+void LLVMIRGenerator::Visit(const ContinueStmtNode& continue_stmt) {
+  assert(!label_views_of_jumpable_blocks.empty());
+  builder_->CreateBr(label_views_of_jumpable_blocks.back().entry);
+}
 
 void LLVMIRGenerator::Visit(const SwitchStmtNode& switch_stmt) {}
 
@@ -461,7 +483,7 @@ void LLVMIRGenerator::Visit(const BinaryExprNode& bin_expr) {
     auto short_circuit_BB =
         llvm::BasicBlock::Create(*context_, "short_circuit", func);
     auto end_BB = llvm::BasicBlock::Create(*context_, "logic_end", func);
-    auto zero = llvm::ConstantInt::get(util_.i32Ty, 0, true);
+    auto zero = llvm::ConstantInt::get(lhs->getType(), 0, true);
     auto lhs_res = builder_->CreateCmp(bin_expr.op == BinaryOperator::kLand
                                            ? llvm::CmpInst::Predicate::ICMP_NE
                                            : llvm::CmpInst::Predicate::ICMP_EQ,
