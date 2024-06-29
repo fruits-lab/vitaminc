@@ -185,7 +185,30 @@ void LLVMIRGenerator::Visit(const TransUnitNode& trans_unit) {
   }
 }
 
-void LLVMIRGenerator::Visit(const IfStmtNode& if_stmt) {}
+void LLVMIRGenerator::Visit(const IfStmtNode& if_stmt) {
+  if_stmt.predicate->Accept(*this);
+  auto predicate_val = val_recorder.ValOfPrevExpr();
+  auto func = builder_->GetInsertBlock()->getParent();
+  auto then_BB = llvm::BasicBlock::Create(*context_, "if_then", func);
+  auto else_BB = if_stmt.or_else != nullptr
+                     ? llvm::BasicBlock::Create(*context_, "if_else", func)
+                     : nullptr;
+  auto end_BB = llvm::BasicBlock::Create(*context_, "if_end", func);
+
+  auto zero = llvm::ConstantInt::get(util_.i32Ty, 0, true);
+  auto predicate = builder_->CreateICmpNE(predicate_val, zero);
+  builder_->CreateCondBr(predicate, then_BB,
+                         if_stmt.or_else != nullptr ? else_BB : end_BB);
+  builder_->SetInsertPoint(then_BB);
+  if_stmt.then->Accept(*this);
+  builder_->CreateBr(end_BB);
+  if (if_stmt.or_else) {
+    builder_->SetInsertPoint(else_BB);
+    if_stmt.or_else->Accept(*this);
+    builder_->CreateBr(end_BB);
+  }
+  builder_->SetInsertPoint(end_BB);
+}
 
 void LLVMIRGenerator::Visit(const WhileStmtNode& while_stmt) {}
 
@@ -221,7 +244,9 @@ void LLVMIRGenerator::Visit(const ArrDesNode& arr_des) {}
 
 void LLVMIRGenerator::Visit(const IdDesNode& id_des) {}
 
-void LLVMIRGenerator::Visit(const NullExprNode& null_expr) {}
+void LLVMIRGenerator::Visit(const NullExprNode& null_expr) {
+  /* do nothing */
+}
 
 void LLVMIRGenerator::Visit(const IdExprNode& id_expr) {
   if (id_expr.type->IsFunc()) {
