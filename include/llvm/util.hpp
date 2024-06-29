@@ -36,8 +36,7 @@ class Util {
 
   Util(std::unique_ptr<llvm::IRBuilder<>>& builder) : builder_{builder} {
     intTy = builder_->getInt32Ty();
-    // FIXME: hardcode 32 bits
-    intPtrTy = builder_->getPtrTy(32);
+    intPtrTy = builder_->getPtrTy();
   }
 
  private:
