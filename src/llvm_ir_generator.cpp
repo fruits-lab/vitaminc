@@ -210,7 +210,45 @@ void LLVMIRGenerator::Visit(const IfStmtNode& if_stmt) {
   builder_->SetInsertPoint(end_BB);
 }
 
-void LLVMIRGenerator::Visit(const WhileStmtNode& while_stmt) {}
+void LLVMIRGenerator::Visit(const WhileStmtNode& while_stmt) {
+  auto label_prefix = std::string{while_stmt.is_do_while ? "do_" : "while_"};
+  auto func = builder_->GetInsertBlock()->getParent();
+  auto body_BB =
+      llvm::BasicBlock::Create(*context_, label_prefix + "body", func);
+  auto pred_BB =
+      llvm::BasicBlock::Create(*context_, label_prefix + "pred", func);
+  auto end_BB = llvm::BasicBlock::Create(*context_, label_prefix + "end", func);
+
+  // A while statement's predicate is evaluated "before" the body statement,
+  // whereas a do-while statement's predicate is evaluated "after" the body
+  // statement. In the generated code for a while statement, there is an
+  // unconditional jump at the end of the body to jump back to the predicate.
+  // For a do-while statement, it only needs one conditional jump.
+  if (!while_stmt.is_do_while) {
+    builder_->CreateBr(pred_BB);
+    builder_->SetInsertPoint(pred_BB);
+    while_stmt.predicate->Accept(*this);
+    auto predicate = val_recorder.ValOfPrevExpr();
+    builder_->CreateCondBr(predicate, body_BB, end_BB);
+  }
+
+  // Connect entry basic block to body basic block.
+  if (while_stmt.is_do_while) {
+    builder_->CreateBr(body_BB);
+  }
+  builder_->SetInsertPoint(body_BB);
+  // TODO: break label
+  while_stmt.loop_body->Accept(*this);
+  builder_->CreateBr(pred_BB);
+
+  if (while_stmt.is_do_while) {
+    builder_->SetInsertPoint(pred_BB);
+    while_stmt.predicate->Accept(*this);
+    auto predicate = val_recorder.ValOfPrevExpr();
+    builder_->CreateCondBr(predicate, body_BB, end_BB);
+  }
+  builder_->SetInsertPoint(end_BB);
+}
 
 void LLVMIRGenerator::Visit(const ForStmtNode& for_stmt) {}
 
@@ -380,8 +418,8 @@ void LLVMIRGenerator::Visit(const BinaryExprNode& bin_expr) {
   auto lhs = val_recorder.ValOfPrevExpr();
 
   if (bin_expr.op == BinaryOperator::kComma) {
-    // For the comma operator, the value of its left operand is not used, so we
-    // passed right hand side operand to the upper level.
+    // For the comma operator, the value of its left operand is not used, so
+    // we passed right hand side operand to the upper level.
     bin_expr.rhs->Accept(*this);
     auto rhs = val_recorder.ValOfPrevExpr();
     val_recorder.Record(rhs);
