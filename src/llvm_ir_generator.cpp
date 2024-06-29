@@ -153,7 +153,10 @@ void LLVMIRGenerator::Visit(const FuncDefNode& func_def) {
   func_def.body->Accept(*this);
 }
 
-void LLVMIRGenerator::Visit(const LoopInitNode& loop_init) {}
+void LLVMIRGenerator::Visit(const LoopInitNode& loop_init) {
+  std::visit([this](auto&& clause) { clause->Accept(*this); },
+             loop_init.clause);
+}
 
 void LLVMIRGenerator::Visit(const CompoundStmtNode& compound_stmt) {
   for (const auto& stmt : compound_stmt.stmts) {
@@ -237,7 +240,7 @@ void LLVMIRGenerator::Visit(const WhileStmtNode& while_stmt) {
     builder_->CreateBr(body_BB);
   }
   builder_->SetInsertPoint(body_BB);
-  // TODO: break label
+  // TODO: break, continue label
   while_stmt.loop_body->Accept(*this);
   builder_->CreateBr(pred_BB);
 
@@ -250,7 +253,32 @@ void LLVMIRGenerator::Visit(const WhileStmtNode& while_stmt) {
   builder_->SetInsertPoint(end_BB);
 }
 
-void LLVMIRGenerator::Visit(const ForStmtNode& for_stmt) {}
+void LLVMIRGenerator::Visit(const ForStmtNode& for_stmt) {
+  auto func = builder_->GetInsertBlock()->getParent();
+  auto pred_BB = llvm::BasicBlock::Create(*context_, "for_pred", func);
+  auto body_BB = llvm::BasicBlock::Create(*context_, "for_body", func);
+  auto step_BB = llvm::BasicBlock::Create(*context_, "for_step", func);
+  auto end_BB = llvm::BasicBlock::Create(*context_, "for_end", func);
+
+  for_stmt.loop_init->Accept(*this);
+  builder_->CreateBr(pred_BB);
+  builder_->SetInsertPoint(pred_BB);
+  for_stmt.predicate->Accept(*this);
+  if (!dynamic_cast<NullExprNode*>((for_stmt.predicate).get())) {
+    auto predicate = val_recorder.ValOfPrevExpr();
+    builder_->CreateCondBr(predicate, body_BB, end_BB);
+  }
+
+  builder_->SetInsertPoint(body_BB);
+  // TODO: break, continue label
+  for_stmt.loop_body->Accept(*this);
+  builder_->CreateBr(step_BB);
+
+  builder_->SetInsertPoint(step_BB);
+  for_stmt.step->Accept(*this);
+  builder_->CreateBr(pred_BB);
+  builder_->SetInsertPoint(end_BB);
+}
 
 void LLVMIRGenerator::Visit(const ReturnStmtNode& ret_stmt) {
   ret_stmt.expr->Accept(*this);
