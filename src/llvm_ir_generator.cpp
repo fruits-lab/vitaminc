@@ -398,14 +398,40 @@ void LLVMIRGenerator::Visit(const ArgExprNode& arg_expr) {
 
 void LLVMIRGenerator::Visit(const ArrSubExprNode& arr_sub_expr) {}
 
-void LLVMIRGenerator::Visit(const CondExprNode& cond_expr) {}
+void LLVMIRGenerator::Visit(const CondExprNode& cond_expr) {
+  cond_expr.predicate->Accept(*this);
+  auto predicate_val = val_recorder.ValOfPrevExpr();
+  auto func = builder_->GetInsertBlock()->getParent();
+  // The second operand is evaluated only if the first compares unequal to
+  // 0; the third operand is evaluated only if the first compares equal to
+  // 0; the result is the value of the second or third operand (whichever is
+  // evaluated).
+  auto second_BB = llvm::BasicBlock::Create(*context_, "cond_second", func);
+  auto third_BB = llvm::BasicBlock::Create(*context_, "cond_third", func);
+  auto end_BB = llvm::BasicBlock::Create(*context_, "cond_end", func);
+
+  auto zero = llvm::ConstantInt::get(predicate_val->getType(), 0, true);
+  auto predicate = builder_->CreateICmpNE(predicate_val, zero);
+  builder_->CreateCondBr(predicate, second_BB, third_BB);
+
+  builder_->SetInsertPoint(second_BB);
+  cond_expr.then->Accept(*this);
+  auto second_val = val_recorder.ValOfPrevExpr();
+  builder_->CreateBr(end_BB);
+
+  builder_->SetInsertPoint(third_BB);
+  cond_expr.or_else->Accept(*this);
+  auto third_val = val_recorder.ValOfPrevExpr();
+  builder_->CreateBr(end_BB);
+
+  builder_->SetInsertPoint(end_BB);
+  auto phi_res = builder_->CreatePHI(util_.intTy, 2);
+  phi_res->addIncoming(second_val, second_BB);
+  phi_res->addIncoming(third_val, third_BB);
+  val_recorder.Record(phi_res);
+}
 
 void LLVMIRGenerator::Visit(const FuncCallExprNode& call_expr) {
-  call_expr.func_expr->Accept(*this);
-  auto val = val_recorder.ValOfPrevExpr();
-  auto func = llvm::dyn_cast<llvm::Function>(val);
-  assert(func);
-
   // Evaluate the arguments.
   std::vector<llvm::Value*> arg_vals{};
   for (const auto& arg : call_expr.args) {
