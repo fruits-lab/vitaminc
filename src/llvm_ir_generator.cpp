@@ -153,17 +153,44 @@ void LLVMIRGenerator::Visit(const FieldNode& field) {}
 
 void LLVMIRGenerator::Visit(const RecordVarDeclNode& struct_def) {}
 
-void LLVMIRGenerator::Visit(const ParamNode& parameter) {}
+void LLVMIRGenerator::Visit(const ParamNode& parameter) {
+  /* Do nothing */
+}
 
 void LLVMIRGenerator::Visit(const FuncDefNode& func_def) {
-  auto prototype = llvm::FunctionType::get(util_.intTy, false);
-  auto* fn = llvm::Function::Create(prototype,
-                                    func_def.id == "main"
-                                        ? llvm::Function::ExternalLinkage
-                                        : llvm::Function::InternalLinkage,
-                                    func_def.id, module_);
-  auto* body = llvm::BasicBlock::Create(*context_, "body", fn);
+  std::vector<llvm::Type*> params;
+  for (auto& parameter : func_def.parameters) {
+    parameter->Accept(*this);
+    // Initiate first
+    id_to_val[parameter->id] = nullptr;
+    // TODO: support multiple data types.
+    if (parameter->type->IsPtr()) {
+      params.push_back(util_.intPtrTy);
+    } else {
+      params.push_back(util_.intTy);
+    }
+  }
+
+  auto prototype = llvm::FunctionType::get(util_.intTy, params, false);
+  auto func = llvm::Function::Create(prototype,
+                                     func_def.id == "main"
+                                         ? llvm::Function::ExternalLinkage
+                                         : llvm::Function::InternalLinkage,
+                                     func_def.id, module_);
+
+  auto body = llvm::BasicBlock::Create(*context_, "body", func);
   builder_->SetInsertPoint(body);
+  // Allocate space for parameters.
+  auto args_iter = func->arg_begin();
+  for (auto& parameter : func_def.parameters) {
+    parameter->Accept(*this);
+    args_iter->setName(parameter->id);
+    auto addr = builder_->CreateAlloca(args_iter->getType());
+    builder_->CreateStore(args_iter, addr);
+    id_to_val.at(parameter->id) = addr;
+    ++args_iter;
+  }
+
   func_def.body->Accept(*this);
 }
 
@@ -386,6 +413,7 @@ void LLVMIRGenerator::Visit(const FuncCallExprNode& call_expr) {
     auto* arg_val = val_recorder.ValOfPrevExpr();
     arg_vals.push_back(arg_val);
   }
+
   if (func->getName() == "__builtin_print") {
     // builtin_print call
     auto printf = module_->getFunction("printf");
@@ -399,6 +427,9 @@ void LLVMIRGenerator::Visit(const FuncCallExprNode& call_expr) {
     print_args.insert(print_args.end(), arg_vals.begin(), arg_vals.end());
     builder_->CreateCall(printf, print_args);
   } else {
+    auto called_func = module_->getFunction(func->getName());
+    auto return_res = builder_->CreateCall(called_func, arg_vals);
+    val_recorder.Record(return_res);
   }
 }
 
