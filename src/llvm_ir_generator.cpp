@@ -189,8 +189,7 @@ void LLVMIRGenerator::Visit(const TransUnitNode& trans_unit) {
   llvm::Function::Create(builtin_print, llvm::Function::ExternalLinkage,
                          "__builtin_print", module_);
 
-  auto ptrTy = builder_->getPtrTy();
-  auto args = llvm::ArrayRef<llvm::Type*>{ptrTy, util_.intTy};
+  auto args = llvm::ArrayRef<llvm::Type*>{util_.intPtrTy, util_.intTy};
   auto printf = llvm::FunctionType::get(util_.intTy, args, false);
   llvm::Function::Create(printf, llvm::Function::ExternalLinkage, "printf",
                          module_);
