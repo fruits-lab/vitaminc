@@ -134,7 +134,9 @@ void LLVMIRGenerator::Visit(const DeclStmtNode& decl_stmt) {
 }
 
 void LLVMIRGenerator::Visit(const VarDeclNode& decl) {
-  auto addr = builder_->CreateAlloca(util_.i32Ty);
+  auto addr = builder_->CreateAlloca(decl.type->IsPtr() == true
+                                         ? (llvm::Type*)util_.intPtrTy
+                                         : (llvm::Type*)util_.intTy);
   if (decl.init) {
     decl.init->Accept(*this);
     auto val = val_recorder.ValOfPrevExpr();
@@ -347,7 +349,9 @@ void LLVMIRGenerator::Visit(const IdExprNode& id_expr) {
   auto id_val = id_to_val.at(id_expr.id);
 
   if (id_expr.type->IsPtr() || id_expr.type->IsFunc()) {
-    // TODO
+    auto res = builder_->CreateLoad(util_.intPtrTy, id_val);
+    val_recorder.Record(res);
+    val_to_id_addr[res] = id_val;
   } else {
     auto res = builder_->CreateLoad(util_.intTy, id_val);
     val_recorder.Record(res);
@@ -455,8 +459,31 @@ void LLVMIRGenerator::Visit(const UnaryExprNode& unary_expr) {
       val_recorder.Record(res);
     } break;
     case UnaryOperator::kAddr: {
+      if (unary_expr.operand->type->IsFunc()) {
+        // No-op; the function itself already evaluates to the address.
+        break;
+      }
+      auto operand = val_recorder.ValOfPrevExpr();
+      auto operand_addr = val_to_id_addr.at(operand);
+      val_recorder.Record(operand_addr);
     } break;
     case UnaryOperator::kDeref: {
+      // Is function pointer.
+      if (unary_expr.operand->type->IsPtr() &&
+          dynamic_cast<PtrType*>((unary_expr.operand->type).get())
+              ->base_type()
+              .IsFunc()) {
+        // No-op; the function itself also evaluates to the address.
+        break;
+      }
+
+      auto operand = val_recorder.ValOfPrevExpr();
+      auto res = builder_->CreateLoad(unary_expr.type->IsPtr() == true
+                                          ? (llvm::Type*)util_.intPtrTy
+                                          : (llvm::Type*)util_.intTy,
+                                      operand);
+      val_recorder.Record(res);
+      val_to_id_addr[res] = operand;
     } break;
     default:
       break;
@@ -524,10 +551,6 @@ void LLVMIRGenerator::Visit(const SimpleAssignmentExprNode& assign_expr) {
   auto lhs = val_recorder.ValOfPrevExpr();
   assign_expr.rhs->Accept(*this);
   auto rhs = val_recorder.ValOfPrevExpr();
-  if (assign_expr.lhs->type->IsPtr()) {
-    // TODO
-  } else {
-    builder_->CreateStore(rhs, val_to_id_addr.at(lhs));
-  }
+  builder_->CreateStore(rhs, val_to_id_addr.at(lhs));
   val_recorder.Record(rhs);
 }
