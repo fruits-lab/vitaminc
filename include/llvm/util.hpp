@@ -9,7 +9,9 @@ namespace util {
 class Util {
  public:
   /// @brief Integer type
-  llvm::IntegerType* i32Ty;
+  llvm::IntegerType* intTy;
+  /// @brief Pointer type
+  llvm::PointerType* intPtrTy;
 
   /// @brief Every LLVM basic block can only have one terminator instruction.
   /// This function can check if there are terminator instructions before the
@@ -33,7 +35,9 @@ class Util {
   }
 
   Util(std::unique_ptr<llvm::IRBuilder<>>& builder) : builder_{builder} {
-    i32Ty = builder_->getInt32Ty();
+    intTy = builder_->getInt32Ty();
+    // FIXME: hardcode 32 bits
+    intPtrTy = builder_->getPtrTy(32);
   }
 
  private:

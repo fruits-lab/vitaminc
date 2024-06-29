@@ -154,7 +154,7 @@ void LLVMIRGenerator::Visit(const RecordVarDeclNode& struct_def) {}
 void LLVMIRGenerator::Visit(const ParamNode& parameter) {}
 
 void LLVMIRGenerator::Visit(const FuncDefNode& func_def) {
-  auto prototype = llvm::FunctionType::get(util_.i32Ty, false);
+  auto prototype = llvm::FunctionType::get(util_.intTy, false);
   auto* fn = llvm::Function::Create(prototype,
                                     func_def.id == "main"
                                         ? llvm::Function::ExternalLinkage
@@ -182,14 +182,14 @@ void LLVMIRGenerator::Visit(const ExternDeclNode& extern_decl) {
 
 void LLVMIRGenerator::Visit(const TransUnitNode& trans_unit) {
   // Generate builtin print function.
-  auto arg = llvm::ArrayRef<llvm::Type*>{util_.i32Ty};
-  auto builtin_print = llvm::FunctionType::get(util_.i32Ty, arg, false);
+  auto arg = llvm::ArrayRef<llvm::Type*>{util_.intTy};
+  auto builtin_print = llvm::FunctionType::get(util_.intTy, arg, false);
   llvm::Function::Create(builtin_print, llvm::Function::ExternalLinkage,
                          "__builtin_print", module_);
 
   auto ptrTy = builder_->getPtrTy();
-  auto args = llvm::ArrayRef<llvm::Type*>{ptrTy, util_.i32Ty};
-  auto printf = llvm::FunctionType::get(util_.i32Ty, args, false);
+  auto args = llvm::ArrayRef<llvm::Type*>{ptrTy, util_.intTy};
+  auto printf = llvm::FunctionType::get(util_.intTy, args, false);
   llvm::Function::Create(printf, llvm::Function::ExternalLinkage, "printf",
                          module_);
 
@@ -349,7 +349,7 @@ void LLVMIRGenerator::Visit(const IdExprNode& id_expr) {
   if (id_expr.type->IsPtr() || id_expr.type->IsFunc()) {
     // TODO
   } else {
-    auto res = builder_->CreateLoad(util_.i32Ty, id_val);
+    auto res = builder_->CreateLoad(util_.intTy, id_val);
     val_recorder.Record(res);
     val_to_id_addr[res] = id_val;
   }
@@ -357,7 +357,7 @@ void LLVMIRGenerator::Visit(const IdExprNode& id_expr) {
 
 void LLVMIRGenerator::Visit(const IntConstExprNode& int_expr) {
   // NOTE: LLVM Constant does not generate IR code, it can be used directly.
-  auto val = llvm::ConstantInt::get(util_.i32Ty, int_expr.val, true);
+  auto val = llvm::ConstantInt::get(util_.intTy, int_expr.val, true);
   val_recorder.Record(val);
 }
 
@@ -408,7 +408,7 @@ void LLVMIRGenerator::Visit(const PostfixArithExprNode& postfix_expr) {
                       ? llvm::BinaryOperator::Add
                       : llvm::BinaryOperator::Sub;
 
-  auto one = llvm::ConstantInt::get(util_.i32Ty, 1, true);
+  auto one = llvm::ConstantInt::get(util_.intTy, 1, true);
   auto res = builder_->CreateBinOp(arith_op, val, one);
   const auto* id_expr = dynamic_cast<IdExprNode*>((postfix_expr.operand).get());
   assert(id_expr);
@@ -425,7 +425,7 @@ void LLVMIRGenerator::Visit(const UnaryExprNode& unary_expr) {
       auto arith_op = unary_expr.op == UnaryOperator::kIncr
                           ? BinaryOperator::kAdd
                           : BinaryOperator::kSub;
-      auto one = llvm::ConstantInt::get(util_.i32Ty, 1, true);
+      auto one = llvm::ConstantInt::get(util_.intTy, 1, true);
       auto res =
           builder_->CreateBinOp(GetBinaryOperator(arith_op), operand, one);
       builder_->CreateStore(res, val_to_id_addr.at(operand));
@@ -436,20 +436,20 @@ void LLVMIRGenerator::Visit(const UnaryExprNode& unary_expr) {
     } break;
     case UnaryOperator::kNeg: {
       auto operand = val_recorder.ValOfPrevExpr();
-      auto zero = llvm::ConstantInt::get(util_.i32Ty, 0, true);
+      auto zero = llvm::ConstantInt::get(util_.intTy, 0, true);
       auto res =
           builder_->CreateBinOp(llvm::BinaryOperator::Sub, zero, operand);
       val_recorder.Record(res);
     } break;
     case UnaryOperator::kNot: {
       auto operand = val_recorder.ValOfPrevExpr();
-      auto zero = llvm::ConstantInt::get(util_.i32Ty, 0, true);
+      auto zero = llvm::ConstantInt::get(util_.intTy, 0, true);
       auto res = builder_->CreateICmpEQ(operand, zero);
       val_recorder.Record(res);
     } break;
     case UnaryOperator::kBitComp: {
       auto operand = val_recorder.ValOfPrevExpr();
-      auto all_ones = llvm::ConstantInt::get(util_.i32Ty, -1, true);
+      auto all_ones = llvm::ConstantInt::get(util_.intTy, -1, true);
       auto res =
           builder_->CreateBinOp(llvm::BinaryOperator::Xor, operand, all_ones);
       val_recorder.Record(res);
