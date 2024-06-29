@@ -11,6 +11,27 @@ class Util {
   /// @brief Integer type
   llvm::IntegerType* i32Ty;
 
+  /// @brief Every LLVM basic block can only have one terminator instruction.
+  /// This function can check if there are terminator instructions before the
+  /// current insert point. If yes, then it will create an unconditional branch.
+  /// If no, then it will not create branch instruction.
+  void CreateBrIfNoBrBefore(llvm::BasicBlock* next_BB) {
+    auto BB = builder_->GetInsertBlock();
+    bool has_terminator = false;
+    for (auto it = BB->begin(); it != BB->end();) {
+      if (it->isTerminator()) {
+        has_terminator = true;
+        break;
+      } else {
+        ++it;
+      }
+    }
+
+    if (!has_terminator) {
+      builder_->CreateBr(next_BB);
+    }
+  }
+
   Util(std::unique_ptr<llvm::IRBuilder<>>& builder) : builder_{builder} {
     i32Ty = builder_->getInt32Ty();
   }
