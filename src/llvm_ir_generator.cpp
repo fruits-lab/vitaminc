@@ -401,7 +401,24 @@ void LLVMIRGenerator::Visit(const ReturnStmtNode& ret_stmt) {
   builder_->CreateRet(expr);
 }
 
-void LLVMIRGenerator::Visit(const GotoStmtNode& goto_stmt) {}
+void LLVMIRGenerator::Visit(const GotoStmtNode& goto_stmt) {
+  auto func = builder_->GetInsertBlock()->getParent();
+  llvm::BasicBlock* target_BB = nullptr;
+  for (auto b = func->begin(), be = func->end(); b != be; ++b) {
+    auto& BB = b;
+    if (BB->getName() == goto_stmt.label) {
+      target_BB = &(*BB);
+      break;
+    }
+  }
+
+  if (target_BB) {
+    builder_->CreateBr(target_BB);
+  } else {
+    auto label_BB = llvm::BasicBlock::Create(*context_, goto_stmt.label, func);
+    builder_->CreateBr(label_BB);
+  }
+}
 
 void LLVMIRGenerator::Visit(const BreakStmtNode& break_stmt) {
   assert(!label_views_of_jumpable_blocks.empty());
@@ -415,7 +432,26 @@ void LLVMIRGenerator::Visit(const ContinueStmtNode& continue_stmt) {
 
 void LLVMIRGenerator::Visit(const SwitchStmtNode& switch_stmt) {}
 
-void LLVMIRGenerator::Visit(const IdLabeledStmtNode& id_labeled_stmt) {}
+void LLVMIRGenerator::Visit(const IdLabeledStmtNode& id_labeled_stmt) {
+  auto func = builder_->GetInsertBlock()->getParent();
+  llvm::BasicBlock* target_BB = nullptr;
+  for (auto b = func->begin(), be = func->end(); b != be; ++b) {
+    auto& BB = b;
+    if (BB->getName() == id_labeled_stmt.label) {
+      target_BB = &(*BB);
+      builder_->SetInsertPoint(target_BB);
+      break;
+    }
+  }
+
+  if (!target_BB) {
+    auto label_BB =
+        llvm::BasicBlock::Create(*context_, id_labeled_stmt.label, func);
+    builder_->SetInsertPoint(label_BB);
+  }
+
+  id_labeled_stmt.stmt->Accept(*this);
+}
 
 void LLVMIRGenerator::Visit(const CaseStmtNode& case_stmt) {}
 
@@ -535,7 +571,7 @@ void LLVMIRGenerator::Visit(const FuncCallExprNode& call_expr) {
       // builtin_print call
       auto printf = module_->getFunction("printf");
       std::vector<llvm::Value*> print_args{};
-      // NOTE: set AllowInternal as true to get internal linkage global variable
+      // NOTE: set AllowInternal true to get internal linkage global variable
       auto print_format =
           module_->getGlobalVariable("__builtin_print_format", true);
       assert(print_format);
