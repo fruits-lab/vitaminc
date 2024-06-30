@@ -180,9 +180,13 @@ void LLVMIRGenerator::Visit(const ArrDeclNode& arr_decl) {
   }
 }
 
-void LLVMIRGenerator::Visit(const RecordDeclNode& struct_def) {}
+void LLVMIRGenerator::Visit(const RecordDeclNode& struct_def) {
+  /* Do nothing because this node only declares a type. */
+}
 
-void LLVMIRGenerator::Visit(const FieldNode& field) {}
+void LLVMIRGenerator::Visit(const FieldNode& field) {
+  /* Do nothing because this node only declares a member type in a record. */
+}
 
 void LLVMIRGenerator::Visit(const RecordVarDeclNode& struct_def) {}
 
