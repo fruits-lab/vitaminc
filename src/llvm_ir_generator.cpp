@@ -694,8 +694,7 @@ void LLVMIRGenerator::Visit(const UnaryExprNode& unary_expr) {
     case UnaryOperator::kNeg: {
       auto operand = val_recorder.ValOfPrevExpr();
       auto zero = llvm::ConstantInt::get(util_.intTy, 0, true);
-      auto res =
-          builder_->CreateBinOp(llvm::BinaryOperator::Sub, zero, operand);
+      auto res = builder_->CreateSub(zero, operand);
       val_recorder.Record(res);
     } break;
     case UnaryOperator::kNot: {
@@ -707,8 +706,7 @@ void LLVMIRGenerator::Visit(const UnaryExprNode& unary_expr) {
     case UnaryOperator::kBitComp: {
       auto operand = val_recorder.ValOfPrevExpr();
       auto all_ones = llvm::ConstantInt::get(util_.intTy, -1, true);
-      auto res =
-          builder_->CreateBinOp(llvm::BinaryOperator::Xor, operand, all_ones);
+      auto res = builder_->CreateXor(operand, all_ones);
       val_recorder.Record(res);
     } break;
     case UnaryOperator::kAddr: {
