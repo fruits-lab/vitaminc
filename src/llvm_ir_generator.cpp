@@ -145,6 +145,9 @@ void LLVMIRGenerator::Visit(const VarDeclNode& decl) {
   if (decl.init) {
     decl.init->Accept(*this);
     auto val = val_recorder.ValOfPrevExpr();
+    if (auto func = llvm::dyn_cast<llvm::Function>(val)) {
+      var_type = func->getFunctionType();
+    }
     builder_->CreateStore(val, addr);
   }
   id_to_val[decl.id] = addr;
@@ -194,21 +197,37 @@ void LLVMIRGenerator::Visit(const ParamNode& parameter) {
   /* Do nothing */
 }
 
-void LLVMIRGenerator::Visit(const FuncDefNode& func_def) {
-  std::vector<llvm::Type*> params;
-  for (auto& parameter : func_def.parameters) {
-    parameter->Accept(*this);
-    // Initiate first
-    id_to_val[parameter->id] = nullptr;
-    // TODO: support multiple data types.
-    if (parameter->type->IsPtr()) {
-      params.push_back(util_.intPtrTy);
+llvm::Type* LLVMIRGenerator::GetParamType_(
+    const std::unique_ptr<ParamNode>& parameter) {
+  llvm::Type* param_type;
+  if (auto ptr_type = dynamic_cast<PtrType*>(parameter->type.get())) {
+    auto base_type = ptr_type->base_type().Clone();
+    if (auto func_type = dynamic_cast<FuncType*>(base_type.get())) {
+      auto return_type = func_type->return_type().IsPtr() == true
+                             ? (llvm::Type*)util_.intPtrTy
+                             : (llvm::Type*)util_.intTy;
+      std::vector<llvm::Type*> func_params;
+      for (auto& func_param : func_type->param_types()) {
+        func_params.push_back(func_param->IsPtr() == true
+                                  ? (llvm::Type*)util_.intPtrTy
+                                  : (llvm::Type*)util_.intTy);
+      }
+      auto func_ptr_type =
+          llvm::FunctionType::get(return_type, func_params, false);
+      param_type = func_ptr_type;
     } else {
-      params.push_back(util_.intTy);
+      param_type = util_.intPtrTy;
     }
+  } else {
+    param_type = util_.intTy;
   }
 
-  auto func_type = llvm::FunctionType::get(util_.intTy, params, false);
+  return param_type;
+}
+
+void LLVMIRGenerator::Visit(const FuncDefNode& func_def) {
+  std::vector<llvm::Type*> param_types(func_def.parameters.size(), util_.intTy);
+  auto func_type = llvm::FunctionType::get(util_.intTy, param_types, false);
   auto func = llvm::Function::Create(func_type,
                                      func_def.id == "main"
                                          ? llvm::Function::ExternalLinkage
@@ -222,10 +241,24 @@ void LLVMIRGenerator::Visit(const FuncDefNode& func_def) {
   for (auto& parameter : func_def.parameters) {
     parameter->Accept(*this);
     args_iter->setName(parameter->id);
-    auto addr = builder_->CreateAlloca(args_iter->getType());
-    builder_->CreateStore(args_iter, addr);
-    id_to_val.at(parameter->id) = addr;
-    val_to_type[addr] = args_iter->getType();
+
+    llvm::Type* param_type = GetParamType_(parameter);
+    // TODO: refactor
+    if (param_type->isFunctionTy()) {
+      auto func_type = param_type;
+      param_type = param_type->getPointerTo();
+      args_iter->mutateType(param_type);
+      auto addr = builder_->CreateAlloca(param_type);
+      builder_->CreateStore(args_iter, addr);
+      id_to_val[parameter->id] = addr;
+      val_to_type[addr] = func_type;
+    } else {
+      args_iter->mutateType(param_type);
+      auto addr = builder_->CreateAlloca(param_type);
+      builder_->CreateStore(args_iter, addr);
+      id_to_val[parameter->id] = addr;
+      val_to_type[addr] = param_type;
+    }
     ++args_iter;
   }
 
@@ -514,14 +547,16 @@ void LLVMIRGenerator::Visit(const FuncCallExprNode& call_expr) {
       auto return_res = builder_->CreateCall(called_func, arg_vals);
       val_recorder.Record(return_res);
     }
-  } else if (llvm::dyn_cast<llvm::PointerType>(val->getType())) {
+  } else if (val->getType()->isPointerTy()) {
     auto func_ptr = val_to_id_addr.at(val);
-    assert(func_ptr);
     auto type = val_to_type.at(func_ptr);
-    auto func_type = llvm::dyn_cast<llvm::FunctionType>(type);
-    assert(func_type);
-    auto return_res = builder_->CreateCall(func_type, val, arg_vals);
-    val_recorder.Record(return_res);
+    if (auto func_type = llvm::dyn_cast<llvm::FunctionType>(type)) {
+      auto return_res = builder_->CreateCall(func_type, val, arg_vals);
+      val_recorder.Record(return_res);
+    } else {
+      // TODO: unreachable
+      assert(false);
+    }
   }
 }
 
