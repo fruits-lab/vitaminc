@@ -92,6 +92,11 @@ auto
                     // as a data member introduces unnecessary dependency.
     = std::map<llvm::Value*, llvm::Value*>{};
 
+auto val_to_type  // NOLINT(cppcoreguidelines-avoid-non-const-global-variables):
+                  // Accessible only within this translation unit; declaring
+                  // as a data member introduces unnecessary dependency.
+    = std::map<llvm::Value*, llvm::Type*>{};
+
 /// @brief Store LLVM Value class at the bottom level of AST node. Upper level
 /// AST node can use the information in Value directly.
 class PrevValueRecorder {
@@ -145,7 +150,34 @@ void LLVMIRGenerator::Visit(const VarDeclNode& decl) {
   id_to_val[decl.id] = addr;
 }
 
-void LLVMIRGenerator::Visit(const ArrDeclNode& arr_decl) {}
+void LLVMIRGenerator::Visit(const ArrDeclNode& arr_decl) {
+  auto arr_decl_type = dynamic_cast<ArrType*>((arr_decl.type).get());
+  auto arr_type = llvm::ArrayType::get(
+      util_.intTy,
+      arr_decl_type->size() / arr_decl_type->element_type().size());
+  auto base_addr = builder_->CreateAlloca(arr_type, nullptr);
+  id_to_val[arr_decl.id] = base_addr;
+  val_to_type[base_addr] = arr_type;
+
+  for (auto i = std::size_t{0}, e = arr_decl_type->len(); i < e; ++i) {
+    if (i < arr_decl.init_list.size()) {
+      auto& arr_init = arr_decl.init_list.at(i);
+      arr_init->Accept(*this);
+    }
+
+    auto res_addr =
+        builder_->CreateConstInBoundsGEP2_32(arr_type, base_addr, 0, i);
+
+    if (i < arr_decl.init_list.size()) {
+      auto init_val = val_recorder.ValOfPrevExpr();
+      builder_->CreateStore(init_val, res_addr);
+    } else {
+      // set remaining elements as 0
+      auto zero = llvm::ConstantInt::get(util_.intTy, 0, true);
+      builder_->CreateStore(zero, res_addr);
+    }
+  }
+}
 
 void LLVMIRGenerator::Visit(const RecordDeclNode& struct_def) {}
 
@@ -354,7 +386,9 @@ void LLVMIRGenerator::Visit(const ExprStmtNode& expr_stmt) {
   expr_stmt.expr->Accept(*this);
 }
 
-void LLVMIRGenerator::Visit(const InitExprNode& init_expr) {}
+void LLVMIRGenerator::Visit(const InitExprNode& init_expr) {
+  init_expr.expr->Accept(*this);
+}
 
 void LLVMIRGenerator::Visit(const ArrDesNode& arr_des) {}
 
@@ -396,7 +430,22 @@ void LLVMIRGenerator::Visit(const ArgExprNode& arg_expr) {
   arg_expr.arg->Accept(*this);
 }
 
-void LLVMIRGenerator::Visit(const ArrSubExprNode& arr_sub_expr) {}
+void LLVMIRGenerator::Visit(const ArrSubExprNode& arr_sub_expr) {
+  arr_sub_expr.arr->Accept(*this);
+  auto val_num = val_recorder.ValOfPrevExpr();
+  auto base_addr = val_to_id_addr.at(val_num);
+  auto arr_type = val_to_type.at(base_addr);
+  arr_sub_expr.index->Accept(*this);
+  auto index = dynamic_cast<IntConstExprNode*>(arr_sub_expr.index.get());
+  assert(index);
+
+  auto res_addr = builder_->CreateConstInBoundsGEP2_32(
+      arr_type, base_addr, 0, (unsigned int)index->val);
+  auto res_val =
+      builder_->CreateLoad(arr_type->getArrayElementType(), res_addr);
+  val_to_id_addr[res_val] = res_addr;
+  val_recorder.Record(res_val);
+}
 
 void LLVMIRGenerator::Visit(const CondExprNode& cond_expr) {
   cond_expr.predicate->Accept(*this);
