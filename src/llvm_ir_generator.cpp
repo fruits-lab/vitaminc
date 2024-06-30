@@ -139,15 +139,16 @@ void LLVMIRGenerator::Visit(const DeclStmtNode& decl_stmt) {
 }
 
 void LLVMIRGenerator::Visit(const VarDeclNode& decl) {
-  auto addr = builder_->CreateAlloca(decl.type->IsPtr() == true
-                                         ? (llvm::Type*)util_.intPtrTy
-                                         : (llvm::Type*)util_.intTy);
+  auto var_type = decl.type->IsPtr() == true ? (llvm::Type*)util_.intPtrTy
+                                             : (llvm::Type*)util_.intTy;
+  auto addr = builder_->CreateAlloca(var_type);
   if (decl.init) {
     decl.init->Accept(*this);
     auto val = val_recorder.ValOfPrevExpr();
     builder_->CreateStore(val, addr);
   }
   id_to_val[decl.id] = addr;
+  val_to_type[addr] = var_type;
 }
 
 void LLVMIRGenerator::Visit(const ArrDeclNode& arr_decl) {
@@ -203,8 +204,8 @@ void LLVMIRGenerator::Visit(const FuncDefNode& func_def) {
     }
   }
 
-  auto prototype = llvm::FunctionType::get(util_.intTy, params, false);
-  auto func = llvm::Function::Create(prototype,
+  auto func_type = llvm::FunctionType::get(util_.intTy, params, false);
+  auto func = llvm::Function::Create(func_type,
                                      func_def.id == "main"
                                          ? llvm::Function::ExternalLinkage
                                          : llvm::Function::InternalLinkage,
@@ -220,6 +221,7 @@ void LLVMIRGenerator::Visit(const FuncDefNode& func_def) {
     auto addr = builder_->CreateAlloca(args_iter->getType());
     builder_->CreateStore(args_iter, addr);
     id_to_val.at(parameter->id) = addr;
+    val_to_type[addr] = args_iter->getType();
     ++args_iter;
   }
 
@@ -489,21 +491,32 @@ void LLVMIRGenerator::Visit(const FuncCallExprNode& call_expr) {
     arg_vals.push_back(arg_val);
   }
 
-  if (func->getName() == "__builtin_print") {
-    // builtin_print call
-    auto printf = module_->getFunction("printf");
-    assert(printf);
-    std::vector<llvm::Value*> print_args{};
-    // NOTE: set AllowInternal as true to get internal linkage global variable
-    auto print_format =
-        module_->getGlobalVariable("__builtin_print_format", true);
-    assert(print_format);
-    print_args.push_back(print_format);
-    print_args.insert(print_args.end(), arg_vals.begin(), arg_vals.end());
-    builder_->CreateCall(printf, print_args);
-  } else {
-    auto called_func = module_->getFunction(func->getName());
-    auto return_res = builder_->CreateCall(called_func, arg_vals);
+  call_expr.func_expr->Accept(*this);
+  auto val = val_recorder.ValOfPrevExpr();
+  if (auto func = llvm::dyn_cast<llvm::Function>(val)) {
+    if (func->getName() == "__builtin_print") {
+      // builtin_print call
+      auto printf = module_->getFunction("printf");
+      std::vector<llvm::Value*> print_args{};
+      // NOTE: set AllowInternal as true to get internal linkage global variable
+      auto print_format =
+          module_->getGlobalVariable("__builtin_print_format", true);
+      assert(print_format);
+      print_args.push_back(print_format);
+      print_args.insert(print_args.end(), arg_vals.begin(), arg_vals.end());
+      builder_->CreateCall(printf, print_args);
+    } else {
+      auto called_func = module_->getFunction(func->getName());
+      auto return_res = builder_->CreateCall(called_func, arg_vals);
+      val_recorder.Record(return_res);
+    }
+  } else if (llvm::dyn_cast<llvm::PointerType>(val->getType())) {
+    auto func_ptr = val_to_id_addr.at(val);
+    assert(func_ptr);
+    auto type = val_to_type.at(func_ptr);
+    auto func_type = llvm::dyn_cast<llvm::FunctionType>(type);
+    assert(func_type);
+    auto return_res = builder_->CreateCall(func_type, val, arg_vals);
     val_recorder.Record(return_res);
   }
 }
@@ -657,5 +670,8 @@ void LLVMIRGenerator::Visit(const SimpleAssignmentExprNode& assign_expr) {
   assign_expr.rhs->Accept(*this);
   auto rhs = val_recorder.ValOfPrevExpr();
   builder_->CreateStore(rhs, val_to_id_addr.at(lhs));
+  if (auto func = llvm::dyn_cast<llvm::Function>(rhs)) {
+    val_to_type[val_to_id_addr.at(lhs)] = func->getFunctionType();
+  }
   val_recorder.Record(rhs);
 }
