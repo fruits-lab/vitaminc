@@ -188,6 +188,10 @@ class RecordType : public Type {
   /// @return The type id.
   virtual std::string id()  // NOLINT(readability-identifier-naming)
       const noexcept = 0;
+  /// @return The fields of a record type.
+  virtual const std::vector<std::unique_ptr<Field>>&
+  fields()  // NOLINT(readability-identifier-naming)
+      const noexcept = 0;
   /// @brief Checks if `id` is a member of the record type.
   virtual bool IsMember(const std::string& id) const noexcept = 0;
   /// @return The type of a member in struct or union. The unknown type if the
@@ -214,6 +218,9 @@ class StructType : public RecordType {
   StructType(std::string id, std::vector<std::unique_ptr<Field>> fields)
       : id_{std::move(id)}, fields_{std::move(fields)} {}
 
+  const std::vector<std::unique_ptr<Field>>& fields() const noexcept override {
+    return fields_;
+  }
   std::string id() const noexcept override;
   bool IsMember(const std::string& id) const noexcept override;
   std::unique_ptr<Type> MemberType(
@@ -243,6 +250,9 @@ class UnionType : public RecordType {
   UnionType(std::string id, std::vector<std::unique_ptr<Field>> fields)
       : id_{std::move(id)}, fields_{std::move(fields)} {}
 
+  const std::vector<std::unique_ptr<Field>>& fields() const noexcept override {
+    return fields_;
+  }
   std::string id() const noexcept override;
   bool IsMember(const std::string& id) const noexcept override;
   std::unique_ptr<Type> MemberType(

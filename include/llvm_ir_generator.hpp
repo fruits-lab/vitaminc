@@ -76,8 +76,11 @@ class LLVMIRGenerator : public NonModifyingVisitor {
   llvm::Module* module_;
   /// @brief Handy LLVM types and functions for code generation.
   util::Util util_;
-  /// @brief Get LLVM type from function parameter
+  /// @brief Get LLVM type from function parameter.
   llvm::Type* GetParamType_(const std::unique_ptr<ParamNode>& parameter);
+  /// @brief Get LLVM types from record fields.
+  std::vector<llvm::Type*> GetFieldTypes_(
+      const std::vector<std::unique_ptr<Field>>& fields);
 };
 
 #endif  // LLVM_IR_GENERATOR_HPP_

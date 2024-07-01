@@ -184,7 +184,7 @@ void LLVMIRGenerator::Visit(const ArrDeclNode& arr_decl) {
   }
 }
 
-void LLVMIRGenerator::Visit(const RecordDeclNode& struct_def) {
+void LLVMIRGenerator::Visit(const RecordDeclNode& record_decl) {
   /* Do nothing because this node only declares a type. */
 }
 
@@ -192,7 +192,35 @@ void LLVMIRGenerator::Visit(const FieldNode& field) {
   /* Do nothing because this node only declares a member type in a record. */
 }
 
-void LLVMIRGenerator::Visit(const RecordVarDeclNode& struct_def) {}
+std::vector<llvm::Type*> LLVMIRGenerator::GetFieldTypes_(
+    const std::vector<std::unique_ptr<Field>>& fields) {
+  std::vector<llvm::Type*> field_types;
+  // TODO: support nested record.
+  // TODO: refactor to support multiple data types
+  for (auto& field : fields) {
+    if (field->type->IsPtr()) {
+      field_types.push_back(util_.intPtrTy);
+    } else {
+      field_types.push_back(util_.intTy);
+    }
+  }
+
+  return field_types;
+}
+
+void LLVMIRGenerator::Visit(const RecordVarDeclNode& record_var_decl) {
+  // Define Record fields
+  auto* record_type = dynamic_cast<RecordType*>(record_var_decl.type.get());
+  assert(record_type);
+  auto field_types = GetFieldTypes_(record_type->fields());
+  auto struct_type = llvm::StructType::create(*context_, field_types,
+                                              "struct_" + record_type->id());
+  auto res = builder_->CreateAlloca(struct_type, nullptr);
+
+  assert(res);
+  // Define Struct or Union type
+  // Allocate memory for the struct instance
+}
 
 void LLVMIRGenerator::Visit(const ParamNode& parameter) {
   /* Do nothing */
