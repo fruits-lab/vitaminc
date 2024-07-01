@@ -30,6 +30,11 @@ class LLVMIRUtil {
   /// @brief Get the corresponding LLVM type from our type.
   llvm::Type* GetLLVMType(const std::unique_ptr<Type>& type);
 
+  /// @brief Find the basic block with the same name as `id` within the current
+  /// function.
+  /// @return A pointer to basic block if found. `nullptr` if not found.
+  llvm::BasicBlock* FindBBWithNameOf(const std::string& id);
+
   LLVMIRUtil(std::unique_ptr<llvm::IRBuilder<>>& builder) : builder_{builder} {
     IntType = builder_->getInt32Ty();
     IntPtrType = builder_->getPtrTy();

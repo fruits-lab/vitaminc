@@ -43,6 +43,18 @@ void LLVMIRUtil::CurrBBFallThroughNextBB(llvm::BasicBlock* curr_BB,
   }
 }
 
+llvm::BasicBlock* LLVMIRUtil::FindBBWithNameOf(const std::string& id) {
+  auto func = builder_->GetInsertBlock()->getParent();
+  for (auto BB_iter = func->begin(), BB_end = func->end(); BB_iter != BB_end;
+       ++BB_iter) {
+    if (BB_iter->getName() == id) {
+      return &(*BB_iter);
+    }
+  }
+
+  return nullptr;
+}
+
 llvm::Type* LLVMIRUtil::GetLLVMType(const std::unique_ptr<Type>& type) {
   if (type->IsPtr()) {
     // TODO recursive
