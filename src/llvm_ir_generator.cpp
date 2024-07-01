@@ -87,13 +87,14 @@ auto
                     // as a data member introduces unnecessary dependency.
     = std::map<llvm::Value*, llvm::Value*>{};
 
+// TODO: replaced this with GetType
 auto val_to_type  // NOLINT(cppcoreguidelines-avoid-non-const-global-variables):
                   // Accessible only within this translation unit; declaring
                   // as a data member introduces unnecessary dependency.
     = std::map<llvm::Value*, llvm::Type*>{};
 
-/// @brief Store LLVM Value class at the bottom level of AST node. Upper level
-/// AST node can use the information in Value directly.
+/// @brief Every expression generates a LLVM object that is the subclass of
+/// `llvm::Value`. This object is stored, so we can propagate to later use.
 class PrevValueRecorder {
  public:
   void Record(llvm::Value* val) {
@@ -101,11 +102,12 @@ class PrevValueRecorder {
   }
 
   llvm::Value* ValOfPrevExpr() {
+    assert(prev_val_);
     return prev_val_;
   }
 
  private:
-  llvm::Value* prev_val_;
+  llvm::Value* prev_val_ = nullptr;
 };
 
 auto
@@ -114,17 +116,22 @@ auto
                   // a data member introduces unnecessary dependency.
     = PrevValueRecorder{};
 
-struct LabelViewPair {
+struct LabelViewInfo {
   llvm::BasicBlock* entry;
   llvm::BasicBlock* exit;
+  /// @brief This vector stores every `case` and `default` basic blocks of
+  /// a switch case.
+  /// This first element of a pair is the expression value
+  /// of a case statement.
+  /// This second element of a pair is the label's basic block.
   std::vector<std::pair<llvm::Value*, llvm::BasicBlock*>> cases{};
 };
 
 /// @note Blocks that allows jumping within or out of it should add its labels
-/// to this list
+/// to this list.
 auto
     label_views_of_jumpable_blocks  // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
-    = std::vector<LabelViewPair>{};
+    = std::vector<LabelViewInfo>{};
 
 }  // namespace
 
