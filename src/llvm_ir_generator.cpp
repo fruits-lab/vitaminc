@@ -10,6 +10,7 @@
 
 namespace {
 
+/// @throw `std::runtime_error` if there's unrecognize binary operator
 llvm::Instruction::BinaryOps GetBinaryOperator(BinaryOperator op) {
   switch (op) {
     case BinaryOperator::kAdd:
@@ -30,37 +31,32 @@ llvm::Instruction::BinaryOps GetBinaryOperator(BinaryOperator op) {
       return llvm::BinaryOperator::Or;
     case BinaryOperator::kShl:
       return llvm::BinaryOperator::Shl;
-    // NOTE: Arithmetic shift right (sar) is akin to dividing by a power of two
+    // NOTE: Arithmetic shift right (AShr) is akin to dividing by a power of two
     // for non-negative numbers. For negatives, it's implementation-defined, so
     // we opt for arithmetic shifting.
     case BinaryOperator::kShr:
       return llvm::BinaryOperator::AShr;
     default:
-      // TODO: unreachable
-      return llvm::BinaryOperator::Xor;
+      throw std::runtime_error{"unrecognize binary operator!"};
   }
 }
 
-llvm::CmpInst::Predicate GetCmpOperator(BinaryOperator op) {
+/// @note Comparison operators are not categorized as operator in LLVM. Thus, we
+/// have this helper function to get the predicate of our comparison operator.
+llvm::CmpInst::Predicate GetCmpPredicate(BinaryOperator op) {
   switch (op) {
-    case BinaryOperator::kGt: {
+    case BinaryOperator::kGt:
       return llvm::CmpInst::Predicate::ICMP_SGT;
-    } break;
-    case BinaryOperator::kGte: {
+    case BinaryOperator::kGte:
       return llvm::CmpInst::Predicate::ICMP_SGE;
-    } break;
-    case BinaryOperator::kLt: {
+    case BinaryOperator::kLt:
       return llvm::CmpInst::Predicate::ICMP_SLT;
-    } break;
-    case BinaryOperator::kLte: {
+    case BinaryOperator::kLte:
       return llvm::CmpInst::Predicate::ICMP_SLE;
-    } break;
-    case BinaryOperator::kEq: {
+    case BinaryOperator::kEq:
       return llvm::CmpInst::Predicate::ICMP_EQ;
-    } break;
-    case BinaryOperator::kNeq: {
+    case BinaryOperator::kNeq:
       return llvm::CmpInst::Predicate::ICMP_NE;
-    } break;
     default:
       return llvm::CmpInst::Predicate::BAD_ICMP_PREDICATE;
   }
@@ -73,9 +69,8 @@ bool isCmpInst(BinaryOperator op) {
     case BinaryOperator::kLt:
     case BinaryOperator::kLte:
     case BinaryOperator::kEq:
-    case BinaryOperator::kNeq: {
+    case BinaryOperator::kNeq:
       return true;
-    } break;
     default:
       return false;
   }
@@ -851,7 +846,7 @@ void LLVMIRGenerator::Visit(const BinaryExprNode& bin_expr) {
   } else if (isCmpInst(bin_expr.op)) {
     bin_expr.rhs->Accept(*this);
     auto rhs = val_recorder.ValOfPrevExpr();
-    auto res = builder_->CreateCmp(GetCmpOperator(bin_expr.op), lhs, rhs);
+    auto res = builder_->CreateCmp(GetCmpPredicate(bin_expr.op), lhs, rhs);
     val_recorder.Record(res);
   } else {
     bin_expr.rhs->Accept(*this);
