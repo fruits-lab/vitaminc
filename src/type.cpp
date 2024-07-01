@@ -182,6 +182,17 @@ std::unique_ptr<Type> StructType::MemberType(
   return std::make_unique<PrimType>(PrimitiveType::kUnknown);
 }
 
+std::size_t StructType::MemberIndex(const std::string& id) const {
+  for (auto i = std::size_t{0}, e = fields_.size(); i < e; ++i) {
+    const auto& field = fields_.at(i);
+    if (field->id == id) {
+      return i;
+    }
+  }
+
+  throw std::runtime_error{"member not found in struct!"};
+}
+
 std::size_t StructType::OffsetOf(const std::string& id) const {
   std::size_t offset = 0;
   for (auto i = std::size_t{0}, e = fields_.size(); i < e; ++i) {
@@ -275,6 +286,17 @@ std::unique_ptr<Type> UnionType::MemberType(
   }
 
   return std::make_unique<PrimType>(PrimitiveType::kUnknown);
+}
+
+std::size_t UnionType::MemberIndex(const std::string& id) const {
+  for (auto i = std::size_t{0}, e = fields_.size(); i < e; ++i) {
+    const auto& field = fields_.at(i);
+    if (field->id == id) {
+      return 0;
+    }
+  }
+
+  throw std::runtime_error{"member not found in struct!"};
 }
 
 std::size_t UnionType::OffsetOf(const std::string& id) const {
