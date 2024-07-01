@@ -333,36 +333,36 @@ void LLVMIRGenerator::Visit(const IfStmtNode& if_stmt) {
   if_stmt.predicate->Accept(*this);
   auto predicate_val = val_recorder.ValOfPrevExpr();
   auto func = llvm_util_.CurrFunc();
-  auto then_BB = llvm::BasicBlock::Create(*context_, "if_then", func);
-  auto else_BB = if_stmt.or_else != nullptr
+  auto then_bb = llvm::BasicBlock::Create(*context_, "if_then", func);
+  auto else_bb = if_stmt.or_else != nullptr
                      ? llvm::BasicBlock::Create(*context_, "if_else", func)
                      : nullptr;
-  auto end_BB = llvm::BasicBlock::Create(*context_, "if_end", func);
+  auto end_bb = llvm::BasicBlock::Create(*context_, "if_end", func);
 
   auto zero = llvm::ConstantInt::get(predicate_val->getType(), 0, true);
   auto predicate = builder_->CreateICmpNE(predicate_val, zero);
-  builder_->CreateCondBr(predicate, then_BB,
-                         if_stmt.or_else != nullptr ? else_BB : end_BB);
-  builder_->SetInsertPoint(then_BB);
+  builder_->CreateCondBr(predicate, then_bb,
+                         if_stmt.or_else != nullptr ? else_bb : end_bb);
+  builder_->SetInsertPoint(then_bb);
   if_stmt.then->Accept(*this);
-  llvm_util_.CreateBrIfNoBrBefore(end_BB);
+  llvm_util_.CreateBrIfNoBrBefore(end_bb);
 
   if (if_stmt.or_else) {
-    builder_->SetInsertPoint(else_BB);
+    builder_->SetInsertPoint(else_bb);
     if_stmt.or_else->Accept(*this);
-    builder_->CreateBr(end_BB);
+    builder_->CreateBr(end_bb);
   }
-  builder_->SetInsertPoint(end_BB);
+  builder_->SetInsertPoint(end_bb);
 }
 
 void LLVMIRGenerator::Visit(const WhileStmtNode& while_stmt) {
   auto label_prefix = std::string{while_stmt.is_do_while ? "do_" : "while_"};
   auto func = llvm_util_.CurrFunc();
-  auto body_BB =
+  auto body_bb =
       llvm::BasicBlock::Create(*context_, label_prefix + "body", func);
-  auto pred_BB =
+  auto pred_bb =
       llvm::BasicBlock::Create(*context_, label_prefix + "pred", func);
-  auto end_BB = llvm::BasicBlock::Create(*context_, label_prefix + "end", func);
+  auto end_bb = llvm::BasicBlock::Create(*context_, label_prefix + "end", func);
 
   // A while statement's predicate is evaluated "before" the body statement,
   // whereas a do-while statement's predicate is evaluated "after" the body
@@ -370,58 +370,58 @@ void LLVMIRGenerator::Visit(const WhileStmtNode& while_stmt) {
   // unconditional jump at the end of the body to jump back to the predicate.
   // For a do-while statement, it only needs one conditional jump.
   if (!while_stmt.is_do_while) {
-    builder_->CreateBr(pred_BB);
-    builder_->SetInsertPoint(pred_BB);
+    builder_->CreateBr(pred_bb);
+    builder_->SetInsertPoint(pred_bb);
     while_stmt.predicate->Accept(*this);
     auto predicate = val_recorder.ValOfPrevExpr();
-    builder_->CreateCondBr(predicate, body_BB, end_BB);
+    builder_->CreateCondBr(predicate, body_bb, end_bb);
   }
 
   // Connect entry basic block to body basic block.
   if (while_stmt.is_do_while) {
-    builder_->CreateBr(body_BB);
+    builder_->CreateBr(body_bb);
   }
-  builder_->SetInsertPoint(body_BB);
-  label_views_of_jumpable_blocks.push_back({.entry = pred_BB, .exit = end_BB});
+  builder_->SetInsertPoint(body_bb);
+  label_views_of_jumpable_blocks.push_back({.entry = pred_bb, .exit = end_bb});
   while_stmt.loop_body->Accept(*this);
   label_views_of_jumpable_blocks.pop_back();
-  llvm_util_.CreateBrIfNoBrBefore(pred_BB);
+  llvm_util_.CreateBrIfNoBrBefore(pred_bb);
 
   if (while_stmt.is_do_while) {
-    builder_->SetInsertPoint(pred_BB);
+    builder_->SetInsertPoint(pred_bb);
     while_stmt.predicate->Accept(*this);
     auto predicate = val_recorder.ValOfPrevExpr();
-    builder_->CreateCondBr(predicate, body_BB, end_BB);
+    builder_->CreateCondBr(predicate, body_bb, end_bb);
   }
-  builder_->SetInsertPoint(end_BB);
+  builder_->SetInsertPoint(end_bb);
 }
 
 void LLVMIRGenerator::Visit(const ForStmtNode& for_stmt) {
   auto func = llvm_util_.CurrFunc();
-  auto pred_BB = llvm::BasicBlock::Create(*context_, "for_pred", func);
-  auto body_BB = llvm::BasicBlock::Create(*context_, "for_body", func);
-  auto step_BB = llvm::BasicBlock::Create(*context_, "for_step", func);
-  auto end_BB = llvm::BasicBlock::Create(*context_, "for_end", func);
+  auto pred_bb = llvm::BasicBlock::Create(*context_, "for_pred", func);
+  auto body_bb = llvm::BasicBlock::Create(*context_, "for_body", func);
+  auto step_bb = llvm::BasicBlock::Create(*context_, "for_step", func);
+  auto end_bb = llvm::BasicBlock::Create(*context_, "for_end", func);
 
   for_stmt.loop_init->Accept(*this);
-  builder_->CreateBr(pred_BB);
-  builder_->SetInsertPoint(pred_BB);
+  builder_->CreateBr(pred_bb);
+  builder_->SetInsertPoint(pred_bb);
   for_stmt.predicate->Accept(*this);
   if (!dynamic_cast<NullExprNode*>((for_stmt.predicate).get())) {
     auto predicate = val_recorder.ValOfPrevExpr();
-    builder_->CreateCondBr(predicate, body_BB, end_BB);
+    builder_->CreateCondBr(predicate, body_bb, end_bb);
   }
 
-  builder_->SetInsertPoint(body_BB);
-  label_views_of_jumpable_blocks.push_back({.entry = step_BB, .exit = end_BB});
+  builder_->SetInsertPoint(body_bb);
+  label_views_of_jumpable_blocks.push_back({.entry = step_bb, .exit = end_bb});
   for_stmt.loop_body->Accept(*this);
   label_views_of_jumpable_blocks.pop_back();
-  llvm_util_.CreateBrIfNoBrBefore(step_BB);
+  llvm_util_.CreateBrIfNoBrBefore(step_bb);
 
-  builder_->SetInsertPoint(step_BB);
+  builder_->SetInsertPoint(step_bb);
   for_stmt.step->Accept(*this);
-  builder_->CreateBr(pred_BB);
-  builder_->SetInsertPoint(end_BB);
+  builder_->CreateBr(pred_bb);
+  builder_->SetInsertPoint(end_bb);
 }
 
 void LLVMIRGenerator::Visit(const ReturnStmtNode& ret_stmt) {
@@ -431,14 +431,14 @@ void LLVMIRGenerator::Visit(const ReturnStmtNode& ret_stmt) {
 }
 
 void LLVMIRGenerator::Visit(const GotoStmtNode& goto_stmt) {
-  llvm::BasicBlock* target_BB = llvm_util_.FindBBWithNameOf(goto_stmt.label);
+  llvm::BasicBlock* target_bb = llvm_util_.FindBBWithNameOf(goto_stmt.label);
 
-  if (target_BB) {
-    builder_->CreateBr(target_BB);
+  if (target_bb) {
+    builder_->CreateBr(target_bb);
   } else {
-    auto label_BB = llvm::BasicBlock::Create(*context_, goto_stmt.label,
+    auto label_bb = llvm::BasicBlock::Create(*context_, goto_stmt.label,
                                              llvm_util_.CurrFunc());
-    builder_->CreateBr(label_BB);
+    builder_->CreateBr(label_bb);
   }
 }
 
@@ -455,48 +455,48 @@ void LLVMIRGenerator::Visit(const ContinueStmtNode& continue_stmt) {
 void LLVMIRGenerator::Visit(const SwitchStmtNode& switch_stmt) {
   switch_stmt.ctrl->Accept(*this);
   auto ctrl = val_recorder.ValOfPrevExpr();
-  auto end_BB =
+  auto end_bb =
       llvm::BasicBlock::Create(*context_, "switch_end", llvm_util_.CurrFunc());
   auto sw = builder_->CreateSwitch(ctrl, nullptr);
-  label_views_of_jumpable_blocks.push_back({.entry = end_BB, .exit = end_BB});
+  label_views_of_jumpable_blocks.push_back({.entry = end_bb, .exit = end_bb});
   switch_stmt.stmt->Accept(*this);
   // Update cases and default label.
   auto switch_infos = label_views_of_jumpable_blocks.back();
   for (auto i = std::size_t{0}, e = switch_infos.cases.size(); i < e; ++i) {
     auto case_info = switch_infos.cases.at(i);
-    auto curr_BB = case_info.second;
+    auto curr_bb = case_info.second;
     if (!case_info.first) {  // default case
-      sw->setDefaultDest(curr_BB);
+      sw->setDefaultDest(curr_bb);
     } else {
       auto const_val = llvm::dyn_cast<llvm::ConstantInt>(case_info.first);
       assert(const_val);
-      sw->addCase(const_val, curr_BB);
+      sw->addCase(const_val, curr_bb);
     }
 
     // NOTE: If BB has no terminator and has a next BB, add one branch to next
     // BB. If BB is the last BB, then branch to switch exit.
     if (i + 1 != e) {
-      auto next_BB = switch_infos.cases.at(i + 1).second;
-      llvm_util_.CurrBBFallThroughNextBB(curr_BB, next_BB);
+      auto next_bb = switch_infos.cases.at(i + 1).second;
+      llvm_util_.CurrBBFallThroughNextBB(curr_bb, next_bb);
     } else {
-      llvm_util_.CurrBBFallThroughNextBB(curr_BB, switch_infos.exit);
+      llvm_util_.CurrBBFallThroughNextBB(curr_bb, switch_infos.exit);
     }
   }
   label_views_of_jumpable_blocks.pop_back();
-  llvm_util_.CreateBrIfNoBrBefore(end_BB);
-  builder_->SetInsertPoint(end_BB);
+  llvm_util_.CreateBrIfNoBrBefore(end_bb);
+  builder_->SetInsertPoint(end_bb);
 }
 
 void LLVMIRGenerator::Visit(const IdLabeledStmtNode& id_labeled_stmt) {
-  llvm::BasicBlock* target_BB =
+  llvm::BasicBlock* target_bb =
       llvm_util_.FindBBWithNameOf(id_labeled_stmt.label);
 
-  if (!target_BB) {
-    auto label_BB = llvm::BasicBlock::Create(*context_, id_labeled_stmt.label,
+  if (!target_bb) {
+    auto label_bb = llvm::BasicBlock::Create(*context_, id_labeled_stmt.label,
                                              llvm_util_.CurrFunc());
-    builder_->SetInsertPoint(label_BB);
+    builder_->SetInsertPoint(label_bb);
   } else {
-    builder_->SetInsertPoint(target_BB);
+    builder_->SetInsertPoint(target_bb);
   }
 
   id_labeled_stmt.stmt->Accept(*this);
@@ -508,24 +508,24 @@ void LLVMIRGenerator::Visit(const CaseStmtNode& case_stmt) {
   auto int_expr = dynamic_cast<IntConstExprNode*>(case_stmt.expr.get());
   assert(int_expr);
 
-  auto case_BB = llvm::BasicBlock::Create(
+  auto case_bb = llvm::BasicBlock::Create(
       *context_, "case" + std::to_string(int_expr->val), llvm_util_.CurrFunc());
 
-  builder_->SetInsertPoint(case_BB);
+  builder_->SetInsertPoint(case_bb);
   case_stmt.stmt->Accept(*this);
 
   assert(!label_views_of_jumpable_blocks.empty());
-  label_views_of_jumpable_blocks.back().cases.push_back({val, case_BB});
+  label_views_of_jumpable_blocks.back().cases.push_back({val, case_bb});
 }
 
 void LLVMIRGenerator::Visit(const DefaultStmtNode& default_stmt) {
-  auto default_BB =
+  auto default_bb =
       llvm::BasicBlock::Create(*context_, "default", llvm_util_.CurrFunc());
-  builder_->SetInsertPoint(default_BB);
+  builder_->SetInsertPoint(default_bb);
   default_stmt.stmt->Accept(*this);
 
   assert(!label_views_of_jumpable_blocks.empty());
-  label_views_of_jumpable_blocks.back().cases.push_back({nullptr, default_BB});
+  label_views_of_jumpable_blocks.back().cases.push_back({nullptr, default_bb});
 }
 
 void LLVMIRGenerator::Visit(const ExprStmtNode& expr_stmt) {
@@ -601,30 +601,30 @@ void LLVMIRGenerator::Visit(const CondExprNode& cond_expr) {
   // 0; the third operand is evaluated only if the first compares equal to
   // 0; the result is the value of the second or third operand (whichever is
   // evaluated).
-  auto second_BB = llvm::BasicBlock::Create(*context_, "cond_second", func);
-  auto third_BB = llvm::BasicBlock::Create(*context_, "cond_third", func);
-  auto end_BB = llvm::BasicBlock::Create(*context_, "cond_end", func);
+  auto second_bb = llvm::BasicBlock::Create(*context_, "cond_second", func);
+  auto third_bb = llvm::BasicBlock::Create(*context_, "cond_third", func);
+  auto end_bb = llvm::BasicBlock::Create(*context_, "cond_end", func);
 
   auto zero = llvm::ConstantInt::get(predicate_val->getType(), 0, true);
   auto predicate = builder_->CreateICmpNE(predicate_val, zero);
-  builder_->CreateCondBr(predicate, second_BB, third_BB);
+  builder_->CreateCondBr(predicate, second_bb, third_bb);
 
-  builder_->SetInsertPoint(second_BB);
+  builder_->SetInsertPoint(second_bb);
   cond_expr.then->Accept(*this);
   auto second_val = val_recorder.ValOfPrevExpr();
-  builder_->CreateBr(end_BB);
+  builder_->CreateBr(end_bb);
 
-  builder_->SetInsertPoint(third_BB);
+  builder_->SetInsertPoint(third_bb);
   cond_expr.or_else->Accept(*this);
   auto third_val = val_recorder.ValOfPrevExpr();
-  builder_->CreateBr(end_BB);
+  builder_->CreateBr(end_bb);
 
-  builder_->SetInsertPoint(end_BB);
+  builder_->SetInsertPoint(end_bb);
   // NOTE: Since we do not know which operand will be executed in runtime, we
   // create a Phi node to merge both values.
   auto phi_res = builder_->CreatePHI(llvm_util_.IntType, 2);
-  phi_res->addIncoming(second_val, second_BB);
-  phi_res->addIncoming(third_val, third_BB);
+  phi_res->addIncoming(second_val, second_bb);
+  phi_res->addIncoming(third_val, third_bb);
   val_recorder.Record(phi_res);
 }
 
@@ -785,32 +785,32 @@ void LLVMIRGenerator::Visit(const BinaryExprNode& bin_expr) {
   if (bin_expr.op == BinaryOperator::kLand ||
       bin_expr.op == BinaryOperator::kLor) {
     auto func = llvm_util_.CurrFunc();
-    auto rhs_BB = llvm::BasicBlock::Create(*context_, "logic_rhs", func);
-    auto short_circuit_BB =
+    auto rhs_bb = llvm::BasicBlock::Create(*context_, "logic_rhs", func);
+    auto short_circuit_bb =
         llvm::BasicBlock::Create(*context_, "short_circuit", func);
-    auto end_BB = llvm::BasicBlock::Create(*context_, "logic_end", func);
+    auto end_bb = llvm::BasicBlock::Create(*context_, "logic_end", func);
     auto zero = llvm::ConstantInt::get(lhs->getType(), 0, true);
     auto lhs_res = builder_->CreateCmp(bin_expr.op == BinaryOperator::kLand
                                            ? llvm::CmpInst::Predicate::ICMP_NE
                                            : llvm::CmpInst::Predicate::ICMP_EQ,
                                        lhs, zero);
-    builder_->CreateCondBr(lhs_res, rhs_BB, short_circuit_BB);
-    builder_->SetInsertPoint(rhs_BB);
+    builder_->CreateCondBr(lhs_res, rhs_bb, short_circuit_bb);
+    builder_->SetInsertPoint(rhs_bb);
     bin_expr.rhs->Accept(*this);
     auto res = val_recorder.ValOfPrevExpr();
     auto rhs_res = builder_->CreateICmpNE(res, zero);
-    builder_->CreateBr(end_BB);
-    builder_->SetInsertPoint(short_circuit_BB);
+    builder_->CreateBr(end_bb);
+    builder_->SetInsertPoint(short_circuit_bb);
     auto false_val = llvm::ConstantInt::getFalse(*context_);
     auto true_val = llvm::ConstantInt::getTrue(*context_);
     auto short_circuit_res =
         bin_expr.op == BinaryOperator::kLand ? false_val : true_val;
-    builder_->CreateBr(end_BB);
-    builder_->SetInsertPoint(end_BB);
+    builder_->CreateBr(end_bb);
+    builder_->SetInsertPoint(end_bb);
     // Merge results from rhs and short_circuit_res.
     auto phi_res = builder_->CreatePHI(builder_->getInt1Ty(), 2);
-    phi_res->addIncoming(rhs_res, rhs_BB);
-    phi_res->addIncoming(short_circuit_res, short_circuit_BB);
+    phi_res->addIncoming(rhs_res, rhs_bb);
+    phi_res->addIncoming(short_circuit_res, short_circuit_bb);
     val_recorder.Record(phi_res);
   } else if (isCmpInst(bin_expr.op)) {
     bin_expr.rhs->Accept(*this);

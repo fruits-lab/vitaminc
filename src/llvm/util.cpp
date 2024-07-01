@@ -12,10 +12,10 @@
 
 using namespace util;
 
-void LLVMIRUtil::CreateBrIfNoBrBefore(llvm::BasicBlock* next_BB) {
-  auto BB = builder_->GetInsertBlock();
+void LLVMIRUtil::CreateBrIfNoBrBefore(llvm::BasicBlock* next_bb) {
+  auto bb = builder_->GetInsertBlock();
   bool has_terminator = false;
-  for (auto it = BB->begin(); it != BB->end();) {
+  for (auto it = bb->begin(); it != bb->end();) {
     if (it->isTerminator()) {
       has_terminator = true;
       break;
@@ -25,15 +25,15 @@ void LLVMIRUtil::CreateBrIfNoBrBefore(llvm::BasicBlock* next_BB) {
   }
 
   if (!has_terminator) {
-    builder_->CreateBr(next_BB);
+    builder_->CreateBr(next_bb);
   }
 }
 
-void LLVMIRUtil::CurrBBFallThroughNextBB(llvm::BasicBlock* curr_BB,
-                                         llvm::BasicBlock* next_BB) {
-  auto BB = curr_BB;
+void LLVMIRUtil::CurrBBFallThroughNextBB(llvm::BasicBlock* curr_bb,
+                                         llvm::BasicBlock* next_bb) {
+  auto bb = curr_bb;
   bool has_terminator = false;
-  for (auto it = BB->begin(); it != BB->end();) {
+  for (auto it = bb->begin(); it != bb->end();) {
     if (it->isTerminator()) {
       has_terminator = true;
       break;
@@ -43,17 +43,17 @@ void LLVMIRUtil::CurrBBFallThroughNextBB(llvm::BasicBlock* curr_BB,
   }
 
   if (!has_terminator) {
-    builder_->SetInsertPoint(curr_BB);
-    builder_->CreateBr(next_BB);
+    builder_->SetInsertPoint(curr_bb);
+    builder_->CreateBr(next_bb);
   }
 }
 
 llvm::BasicBlock* LLVMIRUtil::FindBBWithNameOf(const std::string& id) {
   auto func = builder_->GetInsertBlock()->getParent();
-  for (auto BB_iter = func->begin(), BB_end = func->end(); BB_iter != BB_end;
-       ++BB_iter) {
-    if (BB_iter->getName() == id) {
-      return &(*BB_iter);
+  for (auto bb_iter = func->begin(), bb_end = func->end(); bb_iter != bb_end;
+       ++bb_iter) {
+    if (bb_iter->getName() == id) {
+      return &(*bb_iter);
     }
   }
 
