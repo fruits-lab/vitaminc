@@ -55,6 +55,10 @@ llvm::BasicBlock* LLVMIRUtil::FindBBWithNameOf(const std::string& id) {
   return nullptr;
 }
 
+llvm::Function* LLVMIRUtil::CurrFunc() {
+  return builder_->GetInsertBlock()->getParent();
+}
+
 llvm::Type* LLVMIRUtil::GetLLVMType(const std::unique_ptr<Type>& type) {
   if (type->IsPtr()) {
     // TODO recursive

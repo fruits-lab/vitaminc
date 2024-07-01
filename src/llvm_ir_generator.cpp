@@ -330,7 +330,7 @@ void LLVMIRGenerator::Visit(const TransUnitNode& trans_unit) {
 void LLVMIRGenerator::Visit(const IfStmtNode& if_stmt) {
   if_stmt.predicate->Accept(*this);
   auto predicate_val = val_recorder.ValOfPrevExpr();
-  auto func = builder_->GetInsertBlock()->getParent();
+  auto func = llvm_util_.CurrFunc();
   auto then_BB = llvm::BasicBlock::Create(*context_, "if_then", func);
   auto else_BB = if_stmt.or_else != nullptr
                      ? llvm::BasicBlock::Create(*context_, "if_else", func)
@@ -355,7 +355,7 @@ void LLVMIRGenerator::Visit(const IfStmtNode& if_stmt) {
 
 void LLVMIRGenerator::Visit(const WhileStmtNode& while_stmt) {
   auto label_prefix = std::string{while_stmt.is_do_while ? "do_" : "while_"};
-  auto func = builder_->GetInsertBlock()->getParent();
+  auto func = llvm_util_.CurrFunc();
   auto body_BB =
       llvm::BasicBlock::Create(*context_, label_prefix + "body", func);
   auto pred_BB =
@@ -395,7 +395,7 @@ void LLVMIRGenerator::Visit(const WhileStmtNode& while_stmt) {
 }
 
 void LLVMIRGenerator::Visit(const ForStmtNode& for_stmt) {
-  auto func = builder_->GetInsertBlock()->getParent();
+  auto func = llvm_util_.CurrFunc();
   auto pred_BB = llvm::BasicBlock::Create(*context_, "for_pred", func);
   auto body_BB = llvm::BasicBlock::Create(*context_, "for_body", func);
   auto step_BB = llvm::BasicBlock::Create(*context_, "for_step", func);
@@ -434,8 +434,8 @@ void LLVMIRGenerator::Visit(const GotoStmtNode& goto_stmt) {
   if (target_BB) {
     builder_->CreateBr(target_BB);
   } else {
-    auto label_BB = llvm::BasicBlock::Create(
-        *context_, goto_stmt.label, builder_->GetInsertBlock()->getParent());
+    auto label_BB = llvm::BasicBlock::Create(*context_, goto_stmt.label,
+                                             llvm_util_.CurrFunc());
     builder_->CreateBr(label_BB);
   }
 }
@@ -453,13 +453,12 @@ void LLVMIRGenerator::Visit(const ContinueStmtNode& continue_stmt) {
 void LLVMIRGenerator::Visit(const SwitchStmtNode& switch_stmt) {
   switch_stmt.ctrl->Accept(*this);
   auto ctrl = val_recorder.ValOfPrevExpr();
-
-  auto func = builder_->GetInsertBlock()->getParent();
-  auto end_BB = llvm::BasicBlock::Create(*context_, "switch_end", func);
+  auto end_BB =
+      llvm::BasicBlock::Create(*context_, "switch_end", llvm_util_.CurrFunc());
   auto sw = builder_->CreateSwitch(ctrl, nullptr);
   label_views_of_jumpable_blocks.push_back({.entry = end_BB, .exit = end_BB});
   switch_stmt.stmt->Accept(*this);
-  // Update cases and default
+  // Update cases and default label.
   auto switch_infos = label_views_of_jumpable_blocks.back();
   for (auto i = std::size_t{0}, e = switch_infos.cases.size(); i < e; ++i) {
     auto case_info = switch_infos.cases.at(i);
@@ -472,8 +471,8 @@ void LLVMIRGenerator::Visit(const SwitchStmtNode& switch_stmt) {
       sw->addCase(const_val, curr_BB);
     }
 
-    // NOTE: if BB has no terminator, add one branch to next BB
-    // if BB is the last BB, then branch to switch_infos.exit
+    // NOTE: If BB has no terminator and has a next BB, add one branch to next
+    // BB. If BB is the last BB, then branch to switch exit.
     if (i + 1 != e) {
       auto next_BB = switch_infos.cases.at(i + 1).second;
       llvm_util_.CurrBBFallThroughNextBB(curr_BB, next_BB);
@@ -491,9 +490,8 @@ void LLVMIRGenerator::Visit(const IdLabeledStmtNode& id_labeled_stmt) {
       llvm_util_.FindBBWithNameOf(id_labeled_stmt.label);
 
   if (!target_BB) {
-    auto label_BB =
-        llvm::BasicBlock::Create(*context_, id_labeled_stmt.label,
-                                 builder_->GetInsertBlock()->getParent());
+    auto label_BB = llvm::BasicBlock::Create(*context_, id_labeled_stmt.label,
+                                             llvm_util_.CurrFunc());
     builder_->SetInsertPoint(label_BB);
   } else {
     builder_->SetInsertPoint(target_BB);
@@ -508,9 +506,8 @@ void LLVMIRGenerator::Visit(const CaseStmtNode& case_stmt) {
   auto int_expr = dynamic_cast<IntConstExprNode*>(case_stmt.expr.get());
   assert(int_expr);
 
-  auto func = builder_->GetInsertBlock()->getParent();
   auto case_BB = llvm::BasicBlock::Create(
-      *context_, "case" + std::to_string(int_expr->val), func);
+      *context_, "case" + std::to_string(int_expr->val), llvm_util_.CurrFunc());
 
   builder_->SetInsertPoint(case_BB);
   case_stmt.stmt->Accept(*this);
@@ -520,8 +517,8 @@ void LLVMIRGenerator::Visit(const CaseStmtNode& case_stmt) {
 }
 
 void LLVMIRGenerator::Visit(const DefaultStmtNode& default_stmt) {
-  auto func = builder_->GetInsertBlock()->getParent();
-  auto default_BB = llvm::BasicBlock::Create(*context_, "default", func);
+  auto default_BB =
+      llvm::BasicBlock::Create(*context_, "default", llvm_util_.CurrFunc());
   builder_->SetInsertPoint(default_BB);
   default_stmt.stmt->Accept(*this);
 
@@ -597,7 +594,7 @@ void LLVMIRGenerator::Visit(const ArrSubExprNode& arr_sub_expr) {
 void LLVMIRGenerator::Visit(const CondExprNode& cond_expr) {
   cond_expr.predicate->Accept(*this);
   auto predicate_val = val_recorder.ValOfPrevExpr();
-  auto func = builder_->GetInsertBlock()->getParent();
+  auto func = llvm_util_.CurrFunc();
   // The second operand is evaluated only if the first compares unequal to
   // 0; the third operand is evaluated only if the first compares equal to
   // 0; the result is the value of the second or third operand (whichever is
@@ -784,7 +781,7 @@ void LLVMIRGenerator::Visit(const BinaryExprNode& bin_expr) {
   if (bin_expr.op == BinaryOperator::kLand ||
       bin_expr.op == BinaryOperator::kLor) {
     // Get the current function we are in.
-    auto func = builder_->GetInsertBlock()->getParent();
+    auto func = llvm_util_.CurrFunc();
     auto rhs_BB = llvm::BasicBlock::Create(*context_, "logic_rhs", func);
     auto short_circuit_BB =
         llvm::BasicBlock::Create(*context_, "short_circuit", func);
