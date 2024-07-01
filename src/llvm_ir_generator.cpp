@@ -157,14 +157,12 @@ void LLVMIRGenerator::Visit(const VarDeclNode& decl) {
 }
 
 void LLVMIRGenerator::Visit(const ArrDeclNode& arr_decl) {
-  auto arr_decl_type = dynamic_cast<ArrType*>((arr_decl.type).get());
-  auto arr_type = llvm::ArrayType::get(
-      llvm_util_.IntType,
-      arr_decl_type->size() / arr_decl_type->element_type().size());
+  auto arr_type = llvm_util_.GetLLVMType(arr_decl.type);
   auto base_addr = builder_->CreateAlloca(arr_type, nullptr);
   id_to_val[arr_decl.id] = base_addr;
   val_to_type[base_addr] = arr_type;
 
+  auto arr_decl_type = dynamic_cast<ArrType*>(arr_decl.type.get());
   for (auto i = std::size_t{0}, e = arr_decl_type->len(); i < e; ++i) {
     if (i < arr_decl.init_list.size()) {
       auto& arr_init = arr_decl.init_list.at(i);
@@ -193,36 +191,10 @@ void LLVMIRGenerator::Visit(const FieldNode& field) {
   /* Do nothing because this node only declares a member type in a record. */
 }
 
-std::vector<llvm::Type*> LLVMIRGenerator::GetFieldTypes_(
-    const std::vector<std::unique_ptr<Field>>& fields) {
-  std::vector<llvm::Type*> field_types;
-  // TODO: support nested record.
-  // TODO: refactor to support multiple data types
-  for (auto& field : fields) {
-    if (field->type->IsPtr()) {
-      field_types.push_back(llvm_util_.IntPtrType);
-    } else {
-      field_types.push_back(llvm_util_.IntType);
-    }
-  }
-
-  return field_types;
-}
-
 void LLVMIRGenerator::Visit(const RecordVarDeclNode& record_var_decl) {
-  // Define Record fields
   auto* record_type = dynamic_cast<RecordType*>(record_var_decl.type.get());
   assert(record_type);
-  auto field_types = GetFieldTypes_(record_type->fields());
-  std::string record_prefix = "";
-  if (record_type->IsStruct()) {
-    record_prefix += "struct_";
-  } else {
-    record_prefix += "union_";
-  }
-
-  auto type = llvm::StructType::create(*context_, field_types,
-                                       record_prefix + record_type->id());
+  auto type = llvm_util_.GetLLVMType(record_var_decl.type);
   auto base_addr = builder_->CreateAlloca(type, nullptr);
   id_to_val[record_var_decl.id] = base_addr;
   val_to_type[base_addr] = type;
