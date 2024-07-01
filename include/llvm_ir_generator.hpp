@@ -59,7 +59,7 @@ class LLVMIRGenerator : public NonModifyingVisitor {
         context_{std::make_unique<llvm::LLVMContext>()},
         builder_{std::make_unique<llvm::IRBuilder<>>(*context_)},
         module_{std::make_unique<llvm::Module>(filename, *context_)},
-        util_{util::Util(builder_)} {}
+        llvm_util_{util::LLVMIRUtil(builder_)} {}
 
   /// @brief Print LLVM IR to output_.
   void PrintIR() {
@@ -78,7 +78,7 @@ class LLVMIRGenerator : public NonModifyingVisitor {
   /// @brief Stores global variables, function lists, and the constructed IR.
   std::unique_ptr<llvm::Module> module_;
   /// @brief Handy LLVM types and functions for code generation.
-  util::Util util_;
+  util::LLVMIRUtil llvm_util_;
   /// @brief Get LLVM type from function parameter.
   llvm::Type* GetParamType_(const std::unique_ptr<ParamNode>& parameter);
   /// @brief Get LLVM types from record fields.
