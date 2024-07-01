@@ -27,13 +27,18 @@ class LLVMIRUtil {
   void CurrBBFallThroughNextBB(llvm::BasicBlock* curr_BB,
                                llvm::BasicBlock* next_BB);
 
-  /// @brief Get the corresponding LLVM type from our type.
-  llvm::Type* GetLLVMType(const std::unique_ptr<Type>& type);
-
   /// @brief Find the basic block with the same name as `id` within the current
   /// function.
+  /// @param id The name of the target basic block.
   /// @return A pointer to basic block if found. `nullptr` if not found.
   llvm::BasicBlock* FindBBWithNameOf(const std::string& id);
+
+  /// @brief Get the current function.
+  /// @return A pointer to the current function.
+  llvm::Function* CurrFunc();
+
+  /// @brief Get the corresponding LLVM type from our type.
+  llvm::Type* GetLLVMType(const std::unique_ptr<Type>& type);
 
   LLVMIRUtil(std::unique_ptr<llvm::IRBuilder<>>& builder) : builder_{builder} {
     IntType = builder_->getInt32Ty();
