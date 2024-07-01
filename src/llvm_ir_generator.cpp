@@ -142,9 +142,7 @@ void LLVMIRGenerator::Visit(const DeclStmtNode& decl_stmt) {
 }
 
 void LLVMIRGenerator::Visit(const VarDeclNode& decl) {
-  auto var_type = decl.type->IsPtr() == true
-                      ? (llvm::Type*)llvm_util_.IntPtrType
-                      : (llvm::Type*)llvm_util_.IntType;
+  auto var_type = llvm_util_.GetLLVMType(decl.type);
   auto addr = builder_->CreateAlloca(var_type);
   if (decl.init) {
     decl.init->Accept(*this);

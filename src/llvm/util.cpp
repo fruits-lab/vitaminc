@@ -1,6 +1,7 @@
 #include "llvm/util.hpp"
 
 #include <llvm/IR/IRBuilder.h>
+#include <llvm/IR/Type.h>
 
 #include "type.hpp"
 
@@ -40,4 +41,12 @@ void LLVMIRUtil::CurrBBFallThroughNextBB(llvm::BasicBlock* curr_BB,
     builder_->SetInsertPoint(curr_BB);
     builder_->CreateBr(next_BB);
   }
+}
+
+llvm::Type* LLVMIRUtil::GetLLVMType(const std::unique_ptr<Type>& type) {
+  if (type->IsPtr()) {
+    return IntPtrType;
+  }
+
+  return IntType;
 }

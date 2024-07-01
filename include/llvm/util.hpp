@@ -2,6 +2,7 @@
 #define LLVM_UTIL_HPP_
 
 #include <llvm/IR/IRBuilder.h>
+#include <llvm/IR/Type.h>
 
 #include "type.hpp"
 
@@ -25,6 +26,9 @@ class LLVMIRUtil {
   /// @brief Create a branch instruction to the next basic block.
   void CurrBBFallThroughNextBB(llvm::BasicBlock* curr_BB,
                                llvm::BasicBlock* next_BB);
+
+  /// @brief Get the corresponding LLVM type from our type.
+  llvm::Type* GetLLVMType(const std::unique_ptr<Type>& type);
 
   LLVMIRUtil(std::unique_ptr<llvm::IRBuilder<>>& builder) : builder_{builder} {
     IntType = builder_->getInt32Ty();
