@@ -312,6 +312,7 @@ void LLVMIRGenerator::Visit(const TransUnitNode& trans_unit) {
   llvm::Function::Create(builtin_print, llvm::Function::ExternalLinkage,
                          "__builtin_print", *module_);
 
+  // Generate printf function for LLVM interpreter.
   auto args =
       llvm::ArrayRef<llvm::Type*>{llvm_util_.IntPtrType, llvm_util_.IntType};
   auto printf = llvm::FunctionType::get(llvm_util_.IntType, args, false);
@@ -382,7 +383,7 @@ void LLVMIRGenerator::Visit(const WhileStmtNode& while_stmt) {
   label_views_of_jumpable_blocks.push_back({.entry = pred_BB, .exit = end_BB});
   while_stmt.loop_body->Accept(*this);
   label_views_of_jumpable_blocks.pop_back();
-  builder_->CreateBr(pred_BB);
+  llvm_util_.CreateBrIfNoBrBefore(pred_BB);
 
   if (while_stmt.is_do_while) {
     builder_->SetInsertPoint(pred_BB);
@@ -410,11 +411,10 @@ void LLVMIRGenerator::Visit(const ForStmtNode& for_stmt) {
   }
 
   builder_->SetInsertPoint(body_BB);
-  // TODO: break, continue label
   label_views_of_jumpable_blocks.push_back({.entry = step_BB, .exit = end_BB});
   for_stmt.loop_body->Accept(*this);
   label_views_of_jumpable_blocks.pop_back();
-  builder_->CreateBr(step_BB);
+  llvm_util_.CreateBrIfNoBrBefore(step_BB);
 
   builder_->SetInsertPoint(step_BB);
   for_stmt.step->Accept(*this);
@@ -429,21 +429,13 @@ void LLVMIRGenerator::Visit(const ReturnStmtNode& ret_stmt) {
 }
 
 void LLVMIRGenerator::Visit(const GotoStmtNode& goto_stmt) {
-  auto func = builder_->GetInsertBlock()->getParent();
-  llvm::BasicBlock* target_BB = nullptr;
-  // TODO: refactor
-  for (auto b = func->begin(), be = func->end(); b != be; ++b) {
-    auto& BB = b;
-    if (BB->getName() == goto_stmt.label) {
-      target_BB = &(*BB);
-      break;
-    }
-  }
+  llvm::BasicBlock* target_BB = llvm_util_.FindBBWithNameOf(goto_stmt.label);
 
   if (target_BB) {
     builder_->CreateBr(target_BB);
   } else {
-    auto label_BB = llvm::BasicBlock::Create(*context_, goto_stmt.label, func);
+    auto label_BB = llvm::BasicBlock::Create(
+        *context_, goto_stmt.label, builder_->GetInsertBlock()->getParent());
     builder_->CreateBr(label_BB);
   }
 }
@@ -495,22 +487,16 @@ void LLVMIRGenerator::Visit(const SwitchStmtNode& switch_stmt) {
 }
 
 void LLVMIRGenerator::Visit(const IdLabeledStmtNode& id_labeled_stmt) {
-  auto func = builder_->GetInsertBlock()->getParent();
-  llvm::BasicBlock* target_BB = nullptr;
-  // TODO: refactor
-  for (auto b = func->begin(), be = func->end(); b != be; ++b) {
-    auto& BB = b;
-    if (BB->getName() == id_labeled_stmt.label) {
-      target_BB = &(*BB);
-      builder_->SetInsertPoint(target_BB);
-      break;
-    }
-  }
+  llvm::BasicBlock* target_BB =
+      llvm_util_.FindBBWithNameOf(id_labeled_stmt.label);
 
   if (!target_BB) {
     auto label_BB =
-        llvm::BasicBlock::Create(*context_, id_labeled_stmt.label, func);
+        llvm::BasicBlock::Create(*context_, id_labeled_stmt.label,
+                                 builder_->GetInsertBlock()->getParent());
     builder_->SetInsertPoint(label_BB);
+  } else {
+    builder_->SetInsertPoint(target_BB);
   }
 
   id_labeled_stmt.stmt->Accept(*this);
