@@ -43,7 +43,6 @@ int main(  // NOLINT(bugprone-exception-escape): Using a big try-catch block to
   cmd_options.add_options()
       ("o, output", "Write output to <file>", cxxopts::value<std::string>()->default_value("a.out"), "<file>")
       ("d, dump", "Dump the abstract syntax tree", cxxopts::value<bool>()->default_value("false"))
-      // TODO: support LLVM IR
       ("t, target", "Specify target IR", cxxopts::value<std::string>()->default_value("qbe"), "[qbe|llvm]")
       ("h, help", "Display available options")
       ;
