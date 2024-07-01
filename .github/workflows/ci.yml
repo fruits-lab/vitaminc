@@ -50,6 +50,9 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v3
+      - name: Install LLVM
+        run: |
+          sudo apt-get install -q -y llvm
       - name: Install QBE
         run: scripts/install-qbe.sh
       - name: Install cxxopts
