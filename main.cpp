@@ -7,9 +7,12 @@
 #include <fstream>
 #include <iostream>
 #include <memory>
+#include <string>
+#include <utility>
 
 #include "ast.hpp"
 #include "ast_dumper.hpp"
+#include "llvm_ir_generator.hpp"
 #include "qbe_ir_generator.hpp"
 #include "scope.hpp"
 #include "type_checker.hpp"
@@ -21,6 +24,12 @@ extern FILE*
            // flex read from this file pointer.
 extern void yylex_destroy();  // NOLINT(readability-identifier-naming): extern
                               // from flex generated code.
+
+int QbeBuilder(std::unique_ptr<AstNode> trans_unit, std::string& input_basename,
+               std::string& output_name);
+
+int LLVMBuilder(std::unique_ptr<AstNode> trans_unit,
+                std::string& input_basename, std::string& output_name);
 
 int main(  // NOLINT(bugprone-exception-escape): Using a big try-catch block to
            // catch all exceptions isn't reasonable.
@@ -36,8 +45,7 @@ int main(  // NOLINT(bugprone-exception-escape): Using a big try-catch block to
   cmd_options.add_options()
       ("o, output", "Write output to <file>", cxxopts::value<std::string>()->default_value("a.out"), "<file>")
       ("d, dump", "Dump the abstract syntax tree", cxxopts::value<bool>()->default_value("false"))
-      // TODO: support LLVM IR
-      ("t, target", "Specify target IR", cxxopts::value<std::string>()->default_value("qbe"), "[qbe]")
+      ("t, target", "Specify target IR", cxxopts::value<std::string>()->default_value("qbe"), "[qbe|llvm]")
       ("h, help", "Display available options")
       ;
   // clang-format on
@@ -68,7 +76,7 @@ int main(  // NOLINT(bugprone-exception-escape): Using a big try-catch block to
     std::exit(0);
   }
 
-  /// @brief The root node of the program.
+  /// @brief The root node of the trans_unit.
   auto trans_unit = std::unique_ptr<AstNode>{};
   yy::parser parser{trans_unit};
   int ret = parser.parse();
@@ -93,8 +101,23 @@ int main(  // NOLINT(bugprone-exception-escape): Using a big try-catch block to
     trans_unit->Accept(ast_dumper);
   }
 
-  // generate intermediate representation
   auto input_basename = input_path.stem().string();
+  auto output = opts["output"].as<std::string>();
+  // generate intermediate representation based on target option
+  if (opts["target"].as<std::string>() == "qbe") {
+    return QbeBuilder(std::move(trans_unit), input_basename, output);
+  } else if (opts["target"].as<std::string>() == "llvm") {
+    return LLVMBuilder(std::move(trans_unit), input_basename, output);
+  } else {
+    std::cerr << "unknown target" << '\n';
+    std::exit(0);
+  }
+
+  return 0;
+}
+
+int QbeBuilder(std::unique_ptr<AstNode> trans_unit, std::string& input_basename,
+               std::string& output_name) {
   auto output_ir = std::ofstream{fmt::format("{}.ssa", input_basename)};
   QbeIrGenerator code_generator{output_ir};
   trans_unit->Accept(code_generator);
@@ -102,27 +125,33 @@ int main(  // NOLINT(bugprone-exception-escape): Using a big try-catch block to
   output_ir.close();
 
   // generate assembly
-  if (opts["target"].as<std::string>() == "qbe") {
-    std::string qbe_command =
-        fmt::format("qbe -o {0}.s {0}.ssa", input_basename);
-    auto qbe_ret = std::system(qbe_command.c_str());
-    // 0 on success, 1 otherwise
-    if (qbe_ret) {
-      return qbe_ret;
-    }
-  } else {
-    std::cerr << "unknown target" << '\n';
-    std::exit(0);
+  std::string qbe_command = fmt::format("qbe -o {0}.s {0}.ssa", input_basename);
+  auto qbe_ret = std::system(qbe_command.c_str());
+  // 0 on success, 1 otherwise
+  if (qbe_ret) {
+    return qbe_ret;
   }
-
   // generate executable
-  auto output = opts["output"].as<std::string>();
-  std::string cc_command = fmt::format("cc -o {} {}.s", output, input_basename);
+  std::string cc_command =
+      fmt::format("cc -o {} {}.s", output_name, input_basename);
   auto cc_ret = std::system(cc_command.c_str());
   // 0 on success, 1 otherwise
   if (cc_ret) {
     return cc_ret;
   }
 
+  return 0;
+}
+
+int LLVMBuilder(std::unique_ptr<AstNode> trans_unit,
+                std::string& input_basename, std::string& output_name) {
+  auto output_ir = std::ofstream{fmt::format("{}.ll", input_basename)};
+  LLVMIRGenerator code_generator{output_ir, input_basename};
+  trans_unit->Accept(code_generator);
+  // TODO: Write to stdout based on cxxopts.
+  // Write LLVM IR to output file "*.ll".
+  code_generator.PrintIR();
+
+  output_ir.close();
   return 0;
 }

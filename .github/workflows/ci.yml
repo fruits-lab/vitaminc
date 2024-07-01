@@ -50,6 +50,12 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v3
+      - name: Install LLVM
+        run: |
+          sudo add-apt-repository -y 'deb http://apt.llvm.org/jammy/ llvm-toolchain-jammy-18 main'
+          wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
+          sudo apt-get update
+          sudo apt-get install -q -y llvm-18 lld-18 llvm-18-runtime
       - name: Install QBE
         run: scripts/install-qbe.sh
       - name: Install cxxopts

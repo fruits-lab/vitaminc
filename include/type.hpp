@@ -146,9 +146,10 @@ class FuncType : public Type {
       : return_type_{std::move(return_type)},
         param_types_{std::move(param_types)} {}
 
-  const Type& return_type()  // NOLINT(readability-identifier-naming)
+  const std::unique_ptr<Type>&
+  return_type()  // NOLINT(readability-identifier-naming)
       const noexcept {
-    return *return_type_;
+    return return_type_;
   }
 
   // XXX: Consider exposing iterators for constness.
@@ -188,12 +189,20 @@ class RecordType : public Type {
   /// @return The type id.
   virtual std::string id()  // NOLINT(readability-identifier-naming)
       const noexcept = 0;
+  /// @return The fields of a record type.
+  virtual const std::vector<std::unique_ptr<Field>>&
+  fields()  // NOLINT(readability-identifier-naming)
+      const noexcept = 0;
   /// @brief Checks if `id` is a member of the record type.
   virtual bool IsMember(const std::string& id) const noexcept = 0;
   /// @return The type of a member in struct or union. The unknown type if the
   /// `id` is not a member of the record type.
   virtual std::unique_ptr<Type> MemberType(
       const std::string& id) const noexcept = 0;
+  /// @note Every member in union shares the same index 0.
+  /// @return The index of a member in struct or union.
+  /// @throw `std::runtime_error` if the `id` is not a member of the record.
+  virtual std::size_t MemberIndex(const std::string& id) const = 0;
   /// @note Every member in union shares the same offset 0.
   /// @return The type offset in the record based on `id`.
   /// @throw `std::runtime_error` if the `id` is not a member of the record.
@@ -214,10 +223,14 @@ class StructType : public RecordType {
   StructType(std::string id, std::vector<std::unique_ptr<Field>> fields)
       : id_{std::move(id)}, fields_{std::move(fields)} {}
 
+  const std::vector<std::unique_ptr<Field>>& fields() const noexcept override {
+    return fields_;
+  }
   std::string id() const noexcept override;
   bool IsMember(const std::string& id) const noexcept override;
   std::unique_ptr<Type> MemberType(
       const std::string& id) const noexcept override;
+  std::size_t MemberIndex(const std::string& id) const override;
   std::size_t OffsetOf(const std::string& id) const override;
   std::size_t OffsetOf(std::size_t index) const override;
   std::size_t SlotCount() const noexcept override;
@@ -243,10 +256,14 @@ class UnionType : public RecordType {
   UnionType(std::string id, std::vector<std::unique_ptr<Field>> fields)
       : id_{std::move(id)}, fields_{std::move(fields)} {}
 
+  const std::vector<std::unique_ptr<Field>>& fields() const noexcept override {
+    return fields_;
+  }
   std::string id() const noexcept override;
   bool IsMember(const std::string& id) const noexcept override;
   std::unique_ptr<Type> MemberType(
       const std::string& id) const noexcept override;
+  std::size_t MemberIndex(const std::string& id) const override;
   std::size_t OffsetOf(const std::string& id) const override;
   std::size_t OffsetOf(std::size_t index) const override;
   std::size_t SlotCount() const noexcept override;

@@ -2,9 +2,9 @@ TARGET := vitaminc
 CXX := g++
 CC = $(CXX)
 CLANG_TIDY ?= clang-tidy
-CXXFLAGS = -g3 -std=c++17 -Wall -MMD -Iinclude -Werror
+CXXFLAGS = -g3 -std=c++17 -Wall -MMD -Iinclude -I$(shell llvm-config-18 --includedir) -Werror
 CFLAGS = $(CXXFLAGS)
-LDLIBS = -lfmt
+LDLIBS = -lfmt $(shell llvm-config-18 --libs core)
 LEX = lex
 # C++ features are used, yacc doesn't suffice
 YACC = bison
@@ -87,7 +87,7 @@ coverage-report: coverage
 	@echo "Open $(COVERAGE_DIR)/index.html in your browser to view the coverage report."
 
 clean:
-	$(RM) -r *.s *.o lex.yy.* y.tab.* *.output *.ssa *.out $(TARGET) $(OBJS) $(DEPS) \
+	$(RM) -r *.s *.o lex.yy.* y.tab.* *.output *.ssa *.out *.ll $(TARGET) $(OBJS) $(DEPS) \
 		$(OBJS:.o=.gcda) $(OBJS:.o=.gcno) *.gcov $(COVERAGE_DIR)
 	cd test/ && $(MAKE) clean
 

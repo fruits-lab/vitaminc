@@ -8,6 +8,12 @@
 #
 # -cppcoreguidelines-explicit-virtual-functions:
 #   It's an alias of "modernize-use-override".
+#
+# -bugprone-unchecked-optional-access:
+#   Clang-tidy will crash due to unknown reasons.
+#
+# -bugprone-easily-swappable-parameters
+#   Nothing we can do about it.
 
 # Warnings are easily be overlooked when they are not treated as errors.
 WarningsAsErrors: "*"
@@ -15,6 +21,8 @@ WarningsAsErrors: "*"
 Checks: >
   -*,
   bugprone-*,
+  -bugprone-unchecked-optional-access,
+  -bugprone-easily-swappable-parameters,
   performance-*,
   clang-analyzer-*,
   cppcoreguidelines-*,
