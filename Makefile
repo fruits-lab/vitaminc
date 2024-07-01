@@ -2,9 +2,9 @@ TARGET := vitaminc
 CXX := g++
 CC = $(CXX)
 CLANG_TIDY ?= clang-tidy
-CXXFLAGS = -g3 -std=c++17 -Wall -MMD -Iinclude -I$(shell llvm-config --includedir) -Werror
+CXXFLAGS = -g3 -std=c++17 -Wall -MMD -Iinclude -I$(shell llvm-config-18 --includedir) -Werror
 CFLAGS = $(CXXFLAGS)
-LDLIBS = -lfmt $(shell llvm-config --libs core)
+LDLIBS = -lfmt $(shell llvm-config-18 --libs core)
 LEX = lex
 # C++ features are used, yacc doesn't suffice
 YACC = bison
