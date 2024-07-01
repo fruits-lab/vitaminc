@@ -160,7 +160,6 @@ void LLVMIRGenerator::Visit(const ArrDeclNode& arr_decl) {
   auto arr_type = llvm_util_.GetLLVMType(arr_decl.type);
   auto base_addr = builder_->CreateAlloca(arr_type, nullptr);
   id_to_val[arr_decl.id] = base_addr;
-  val_to_type[base_addr] = arr_type;
 
   auto arr_decl_type = dynamic_cast<ArrType*>(arr_decl.type.get());
   for (auto i = std::size_t{0}, e = arr_decl_type->len(); i < e; ++i) {
@@ -197,7 +196,6 @@ void LLVMIRGenerator::Visit(const RecordVarDeclNode& record_var_decl) {
   auto type = llvm_util_.GetLLVMType(record_var_decl.type);
   auto base_addr = builder_->CreateAlloca(type, nullptr);
   id_to_val[record_var_decl.id] = base_addr;
-  val_to_type[base_addr] = type;
 
   // NOTE: This predicate will make sure that we don't initialize members that
   // exceed the total number of members in a record. Also, it gurantees
@@ -576,9 +574,9 @@ void LLVMIRGenerator::Visit(const ArgExprNode& arg_expr) {
 
 void LLVMIRGenerator::Visit(const ArrSubExprNode& arr_sub_expr) {
   arr_sub_expr.arr->Accept(*this);
-  auto val_num = val_recorder.ValOfPrevExpr();
-  auto base_addr = val_to_id_addr.at(val_num);
-  auto arr_type = val_to_type.at(base_addr);
+  auto val = val_recorder.ValOfPrevExpr();
+  auto base_addr = val_to_id_addr.at(val);
+  auto arr_type = llvm_util_.GetLLVMType(arr_sub_expr.arr->type);
   arr_sub_expr.index->Accept(*this);
   auto index = dynamic_cast<IntConstExprNode*>(arr_sub_expr.index.get());
   assert(index);
@@ -618,6 +616,8 @@ void LLVMIRGenerator::Visit(const CondExprNode& cond_expr) {
   builder_->CreateBr(end_BB);
 
   builder_->SetInsertPoint(end_BB);
+  // NOTE: Since we do not know which operand will be executed in runtime, we
+  // create a Phi node to merge both values.
   auto phi_res = builder_->CreatePHI(llvm_util_.IntType, 2);
   phi_res->addIncoming(second_val, second_BB);
   phi_res->addIncoming(third_val, third_BB);
@@ -685,14 +685,14 @@ void LLVMIRGenerator::Visit(const RecordMemExprNode& mem_expr) {
   mem_expr.expr->Accept(*this);
   auto val = val_recorder.ValOfPrevExpr();
   auto base_addr = val_to_id_addr.at(val);
-  auto struct_type = val_to_type.at(base_addr);
+  auto struct_type = llvm_util_.GetLLVMType(mem_expr.expr->type);
   auto* record_type = dynamic_cast<RecordType*>(mem_expr.expr->type.get());
   assert(record_type);
 
   auto res_addr = builder_->CreateStructGEP(
       struct_type, base_addr, record_type->MemberIndex(mem_expr.id));
-  // TODO: get type
-  auto res_val = builder_->CreateLoad(llvm_util_.IntType, res_addr);
+  auto res_val = builder_->CreateLoad(
+      llvm_util_.GetLLVMType(record_type->MemberType(mem_expr.id)), res_addr);
   val_to_id_addr[res_val] = res_addr;
   val_recorder.Record(res_val);
 }
@@ -707,7 +707,7 @@ void LLVMIRGenerator::Visit(const UnaryExprNode& unary_expr) {
       auto arith_op = unary_expr.op == UnaryOperator::kIncr
                           ? BinaryOperator::kAdd
                           : BinaryOperator::kSub;
-      auto one = llvm::ConstantInt::get(llvm_util_.IntType, 1, true);
+      auto one = llvm::ConstantInt::get(operand->getType(), 1, true);
       auto res =
           builder_->CreateBinOp(GetBinaryOperator(arith_op), operand, one);
       builder_->CreateStore(res, val_to_id_addr.at(operand));
@@ -718,19 +718,19 @@ void LLVMIRGenerator::Visit(const UnaryExprNode& unary_expr) {
     } break;
     case UnaryOperator::kNeg: {
       auto operand = val_recorder.ValOfPrevExpr();
-      auto zero = llvm::ConstantInt::get(llvm_util_.IntType, 0, true);
+      auto zero = llvm::ConstantInt::get(operand->getType(), 0, true);
       auto res = builder_->CreateSub(zero, operand);
       val_recorder.Record(res);
     } break;
     case UnaryOperator::kNot: {
       auto operand = val_recorder.ValOfPrevExpr();
-      auto zero = llvm::ConstantInt::get(llvm_util_.IntType, 0, true);
+      auto zero = llvm::ConstantInt::get(operand->getType(), 0, true);
       auto res = builder_->CreateICmpEQ(operand, zero);
       val_recorder.Record(res);
     } break;
     case UnaryOperator::kBitComp: {
       auto operand = val_recorder.ValOfPrevExpr();
-      auto all_ones = llvm::ConstantInt::get(llvm_util_.IntType, -1, true);
+      auto all_ones = llvm::ConstantInt::get(operand->getType(), -1, true);
       auto res = builder_->CreateXor(operand, all_ones);
       val_recorder.Record(res);
     } break;
@@ -780,7 +780,6 @@ void LLVMIRGenerator::Visit(const BinaryExprNode& bin_expr) {
   }
   if (bin_expr.op == BinaryOperator::kLand ||
       bin_expr.op == BinaryOperator::kLor) {
-    // Get the current function we are in.
     auto func = llvm_util_.CurrFunc();
     auto rhs_BB = llvm::BasicBlock::Create(*context_, "logic_rhs", func);
     auto short_circuit_BB =
@@ -804,7 +803,7 @@ void LLVMIRGenerator::Visit(const BinaryExprNode& bin_expr) {
         bin_expr.op == BinaryOperator::kLand ? false_val : true_val;
     builder_->CreateBr(end_BB);
     builder_->SetInsertPoint(end_BB);
-    // Merge results from rhs and short_circuit_res
+    // Merge results from rhs and short_circuit_res.
     auto phi_res = builder_->CreatePHI(builder_->getInt1Ty(), 2);
     phi_res->addIncoming(rhs_res, rhs_BB);
     phi_res->addIncoming(short_circuit_res, short_circuit_BB);
