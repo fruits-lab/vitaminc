@@ -8,8 +8,8 @@
 #include <llvm/Support/raw_os_ostream.h>
 
 #include <memory>
-#include <utility>
-#include <vector>
+#include <ostream>
+#include <string>
 
 #include "ast.hpp"
 #include "llvm/util.hpp"

@@ -1,16 +1,30 @@
 #include "llvm_ir_generator.hpp"
 
+#include <llvm/ADT/ArrayRef.h>
 #include <llvm/IR/BasicBlock.h>
+#include <llvm/IR/Constants.h>
 #include <llvm/IR/DerivedTypes.h>
 #include <llvm/IR/Function.h>
 #include <llvm/IR/GlobalVariable.h>
 #include <llvm/IR/IRBuilder.h>
+#include <llvm/IR/InstrTypes.h>
+#include <llvm/IR/Instruction.h>
 #include <llvm/IR/Module.h>
 #include <llvm/IR/Type.h>
+#include <llvm/Support/Casting.h>
 
+#include <cassert>
+#include <cstddef>
 #include <map>
+#include <memory>
+#include <string>
+#include <utility>
+#include <variant>
+#include <vector>
 
 #include "ast.hpp"
+#include "operator.hpp"
+#include "type.hpp"
 
 namespace {
 
@@ -66,7 +80,7 @@ llvm::CmpInst::Predicate GetCmpPredicate(BinaryOperator op) {
   }
 }
 
-bool isCmpInst(BinaryOperator op) {
+bool IsCmpInst(BinaryOperator op) {
   switch (op) {
     case BinaryOperator::kGt:
     case BinaryOperator::kGte:
@@ -220,18 +234,19 @@ void LLVMIRGenerator::Visit(const ParamNode& parameter) {
   /* Do nothing */
 }
 
+// TODO: Remove this function after refactoring GetLLVMType
 llvm::Type* LLVMIRGenerator::GetParamType_(
     const std::unique_ptr<ParamNode>& parameter) {
-  llvm::Type* param_type;
+  llvm::Type* param_type = nullptr;
   if (auto ptr_type = dynamic_cast<PtrType*>(parameter->type.get())) {
     auto base_type = ptr_type->base_type().Clone();
     if (auto func_type = dynamic_cast<FuncType*>(base_type.get())) {
-      auto return_type = func_type->return_type()->IsPtr() == true
+      auto return_type = func_type->return_type()->IsPtr()
                              ? (llvm::Type*)llvm_util_.IntPtrType()
                              : (llvm::Type*)llvm_util_.IntType();
       std::vector<llvm::Type*> func_params;
       for (auto& func_param : func_type->param_types()) {
-        func_params.push_back(func_param->IsPtr() == true
+        func_params.push_back(func_param->IsPtr()
                                   ? (llvm::Type*)llvm_util_.IntPtrType()
                                   : (llvm::Type*)llvm_util_.IntType());
       }
@@ -516,7 +531,8 @@ void LLVMIRGenerator::Visit(const CaseStmtNode& case_stmt) {
   case_stmt.stmt->Accept(*this);
 
   assert(!label_views_of_jumpable_blocks.empty());
-  label_views_of_jumpable_blocks.back().cases.push_back({val, case_bb});
+  std::pair<llvm::Value*, llvm::BasicBlock*> p{val, case_bb};
+  label_views_of_jumpable_blocks.back().cases.push_back(p);
 }
 
 void LLVMIRGenerator::Visit(const DefaultStmtNode& default_stmt) {
@@ -526,7 +542,8 @@ void LLVMIRGenerator::Visit(const DefaultStmtNode& default_stmt) {
   default_stmt.stmt->Accept(*this);
 
   assert(!label_views_of_jumpable_blocks.empty());
-  label_views_of_jumpable_blocks.back().cases.push_back({nullptr, default_bb});
+  std::pair<llvm::Value*, llvm::BasicBlock*> p{nullptr, default_bb};
+  label_views_of_jumpable_blocks.back().cases.push_back(p);
 }
 
 void LLVMIRGenerator::Visit(const ExprStmtNode& expr_stmt) {
@@ -759,7 +776,7 @@ void LLVMIRGenerator::Visit(const UnaryExprNode& unary_expr) {
       }
 
       auto operand = val_recorder.ValOfPrevExpr();
-      auto res = builder_->CreateLoad(unary_expr.type->IsPtr() == true
+      auto res = builder_->CreateLoad(unary_expr.type->IsPtr()
                                           ? (llvm::Type*)llvm_util_.IntPtrType()
                                           : (llvm::Type*)llvm_util_.IntType(),
                                       operand);
@@ -813,7 +830,7 @@ void LLVMIRGenerator::Visit(const BinaryExprNode& bin_expr) {
     phi_res->addIncoming(rhs_res, rhs_bb);
     phi_res->addIncoming(short_circuit_res, short_circuit_bb);
     val_recorder.Record(phi_res);
-  } else if (isCmpInst(bin_expr.op)) {
+  } else if (IsCmpInst(bin_expr.op)) {
     bin_expr.rhs->Accept(*this);
     auto rhs = val_recorder.ValOfPrevExpr();
     auto res = builder_->CreateCmp(GetCmpPredicate(bin_expr.op), lhs, rhs);
