@@ -198,6 +198,10 @@ class RecordType : public Type {
   /// `id` is not a member of the record type.
   virtual std::unique_ptr<Type> MemberType(
       const std::string& id) const noexcept = 0;
+  /// @note Every member in union shares the same index 0.
+  /// @return The index of a member in struct or union.
+  /// @throw `std::runtime_error` if the `id` is not a member of the record.
+  virtual std::size_t MemberIndex(const std::string& id) const = 0;
   /// @note Every member in union shares the same offset 0.
   /// @return The type offset in the record based on `id`.
   /// @throw `std::runtime_error` if the `id` is not a member of the record.
@@ -225,6 +229,7 @@ class StructType : public RecordType {
   bool IsMember(const std::string& id) const noexcept override;
   std::unique_ptr<Type> MemberType(
       const std::string& id) const noexcept override;
+  std::size_t MemberIndex(const std::string& id) const override;
   std::size_t OffsetOf(const std::string& id) const override;
   std::size_t OffsetOf(std::size_t index) const override;
   std::size_t SlotCount() const noexcept override;
@@ -257,6 +262,7 @@ class UnionType : public RecordType {
   bool IsMember(const std::string& id) const noexcept override;
   std::unique_ptr<Type> MemberType(
       const std::string& id) const noexcept override;
+  std::size_t MemberIndex(const std::string& id) const override;
   std::size_t OffsetOf(const std::string& id) const override;
   std::size_t OffsetOf(std::size_t index) const override;
   std::size_t SlotCount() const noexcept override;

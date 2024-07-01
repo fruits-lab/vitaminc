@@ -213,13 +213,32 @@ void LLVMIRGenerator::Visit(const RecordVarDeclNode& record_var_decl) {
   auto* record_type = dynamic_cast<RecordType*>(record_var_decl.type.get());
   assert(record_type);
   auto field_types = GetFieldTypes_(record_type->fields());
-  auto struct_type = llvm::StructType::create(*context_, field_types,
-                                              "struct_" + record_type->id());
-  auto res = builder_->CreateAlloca(struct_type, nullptr);
+  std::string record_prefix = "";
+  if (record_type->IsStruct()) {
+    record_prefix += "struct_";
+  } else {
+    record_prefix += "union_";
+  }
 
-  assert(res);
-  // Define Struct or Union type
-  // Allocate memory for the struct instance
+  auto type = llvm::StructType::create(*context_, field_types,
+                                       record_prefix + record_type->id());
+  auto base_addr = builder_->CreateAlloca(type, nullptr);
+  id_to_val[record_var_decl.id] = base_addr;
+  val_to_type[base_addr] = type;
+
+  // NOTE: This predicate will make sure that we don't initialize members that
+  // exceed the total number of members in a record. Also, it gurantees
+  // that accessing element in the initializers will not go out of bound.
+  for (auto i = std::size_t{0}, e = record_var_decl.inits.size(),
+            slot_count = record_type->SlotCount();
+       i < slot_count && i < e; ++i) {
+    auto& init = record_var_decl.inits.at(i);
+    init->Accept(*this);
+    auto init_val = val_recorder.ValOfPrevExpr();
+
+    auto res_addr = builder_->CreateStructGEP(type, base_addr, i);
+    builder_->CreateStore(init_val, res_addr);
+  }
 }
 
 void LLVMIRGenerator::Visit(const ParamNode& parameter) {
@@ -698,6 +717,22 @@ void LLVMIRGenerator::Visit(const PostfixArithExprNode& postfix_expr) {
   const auto* id_expr = dynamic_cast<IdExprNode*>((postfix_expr.operand).get());
   assert(id_expr);
   builder_->CreateStore(res, id_to_val.at(id_expr->id));
+}
+
+void LLVMIRGenerator::Visit(const RecordMemExprNode& mem_expr) {
+  mem_expr.expr->Accept(*this);
+  auto val = val_recorder.ValOfPrevExpr();
+  auto base_addr = val_to_id_addr.at(val);
+  auto struct_type = val_to_type.at(base_addr);
+  auto* record_type = dynamic_cast<RecordType*>(mem_expr.expr->type.get());
+  assert(record_type);
+
+  auto res_addr = builder_->CreateStructGEP(
+      struct_type, base_addr, record_type->MemberIndex(mem_expr.id));
+  // TODO: get type
+  auto res_val = builder_->CreateLoad(util_.intTy, res_addr);
+  val_to_id_addr[res_val] = res_addr;
+  val_recorder.Record(res_val);
 }
 
 void LLVMIRGenerator::Visit(const UnaryExprNode& unary_expr) {
