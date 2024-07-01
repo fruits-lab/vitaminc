@@ -105,7 +105,7 @@ auto
                     // as a data member introduces unnecessary dependency.
     = std::map<llvm::Value*, llvm::Value*>{};
 
-// TODO: replaced this with GetType
+// TODO: Remove this after finishing LLVMGetType and remove all use of this map.
 auto val_to_type  // NOLINT(cppcoreguidelines-avoid-non-const-global-variables):
                   // Accessible only within this translation unit; declaring
                   // as a data member introduces unnecessary dependency.
@@ -165,12 +165,14 @@ void LLVMIRGenerator::Visit(const VarDeclNode& decl) {
   if (decl.init) {
     decl.init->Accept(*this);
     auto val = val_recorder.ValOfPrevExpr();
+    // TODO: Remove this after finishing LLVMGetType
     if (auto func = llvm::dyn_cast<llvm::Function>(val)) {
       var_type = func->getFunctionType();
     }
     builder_->CreateStore(val, addr);
   }
   id_to_val[decl.id] = addr;
+  // TODO: Remove this after finishing LLVMGetType
   val_to_type[addr] = var_type;
 }
 
@@ -283,11 +285,12 @@ void LLVMIRGenerator::Visit(const FuncDefNode& func_def) {
     parameter->Accept(*this);
     args_iter->setName(parameter->id);
 
-    // llvm::Type* param_type = GetParamType_(parameter);
     llvm::Type* param_type = GetParamType_(parameter);
-    // TODO: refactor
+    // TODO: Refactor this after finishing GetLLVMType
+    // Remove the need of storing val_to_type map
     if (param_type->isFunctionTy()) {
       auto func_type = param_type;
+      // function pointer
       param_type = param_type->getPointerTo();
       args_iter->mutateType(param_type);
       auto addr = builder_->CreateAlloca(param_type);
@@ -675,7 +678,9 @@ void LLVMIRGenerator::Visit(const FuncCallExprNode& call_expr) {
       val_recorder.Record(return_res);
     }
   } else if (val->getType()->isPointerTy()) {
+    // function pointer
     auto func_ptr = val_to_id_addr.at(val);
+    // TODO: get function type from call_expr.func_expr
     auto type = val_to_type.at(func_ptr);
     if (auto func_type = llvm::dyn_cast<llvm::FunctionType>(type)) {
       auto return_res = builder_->CreateCall(func_type, val, arg_vals);
@@ -849,6 +854,7 @@ void LLVMIRGenerator::Visit(const SimpleAssignmentExprNode& assign_expr) {
   assign_expr.rhs->Accept(*this);
   auto rhs = val_recorder.ValOfPrevExpr();
   builder_->CreateStore(rhs, val_to_id_addr.at(lhs));
+  // TODO: Remove this after finishing GetLLVMType
   if (auto func = llvm::dyn_cast<llvm::Function>(rhs)) {
     val_to_type[val_to_id_addr.at(lhs)] = func->getFunctionType();
   }
