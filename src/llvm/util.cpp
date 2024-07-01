@@ -12,6 +12,14 @@
 
 using namespace util;
 
+llvm::IntegerType* LLVMIRUtil::IntType() {
+  return builder_->getInt32Ty();
+}
+
+llvm::PointerType* LLVMIRUtil::IntPtrType() {
+  return builder_->getPtrTy();
+}
+
 void LLVMIRUtil::CreateBrIfNoBrBefore(llvm::BasicBlock* next_bb) {
   auto bb = builder_->GetInsertBlock();
   bool has_terminator = false;
@@ -66,11 +74,13 @@ llvm::Function* LLVMIRUtil::CurrFunc() {
 
 llvm::Type* LLVMIRUtil::GetLLVMType(const std::unique_ptr<Type>& type) {
   if (type->IsPtr()) {
-    // TODO recursive
-    return IntPtrType;
+    // TODO: recursive
+    auto ptr_type = dynamic_cast<PtrType*>(type.get());
+    assert(ptr_type);
+    return IntPtrType();
   } else if (type->IsArr()) {
     auto arr_type = dynamic_cast<ArrType*>(type.get());
-    return llvm::ArrayType::get(IntType, arr_type->len());
+    return llvm::ArrayType::get(IntType(), arr_type->len());
   } else if (type->IsStruct() || type->IsUnion()) {
     std::string record_prefix = type->IsStruct() ? "struct_" : "union_";
     auto record_type = dynamic_cast<RecordType*>(type.get());
@@ -93,5 +103,5 @@ llvm::Type* LLVMIRUtil::GetLLVMType(const std::unique_ptr<Type>& type) {
     return llvm::FunctionType::get(return_type, param_types, false);
   }
 
-  return IntType;
+  return IntType();
 }

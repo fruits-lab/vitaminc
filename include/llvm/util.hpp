@@ -15,9 +15,9 @@ namespace util {
 class LLVMIRUtil {
  public:
   /// @brief LLVM Integer type
-  llvm::IntegerType* IntType;
+  llvm::IntegerType* IntType();
   /// @brief LLVM Pointer type
-  llvm::PointerType* IntPtrType;
+  llvm::PointerType* IntPtrType();
 
   /// @brief Every LLVM basic block can only have one terminator instruction.
   /// This function can check if there are terminator instructions before the
@@ -43,10 +43,7 @@ class LLVMIRUtil {
   /// @brief Get the corresponding LLVM type from our type.
   llvm::Type* GetLLVMType(const std::unique_ptr<Type>& type);
 
-  LLVMIRUtil(std::unique_ptr<llvm::IRBuilder<>>& builder) : builder_{builder} {
-    IntType = builder_->getInt32Ty();
-    IntPtrType = builder_->getPtrTy();
-  }
+  LLVMIRUtil(std::unique_ptr<llvm::IRBuilder<>>& builder) : builder_{builder} {}
 
  private:
   /// @brief Stores a reference from the original builder.
