@@ -24,11 +24,11 @@ class LLVMIRUtil {
   /// current insert point. If no, then it will create an unconditional branch
   /// to the next basic block. If yes, then it will not create branch
   /// instruction.
-  void CreateBrIfNoBrBefore(llvm::BasicBlock* next_BB);
+  void CreateBrIfNoBrBefore(llvm::BasicBlock* next_bb);
 
   /// @brief Create a branch instruction to the next basic block.
-  void CurrBBFallThroughNextBB(llvm::BasicBlock* curr_BB,
-                               llvm::BasicBlock* next_BB);
+  void CurrBBFallThroughNextBB(llvm::BasicBlock* curr_bb,
+                               llvm::BasicBlock* next_bb);
 
   /// @brief Find the basic block with the same name as `id` within the current
   /// function.
