@@ -3,15 +3,17 @@
 
 #include <llvm/IR/IRBuilder.h>
 
+#include "type.hpp"
+
 namespace util {
 
 /// @brief A collection of wrappers of LLVM types and functions.
-class Util {
+class LLVMIRUtil {
  public:
-  /// @brief Integer type
-  llvm::IntegerType* intTy;
-  /// @brief Pointer type
-  llvm::PointerType* intPtrTy;
+  /// @brief LLVM Integer type
+  llvm::IntegerType* IntType;
+  /// @brief LLVM Pointer type
+  llvm::PointerType* IntPtrType;
 
   /// @brief Every LLVM basic block can only have one terminator instruction.
   /// This function can check if there are terminator instructions before the
@@ -24,9 +26,9 @@ class Util {
   void CurrBBFallThroughNextBB(llvm::BasicBlock* curr_BB,
                                llvm::BasicBlock* next_BB);
 
-  Util(std::unique_ptr<llvm::IRBuilder<>>& builder) : builder_{builder} {
-    intTy = builder_->getInt32Ty();
-    intPtrTy = builder_->getPtrTy();
+  LLVMIRUtil(std::unique_ptr<llvm::IRBuilder<>>& builder) : builder_{builder} {
+    IntType = builder_->getInt32Ty();
+    IntPtrType = builder_->getPtrTy();
   }
 
  private:

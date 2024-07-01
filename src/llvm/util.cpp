@@ -2,9 +2,11 @@
 
 #include <llvm/IR/IRBuilder.h>
 
+#include "type.hpp"
+
 using namespace util;
 
-void Util::CreateBrIfNoBrBefore(llvm::BasicBlock* next_BB) {
+void LLVMIRUtil::CreateBrIfNoBrBefore(llvm::BasicBlock* next_BB) {
   auto BB = builder_->GetInsertBlock();
   bool has_terminator = false;
   for (auto it = BB->begin(); it != BB->end();) {
@@ -21,8 +23,8 @@ void Util::CreateBrIfNoBrBefore(llvm::BasicBlock* next_BB) {
   }
 }
 
-void Util::CurrBBFallThroughNextBB(llvm::BasicBlock* curr_BB,
-                                   llvm::BasicBlock* next_BB) {
+void LLVMIRUtil::CurrBBFallThroughNextBB(llvm::BasicBlock* curr_BB,
+                                         llvm::BasicBlock* next_BB) {
   auto BB = curr_BB;
   bool has_terminator = false;
   for (auto it = BB->begin(); it != BB->end();) {

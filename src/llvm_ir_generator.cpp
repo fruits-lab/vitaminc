@@ -142,8 +142,9 @@ void LLVMIRGenerator::Visit(const DeclStmtNode& decl_stmt) {
 }
 
 void LLVMIRGenerator::Visit(const VarDeclNode& decl) {
-  auto var_type = decl.type->IsPtr() == true ? (llvm::Type*)util_.intPtrTy
-                                             : (llvm::Type*)util_.intTy;
+  auto var_type = decl.type->IsPtr() == true
+                      ? (llvm::Type*)llvm_util_.IntPtrType
+                      : (llvm::Type*)llvm_util_.IntType;
   auto addr = builder_->CreateAlloca(var_type);
   if (decl.init) {
     decl.init->Accept(*this);
@@ -160,7 +161,7 @@ void LLVMIRGenerator::Visit(const VarDeclNode& decl) {
 void LLVMIRGenerator::Visit(const ArrDeclNode& arr_decl) {
   auto arr_decl_type = dynamic_cast<ArrType*>((arr_decl.type).get());
   auto arr_type = llvm::ArrayType::get(
-      util_.intTy,
+      llvm_util_.IntType,
       arr_decl_type->size() / arr_decl_type->element_type().size());
   auto base_addr = builder_->CreateAlloca(arr_type, nullptr);
   id_to_val[arr_decl.id] = base_addr;
@@ -180,7 +181,7 @@ void LLVMIRGenerator::Visit(const ArrDeclNode& arr_decl) {
       builder_->CreateStore(init_val, res_addr);
     } else {
       // set remaining elements as 0
-      auto zero = llvm::ConstantInt::get(util_.intTy, 0, true);
+      auto zero = llvm::ConstantInt::get(llvm_util_.IntType, 0, true);
       builder_->CreateStore(zero, res_addr);
     }
   }
@@ -201,9 +202,9 @@ std::vector<llvm::Type*> LLVMIRGenerator::GetFieldTypes_(
   // TODO: refactor to support multiple data types
   for (auto& field : fields) {
     if (field->type->IsPtr()) {
-      field_types.push_back(util_.intPtrTy);
+      field_types.push_back(llvm_util_.IntPtrType);
     } else {
-      field_types.push_back(util_.intTy);
+      field_types.push_back(llvm_util_.IntType);
     }
   }
 
@@ -254,30 +255,32 @@ llvm::Type* LLVMIRGenerator::GetParamType_(
     auto base_type = ptr_type->base_type().Clone();
     if (auto func_type = dynamic_cast<FuncType*>(base_type.get())) {
       auto return_type = func_type->return_type().IsPtr() == true
-                             ? (llvm::Type*)util_.intPtrTy
-                             : (llvm::Type*)util_.intTy;
+                             ? (llvm::Type*)llvm_util_.IntPtrType
+                             : (llvm::Type*)llvm_util_.IntType;
       std::vector<llvm::Type*> func_params;
       for (auto& func_param : func_type->param_types()) {
         func_params.push_back(func_param->IsPtr() == true
-                                  ? (llvm::Type*)util_.intPtrTy
-                                  : (llvm::Type*)util_.intTy);
+                                  ? (llvm::Type*)llvm_util_.IntPtrType
+                                  : (llvm::Type*)llvm_util_.IntType);
       }
       auto func_ptr_type =
           llvm::FunctionType::get(return_type, func_params, false);
       param_type = func_ptr_type;
     } else {
-      param_type = util_.intPtrTy;
+      param_type = llvm_util_.IntPtrType;
     }
   } else {
-    param_type = util_.intTy;
+    param_type = llvm_util_.IntType;
   }
 
   return param_type;
 }
 
 void LLVMIRGenerator::Visit(const FuncDefNode& func_def) {
-  std::vector<llvm::Type*> param_types(func_def.parameters.size(), util_.intTy);
-  auto func_type = llvm::FunctionType::get(util_.intTy, param_types, false);
+  std::vector<llvm::Type*> param_types(func_def.parameters.size(),
+                                       llvm_util_.IntType);
+  auto func_type =
+      llvm::FunctionType::get(llvm_util_.IntType, param_types, false);
   auto func = llvm::Function::Create(func_type,
                                      func_def.id == "main"
                                          ? llvm::Function::ExternalLinkage
@@ -332,13 +335,14 @@ void LLVMIRGenerator::Visit(const ExternDeclNode& extern_decl) {
 
 void LLVMIRGenerator::Visit(const TransUnitNode& trans_unit) {
   // Generate builtin print function.
-  auto arg = llvm::ArrayRef<llvm::Type*>{util_.intTy};
-  auto builtin_print = llvm::FunctionType::get(util_.intTy, arg, false);
+  auto arg = llvm::ArrayRef<llvm::Type*>{llvm_util_.IntType};
+  auto builtin_print = llvm::FunctionType::get(llvm_util_.IntType, arg, false);
   llvm::Function::Create(builtin_print, llvm::Function::ExternalLinkage,
                          "__builtin_print", *module_);
 
-  auto args = llvm::ArrayRef<llvm::Type*>{util_.intPtrTy, util_.intTy};
-  auto printf = llvm::FunctionType::get(util_.intTy, args, false);
+  auto args =
+      llvm::ArrayRef<llvm::Type*>{llvm_util_.IntPtrType, llvm_util_.IntType};
+  auto printf = llvm::FunctionType::get(llvm_util_.IntType, args, false);
   llvm::Function::Create(printf, llvm::Function::ExternalLinkage, "printf",
                          *module_);
 
@@ -366,7 +370,7 @@ void LLVMIRGenerator::Visit(const IfStmtNode& if_stmt) {
                          if_stmt.or_else != nullptr ? else_BB : end_BB);
   builder_->SetInsertPoint(then_BB);
   if_stmt.then->Accept(*this);
-  util_.CreateBrIfNoBrBefore(end_BB);
+  llvm_util_.CreateBrIfNoBrBefore(end_BB);
 
   if (if_stmt.or_else) {
     builder_->SetInsertPoint(else_BB);
@@ -474,12 +478,12 @@ void LLVMIRGenerator::Visit(const GotoStmtNode& goto_stmt) {
 
 void LLVMIRGenerator::Visit(const BreakStmtNode& break_stmt) {
   assert(!label_views_of_jumpable_blocks.empty());
-  util_.CreateBrIfNoBrBefore(label_views_of_jumpable_blocks.back().exit);
+  llvm_util_.CreateBrIfNoBrBefore(label_views_of_jumpable_blocks.back().exit);
 }
 
 void LLVMIRGenerator::Visit(const ContinueStmtNode& continue_stmt) {
   assert(!label_views_of_jumpable_blocks.empty());
-  util_.CreateBrIfNoBrBefore(label_views_of_jumpable_blocks.back().entry);
+  llvm_util_.CreateBrIfNoBrBefore(label_views_of_jumpable_blocks.back().entry);
 }
 
 void LLVMIRGenerator::Visit(const SwitchStmtNode& switch_stmt) {
@@ -508,13 +512,13 @@ void LLVMIRGenerator::Visit(const SwitchStmtNode& switch_stmt) {
     // if BB is the last BB, then branch to switch_infos.exit
     if (i + 1 != e) {
       auto next_BB = switch_infos.cases.at(i + 1).second;
-      util_.CurrBBFallThroughNextBB(curr_BB, next_BB);
+      llvm_util_.CurrBBFallThroughNextBB(curr_BB, next_BB);
     } else {
-      util_.CurrBBFallThroughNextBB(curr_BB, switch_infos.exit);
+      llvm_util_.CurrBBFallThroughNextBB(curr_BB, switch_infos.exit);
     }
   }
   label_views_of_jumpable_blocks.pop_back();
-  util_.CreateBrIfNoBrBefore(end_BB);
+  llvm_util_.CreateBrIfNoBrBefore(end_BB);
   builder_->SetInsertPoint(end_BB);
 }
 
@@ -594,11 +598,11 @@ void LLVMIRGenerator::Visit(const IdExprNode& id_expr) {
   auto id_val = id_to_val.at(id_expr.id);
 
   if (id_expr.type->IsPtr() || id_expr.type->IsFunc()) {
-    auto res = builder_->CreateLoad(util_.intPtrTy, id_val);
+    auto res = builder_->CreateLoad(llvm_util_.IntPtrType, id_val);
     val_recorder.Record(res);
     val_to_id_addr[res] = id_val;
   } else {
-    auto res = builder_->CreateLoad(util_.intTy, id_val);
+    auto res = builder_->CreateLoad(llvm_util_.IntType, id_val);
     val_recorder.Record(res);
     val_to_id_addr[res] = id_val;
   }
@@ -606,7 +610,7 @@ void LLVMIRGenerator::Visit(const IdExprNode& id_expr) {
 
 void LLVMIRGenerator::Visit(const IntConstExprNode& int_expr) {
   // NOTE: LLVM Constant does not generate IR code, it can be used directly.
-  auto val = llvm::ConstantInt::get(util_.intTy, int_expr.val, true);
+  auto val = llvm::ConstantInt::get(llvm_util_.IntType, int_expr.val, true);
   val_recorder.Record(val);
 }
 
@@ -659,7 +663,7 @@ void LLVMIRGenerator::Visit(const CondExprNode& cond_expr) {
   builder_->CreateBr(end_BB);
 
   builder_->SetInsertPoint(end_BB);
-  auto phi_res = builder_->CreatePHI(util_.intTy, 2);
+  auto phi_res = builder_->CreatePHI(llvm_util_.IntType, 2);
   phi_res->addIncoming(second_val, second_BB);
   phi_res->addIncoming(third_val, third_BB);
   val_recorder.Record(phi_res);
@@ -715,7 +719,7 @@ void LLVMIRGenerator::Visit(const PostfixArithExprNode& postfix_expr) {
                       ? llvm::BinaryOperator::Add
                       : llvm::BinaryOperator::Sub;
 
-  auto one = llvm::ConstantInt::get(util_.intTy, 1, true);
+  auto one = llvm::ConstantInt::get(llvm_util_.IntType, 1, true);
   auto res = builder_->CreateBinOp(arith_op, val, one);
   const auto* id_expr = dynamic_cast<IdExprNode*>((postfix_expr.operand).get());
   assert(id_expr);
@@ -733,7 +737,7 @@ void LLVMIRGenerator::Visit(const RecordMemExprNode& mem_expr) {
   auto res_addr = builder_->CreateStructGEP(
       struct_type, base_addr, record_type->MemberIndex(mem_expr.id));
   // TODO: get type
-  auto res_val = builder_->CreateLoad(util_.intTy, res_addr);
+  auto res_val = builder_->CreateLoad(llvm_util_.IntType, res_addr);
   val_to_id_addr[res_val] = res_addr;
   val_recorder.Record(res_val);
 }
@@ -748,7 +752,7 @@ void LLVMIRGenerator::Visit(const UnaryExprNode& unary_expr) {
       auto arith_op = unary_expr.op == UnaryOperator::kIncr
                           ? BinaryOperator::kAdd
                           : BinaryOperator::kSub;
-      auto one = llvm::ConstantInt::get(util_.intTy, 1, true);
+      auto one = llvm::ConstantInt::get(llvm_util_.IntType, 1, true);
       auto res =
           builder_->CreateBinOp(GetBinaryOperator(arith_op), operand, one);
       builder_->CreateStore(res, val_to_id_addr.at(operand));
@@ -759,19 +763,19 @@ void LLVMIRGenerator::Visit(const UnaryExprNode& unary_expr) {
     } break;
     case UnaryOperator::kNeg: {
       auto operand = val_recorder.ValOfPrevExpr();
-      auto zero = llvm::ConstantInt::get(util_.intTy, 0, true);
+      auto zero = llvm::ConstantInt::get(llvm_util_.IntType, 0, true);
       auto res = builder_->CreateSub(zero, operand);
       val_recorder.Record(res);
     } break;
     case UnaryOperator::kNot: {
       auto operand = val_recorder.ValOfPrevExpr();
-      auto zero = llvm::ConstantInt::get(util_.intTy, 0, true);
+      auto zero = llvm::ConstantInt::get(llvm_util_.IntType, 0, true);
       auto res = builder_->CreateICmpEQ(operand, zero);
       val_recorder.Record(res);
     } break;
     case UnaryOperator::kBitComp: {
       auto operand = val_recorder.ValOfPrevExpr();
-      auto all_ones = llvm::ConstantInt::get(util_.intTy, -1, true);
+      auto all_ones = llvm::ConstantInt::get(llvm_util_.IntType, -1, true);
       auto res = builder_->CreateXor(operand, all_ones);
       val_recorder.Record(res);
     } break;
@@ -796,8 +800,8 @@ void LLVMIRGenerator::Visit(const UnaryExprNode& unary_expr) {
 
       auto operand = val_recorder.ValOfPrevExpr();
       auto res = builder_->CreateLoad(unary_expr.type->IsPtr() == true
-                                          ? (llvm::Type*)util_.intPtrTy
-                                          : (llvm::Type*)util_.intTy,
+                                          ? (llvm::Type*)llvm_util_.IntPtrType
+                                          : (llvm::Type*)llvm_util_.IntType,
                                       operand);
       val_recorder.Record(res);
       val_to_id_addr[res] = operand;
