@@ -47,9 +47,6 @@ lex.yy.*
 # QBE IR files
 *.ssa
 
-# LLVM test source files
-*_llvm.c
-
 # LLVM IR files
 *.ll
 

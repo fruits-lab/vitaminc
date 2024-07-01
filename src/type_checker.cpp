@@ -236,7 +236,6 @@ void TypeChecker::Visit(CompoundStmtNode& compound_stmt) {
 void TypeChecker::InstallBuiltins_(ScopeStack& env) {
   // The supported builtins are:
   // - int __builtin_print(int)
-  // - int printf(int)
 
   auto param_types = std::vector<std::unique_ptr<Type>>{};
   param_types.emplace_back(std::make_unique<PrimType>(PrimitiveType::kInt));
@@ -245,15 +244,6 @@ void TypeChecker::InstallBuiltins_(ScopeStack& env) {
                              std::make_unique<PrimType>(PrimitiveType::kInt),
                              std::move(param_types)));
   env.AddSymbol(std::move(symbol), ScopeKind::kFile);
-
-  auto param_types_printf = std::vector<std::unique_ptr<Type>>{};
-  param_types_printf.emplace_back(
-      std::make_unique<PrimType>(PrimitiveType::kInt));
-  auto symbol_printf = std::make_unique<SymbolEntry>(
-      "printf", std::make_unique<FuncType>(
-                    std::make_unique<PrimType>(PrimitiveType::kInt),
-                    std::move(param_types_printf)));
-  env.AddSymbol(std::move(symbol_printf), ScopeKind::kFile);
 }
 
 void TypeChecker::Visit(ExternDeclNode& extern_decl) {
