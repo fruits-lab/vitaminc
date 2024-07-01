@@ -58,7 +58,7 @@ class LLVMIRGenerator : public NonModifyingVisitor {
       : output_{output},
         context_{std::make_unique<llvm::LLVMContext>()},
         builder_{std::make_unique<llvm::IRBuilder<>>(*context_)},
-        module_{new llvm::Module(filename, *context_)},
+        module_{std::make_unique<llvm::Module>(filename, *context_)},
         util_{util::Util(builder_)} {}
 
   /// @brief Print LLVM IR to output_.
@@ -69,12 +69,14 @@ class LLVMIRGenerator : public NonModifyingVisitor {
  private:
   /// @brief A LLVM ostream wrapper for writing to output.
   llvm::raw_os_ostream output_;
-  /// @brief A LLVM core object.
+  /// @brief A LLVM object that includes core LLVM infrastructure.
   std::unique_ptr<llvm::LLVMContext> context_;
-  /// @brief Provides LLVM Builder API for constructing IR.
+  /// @brief Provides LLVM Builder API for constructing IR. By default, Constant
+  /// folding is enabled and we have more flexibility for inserting
+  /// instructions.
   std::unique_ptr<llvm::IRBuilder<>> builder_;
-  /// @brief Stores LLVM related information, including the constructed IR.
-  llvm::Module* module_;
+  /// @brief Stores global variables, function lists, and the constructed IR.
+  std::unique_ptr<llvm::Module> module_;
   /// @brief Handy LLVM types and functions for code generation.
   util::Util util_;
   /// @brief Get LLVM type from function parameter.

@@ -280,7 +280,7 @@ void LLVMIRGenerator::Visit(const FuncDefNode& func_def) {
                                      func_def.id == "main"
                                          ? llvm::Function::ExternalLinkage
                                          : llvm::Function::InternalLinkage,
-                                     func_def.id, module_);
+                                     func_def.id, *module_);
 
   auto body = llvm::BasicBlock::Create(*context_, "body", func);
   builder_->SetInsertPoint(body);
@@ -333,14 +333,15 @@ void LLVMIRGenerator::Visit(const TransUnitNode& trans_unit) {
   auto arg = llvm::ArrayRef<llvm::Type*>{util_.intTy};
   auto builtin_print = llvm::FunctionType::get(util_.intTy, arg, false);
   llvm::Function::Create(builtin_print, llvm::Function::ExternalLinkage,
-                         "__builtin_print", module_);
+                         "__builtin_print", *module_);
 
   auto args = llvm::ArrayRef<llvm::Type*>{util_.intPtrTy, util_.intTy};
   auto printf = llvm::FunctionType::get(util_.intTy, args, false);
   llvm::Function::Create(printf, llvm::Function::ExternalLinkage, "printf",
-                         module_);
+                         *module_);
 
-  builder_->CreateGlobalString("%d\n", "__builtin_print_format", 0, module_);
+  builder_->CreateGlobalString("%d\n", "__builtin_print_format", 0,
+                               module_.get());
 
   for (const auto& extern_decl : trans_unit.extern_decls) {
     extern_decl->Accept(*this);
