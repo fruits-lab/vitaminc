@@ -14,4 +14,4 @@ test:
 
 
 clean:
-	rm -f *.s **/*.s *.o **/*.o *.ssa **/*.ssa **/*.ll **/*_llvm.c
+	rm -f *.s **/*.s *.o **/*.o *.ssa **/*.ssa **/*.ll
