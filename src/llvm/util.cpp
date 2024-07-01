@@ -8,6 +8,11 @@
 #include <llvm/IR/Module.h>
 #include <llvm/IR/Type.h>
 
+#include <cassert>
+#include <memory>
+#include <string>
+#include <vector>
+
 #include "type.hpp"
 
 using namespace util;
@@ -58,10 +63,9 @@ void LLVMIRUtil::CurrBBFallThroughNextBB(llvm::BasicBlock* curr_bb,
 
 llvm::BasicBlock* LLVMIRUtil::FindBBWithNameOf(const std::string& id) {
   auto func = builder_->GetInsertBlock()->getParent();
-  for (auto bb_iter = func->begin(), bb_end = func->end(); bb_iter != bb_end;
-       ++bb_iter) {
-    if (bb_iter->getName() == id) {
-      return &(*bb_iter);
+  for (auto& bb_iter : *func) {
+    if (bb_iter.getName() == id) {
+      return &(bb_iter);
     }
   }
 

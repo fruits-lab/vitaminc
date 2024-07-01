@@ -7,6 +7,8 @@
 #include <fstream>
 #include <iostream>
 #include <memory>
+#include <string>
+#include <utility>
 
 #include "ast.hpp"
 #include "ast_dumper.hpp"
@@ -23,11 +25,11 @@ extern FILE*
 extern void yylex_destroy();  // NOLINT(readability-identifier-naming): extern
                               // from flex generated code.
 
-int QbeBuilder(std::unique_ptr<AstNode> program, std::string& input_basename,
+int QbeBuilder(std::unique_ptr<AstNode> trans_unit, std::string& input_basename,
                std::string& output_name);
 
-int LLVMBuilder(std::unique_ptr<AstNode> program, std::string& input_basename,
-                std::string& output_name);
+int LLVMBuilder(std::unique_ptr<AstNode> trans_unit,
+                std::string& input_basename, std::string& output_name);
 
 int main(  // NOLINT(bugprone-exception-escape): Using a big try-catch block to
            // catch all exceptions isn't reasonable.
@@ -74,7 +76,7 @@ int main(  // NOLINT(bugprone-exception-escape): Using a big try-catch block to
     std::exit(0);
   }
 
-  /// @brief The root node of the program.
+  /// @brief The root node of the trans_unit.
   auto trans_unit = std::unique_ptr<AstNode>{};
   yy::parser parser{trans_unit};
   int ret = parser.parse();

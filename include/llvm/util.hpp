@@ -7,6 +7,9 @@
 #include <llvm/IR/IRBuilder.h>
 #include <llvm/IR/Type.h>
 
+#include <memory>
+#include <string>
+
 #include "type.hpp"
 
 namespace util {
@@ -47,7 +50,8 @@ class LLVMIRUtil {
 
  private:
   /// @brief Stores a reference from the original builder.
-  std::unique_ptr<llvm::IRBuilder<>>& builder_;
+  std::unique_ptr<llvm::IRBuilder<>>&  // XXX: Ignore check until refactor.
+      builder_;  // NOLINT(cppcoreguidelines-avoid-const-or-ref-data-members)
 };
 
 }  // namespace util
