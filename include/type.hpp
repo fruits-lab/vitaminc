@@ -146,9 +146,10 @@ class FuncType : public Type {
       : return_type_{std::move(return_type)},
         param_types_{std::move(param_types)} {}
 
-  const Type& return_type()  // NOLINT(readability-identifier-naming)
+  const std::unique_ptr<Type>&
+  return_type()  // NOLINT(readability-identifier-naming)
       const noexcept {
-    return *return_type_;
+    return return_type_;
   }
 
   // XXX: Consider exposing iterators for constness.
