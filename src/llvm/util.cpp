@@ -46,6 +46,19 @@ void LLVMIRUtil::CurrBBFallThroughNextBB(llvm::BasicBlock* curr_BB,
 llvm::Type* LLVMIRUtil::GetLLVMType(const std::unique_ptr<Type>& type) {
   if (type->IsPtr()) {
     return IntPtrType;
+  } else if (type->IsArr()) {
+    auto arr_type = dynamic_cast<ArrType*>(type.get());
+    return llvm::ArrayType::get(IntType, arr_type->len());
+  } else if (type->IsStruct() || type->IsUnion()) {
+    std::string record_prefix = type->IsStruct() ? "struct_" : "union_";
+    auto record_type = dynamic_cast<RecordType*>(type.get());
+    std::vector<llvm::Type*> field_types;
+    for (auto& field : record_type->fields()) {
+      field_types.push_back(GetLLVMType(field->type));
+    }
+
+    return llvm::StructType::create(builder_->getContext(), field_types,
+                                    record_prefix + record_type->id());
   }
 
   return IntType;
