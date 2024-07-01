@@ -78,7 +78,8 @@ llvm::Function* LLVMIRUtil::CurrFunc() {
 
 llvm::Type* LLVMIRUtil::GetLLVMType(const std::unique_ptr<Type>& type) {
   if (type->IsPtr()) {
-    // TODO: recursive
+    // TODO: If type's base_type() IsFunc(), then return
+    // GetLLVMType(base_type()). Otherwise, return pointer to base_type() type.
     auto ptr_type = dynamic_cast<PtrType*>(type.get());
     assert(ptr_type);
     return IntPtrType();

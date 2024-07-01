@@ -296,7 +296,7 @@ std::size_t UnionType::MemberIndex(const std::string& id) const {
     }
   }
 
-  throw std::runtime_error{"member not found in struct!"};
+  throw std::runtime_error{"member not found in union!"};
 }
 
 std::size_t UnionType::OffsetOf(const std::string& id) const {
