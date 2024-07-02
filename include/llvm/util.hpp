@@ -44,6 +44,9 @@ class LLVMIRUtil {
   llvm::Function* CurrFunc();
 
   /// @brief Get the corresponding LLVM type from our type.
+  /// @note For Function Pointers, even though it is a pointer type, we return
+  /// `FunctionType` instead of `PointerType` because `FunctionType` is needed
+  /// for creating LLVM IR function call.
   /// @throw `std::runtime_error` if the `type` is not unknown.
   llvm::Type* GetLLVMType(const Type& type);
 

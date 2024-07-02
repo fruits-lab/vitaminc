@@ -88,6 +88,7 @@ llvm::Type* LLVMIRUtil::GetLLVMType(const Type& type) {
     auto ptr_type = dynamic_cast<const PtrType*>(&type);
     auto base_type = ptr_type->base_type().Clone();
     auto llvm_base_type = GetLLVMType(*base_type);
+    // Function pointers
     if (llvm_base_type->isFunctionTy()) {
       return llvm_base_type;
     }
@@ -98,6 +99,7 @@ llvm::Type* LLVMIRUtil::GetLLVMType(const Type& type) {
     return llvm::ArrayType::get(GetLLVMType(arr_type->element_type()),
                                 arr_type->len());
   } else if (type.IsStruct() || type.IsUnion()) {
+    // A prefix is needed to distinguish struct and union with the same name.
     std::string record_prefix = type.IsStruct() ? "struct_" : "union_";
     auto record_type = dynamic_cast<const RecordType*>(&type);
     std::vector<llvm::Type*> field_types;
