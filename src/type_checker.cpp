@@ -200,7 +200,7 @@ void TypeChecker::Visit(FuncDefNode& func_def) {
     decayed_param_types.push_back(parameter->type->Clone());
   }
   auto return_type =
-      dynamic_cast<FuncType*>(func_def.type.get())->return_type()->Clone();
+      dynamic_cast<FuncType*>(func_def.type.get())->return_type().Clone();
   func_def.type = std::make_unique<FuncType>(std::move(return_type),
                                              std::move(decayed_param_types));
   auto symbol =
@@ -464,7 +464,7 @@ void TypeChecker::Visit(FuncCallExprNode& call_expr) {
     // TODO: called object type 'type' is not a function or function pointer
     assert(false);
   }
-  call_expr.type = func_type->return_type()->Clone();
+  call_expr.type = func_type->return_type().Clone();
 
   auto& param_types = func_type->param_types();
   auto& args = call_expr.args;

@@ -243,7 +243,7 @@ llvm::Type* LLVMIRGenerator::GetParamType_(
   if (auto ptr_type = dynamic_cast<PtrType*>(parameter->type.get())) {
     auto base_type = ptr_type->base_type().Clone();
     if (auto func_type = dynamic_cast<FuncType*>(base_type.get())) {
-      auto return_type = func_type->return_type()->IsPtr()
+      auto return_type = func_type->return_type().IsPtr() == true
                              ? (llvm::Type*)llvm_util_.IntPtrType()
                              : (llvm::Type*)llvm_util_.IntType();
       std::vector<llvm::Type*> func_params;
@@ -266,11 +266,10 @@ llvm::Type* LLVMIRGenerator::GetParamType_(
 }
 
 void LLVMIRGenerator::Visit(const FuncDefNode& func_def) {
-  // Explicit cast to FunctionType or else it would get an error.
+  std::vector<llvm::Type*> param_types(func_def.parameters.size(),
+                                       llvm_util_.IntType());
   auto func_type =
-      llvm::dyn_cast<llvm::FunctionType>(llvm_util_.GetLLVMType(func_def.type));
-  assert(func_type);
-
+      llvm::FunctionType::get(llvm_util_.IntType(), param_types, false);
   auto func = llvm::Function::Create(func_type,
                                      func_def.id == "main"
                                          ? llvm::Function::ExternalLinkage
