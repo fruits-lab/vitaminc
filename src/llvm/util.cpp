@@ -10,6 +10,7 @@
 
 #include <cassert>
 #include <memory>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -77,7 +78,13 @@ llvm::Function* LLVMIRUtil::CurrFunc() {
 }
 
 llvm::Type* LLVMIRUtil::GetLLVMType(const Type& type) {
-  if (type.IsPtr()) {
+  if (type.IsPrim()) {
+    if (type.IsEqual(PrimitiveType::kInt)) {
+      return IntType();
+    }
+
+    throw std::runtime_error{"unknown type in GetLLVMType!"};
+  } else if (type.IsPtr()) {
     auto ptr_type = dynamic_cast<const PtrType*>(&type);
     auto base_type = ptr_type->base_type().Clone();
     auto llvm_base_type = GetLLVMType(*base_type);
@@ -110,5 +117,7 @@ llvm::Type* LLVMIRUtil::GetLLVMType(const Type& type) {
 
     return llvm::FunctionType::get(return_type, param_types, false);
   }
-  return IntType();
+
+  assert(false);
+  return nullptr;
 }
