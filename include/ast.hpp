@@ -36,7 +36,6 @@ struct AstNode {
   AstNode& operator=(AstNode&&) = delete;
 
   Location loc;
-  bool is_global{false};
 };
 
 // NOLINTBEGIN(cppcoreguidelines-special-member-functions):
@@ -72,6 +71,7 @@ struct DeclNode  // NOLINT(cppcoreguidelines-special-member-functions)
 
   std::string id;
   std::unique_ptr<Type> type;
+  bool is_global{false};
 };
 
 /// @note This is an abstract class.
@@ -87,6 +87,7 @@ struct ExprNode  // NOLINT(cppcoreguidelines-special-member-functions)
 
   std::unique_ptr<Type> type =
       std::make_unique<PrimType>(PrimitiveType::kUnknown);
+  bool is_global{false};
 };
 
 /// @brief A designator node is used to explicitly reference a member for
