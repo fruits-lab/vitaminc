@@ -79,6 +79,13 @@ llvm::Function* LLVMIRUtil::CurrFunc() {
 llvm::Type* LLVMIRUtil::GetLLVMType(const Type& type) {
   if (type.IsPtr()) {
     // TODO: recursive get base type
+    auto ptr_type = dynamic_cast<const PtrType*>(&type);
+    auto base_type = ptr_type->base_type().Clone();
+    auto llvm_base_type = GetLLVMType(*base_type);
+    if (llvm_base_type->isFunctionTy()) {
+      return IntPtrType();
+    }
+
     return IntPtrType();
   } else if (type.IsArr()) {
     auto arr_type = dynamic_cast<const ArrType*>(&type);
@@ -94,6 +101,15 @@ llvm::Type* LLVMIRUtil::GetLLVMType(const Type& type) {
 
     return llvm::StructType::create(builder_->getContext(), field_types,
                                     record_prefix + record_type->id());
+  } else if (type.IsFunc()) {
+    auto func_type = dynamic_cast<const FuncType*>(&type);
+    auto return_type = GetLLVMType(func_type->return_type());
+    std::vector<llvm::Type*> param_types;
+    for (auto& param_type : func_type->param_types()) {
+      param_types.push_back(GetLLVMType(*param_type));
+    }
+
+    return llvm::FunctionType::get(return_type, param_types, false);
   }
   return IntType();
 }
