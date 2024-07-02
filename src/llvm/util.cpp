@@ -78,12 +78,11 @@ llvm::Function* LLVMIRUtil::CurrFunc() {
 
 llvm::Type* LLVMIRUtil::GetLLVMType(const Type& type) {
   if (type.IsPtr()) {
-    // TODO: recursive get base type
     auto ptr_type = dynamic_cast<const PtrType*>(&type);
     auto base_type = ptr_type->base_type().Clone();
     auto llvm_base_type = GetLLVMType(*base_type);
     if (llvm_base_type->isFunctionTy()) {
-      return IntPtrType();
+      return llvm_base_type;
     }
 
     return IntPtrType();
