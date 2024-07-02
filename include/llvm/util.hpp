@@ -44,6 +44,7 @@ class LLVMIRUtil {
   llvm::Function* CurrFunc();
 
   /// @brief Get the corresponding LLVM type from our type.
+  /// @throw `std::runtime_error` if the `type` is not unknown.
   llvm::Type* GetLLVMType(const Type& type);
 
   LLVMIRUtil(std::unique_ptr<llvm::IRBuilder<>>& builder) : builder_{builder} {}
