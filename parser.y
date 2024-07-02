@@ -186,7 +186,7 @@ func_def: declaration_specifiers declarator compound_stmt {
     assert(func_def->type->IsFunc());
     const auto* func_type = static_cast<FuncType*>(func_def->type.get());
     auto type = std::get<std::unique_ptr<Type>>($1);
-    auto resolved_return_type = ResolveType(std::move(type), func_type->return_type()->Clone());
+    auto resolved_return_type = ResolveType(std::move(type), func_type->return_type().Clone());
     auto param_types = std::vector<std::unique_ptr<Type>>{};
     for (auto& param : func_type->param_types()) {
       param_types.push_back(param->Clone());
@@ -813,7 +813,7 @@ std::unique_ptr<Type> ResolveType(std::unique_ptr<Type> resolved_type,
   if (unknown_type->IsFunc()) {
     // NOTE: Due to the structure of the grammar, the return type of a function is to be resolved.
     auto func_type = static_cast<FuncType*>(unknown_type.get());
-    resolved_type = ResolveType(std::move(resolved_type), func_type->return_type()->Clone());
+    resolved_type = ResolveType(std::move(resolved_type), func_type->return_type().Clone());
     auto param_types = std::vector<std::unique_ptr<Type>>{};
     for (const auto& param : func_type->param_types()) {
       param_types.push_back(param->Clone());

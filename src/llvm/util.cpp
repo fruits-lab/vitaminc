@@ -78,10 +78,6 @@ llvm::Function* LLVMIRUtil::CurrFunc() {
 
 llvm::Type* LLVMIRUtil::GetLLVMType(const std::unique_ptr<Type>& type) {
   if (type->IsPtr()) {
-    // TODO: If type's base_type() IsFunc(), then return
-    // GetLLVMType(base_type()). Otherwise, return pointer to base_type() type.
-    auto ptr_type = dynamic_cast<PtrType*>(type.get());
-    assert(ptr_type);
     return IntPtrType();
   } else if (type->IsArr()) {
     auto arr_type = dynamic_cast<ArrType*>(type.get());
@@ -96,16 +92,6 @@ llvm::Type* LLVMIRUtil::GetLLVMType(const std::unique_ptr<Type>& type) {
 
     return llvm::StructType::create(builder_->getContext(), field_types,
                                     record_prefix + record_type->id());
-  } else if (type->IsFunc()) {
-    auto func_type = dynamic_cast<FuncType*>(type.get());
-    auto return_type = GetLLVMType(func_type->return_type());
-
-    std::vector<llvm::Type*> param_types;
-    for (auto& param_type : func_type->param_types()) {
-      param_types.push_back(GetLLVMType(param_type));
-    }
-
-    return llvm::FunctionType::get(return_type, param_types, false);
   }
 
   return IntType();
