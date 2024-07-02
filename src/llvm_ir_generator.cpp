@@ -160,7 +160,7 @@ void LLVMIRGenerator::Visit(const DeclStmtNode& decl_stmt) {
 }
 
 void LLVMIRGenerator::Visit(const VarDeclNode& decl) {
-  auto var_type = llvm_util_.GetLLVMType(decl.type);
+  auto var_type = llvm_util_.GetLLVMType(*(decl.type));
   auto addr = builder_->CreateAlloca(var_type);
   if (decl.init) {
     decl.init->Accept(*this);
@@ -177,7 +177,7 @@ void LLVMIRGenerator::Visit(const VarDeclNode& decl) {
 }
 
 void LLVMIRGenerator::Visit(const ArrDeclNode& arr_decl) {
-  auto arr_type = llvm_util_.GetLLVMType(arr_decl.type);
+  auto arr_type = llvm_util_.GetLLVMType(*(arr_decl.type));
   auto base_addr = builder_->CreateAlloca(arr_type, nullptr);
   id_to_val[arr_decl.id] = base_addr;
 
@@ -213,7 +213,7 @@ void LLVMIRGenerator::Visit(const FieldNode& field) {
 void LLVMIRGenerator::Visit(const RecordVarDeclNode& record_var_decl) {
   auto* record_type = dynamic_cast<RecordType*>(record_var_decl.type.get());
   assert(record_type);
-  auto type = llvm_util_.GetLLVMType(record_var_decl.type);
+  auto type = llvm_util_.GetLLVMType(*(record_var_decl.type));
   auto base_addr = builder_->CreateAlloca(type, nullptr);
   id_to_val[record_var_decl.id] = base_addr;
 
@@ -600,7 +600,7 @@ void LLVMIRGenerator::Visit(const ArrSubExprNode& arr_sub_expr) {
   arr_sub_expr.arr->Accept(*this);
   auto val = val_recorder.ValOfPrevExpr();
   auto base_addr = val_to_id_addr.at(val);
-  auto arr_type = llvm_util_.GetLLVMType(arr_sub_expr.arr->type);
+  auto arr_type = llvm_util_.GetLLVMType(*(arr_sub_expr.arr->type));
   arr_sub_expr.index->Accept(*this);
   auto index = dynamic_cast<IntConstExprNode*>(arr_sub_expr.index.get());
   assert(index);
@@ -711,14 +711,15 @@ void LLVMIRGenerator::Visit(const RecordMemExprNode& mem_expr) {
   mem_expr.expr->Accept(*this);
   auto val = val_recorder.ValOfPrevExpr();
   auto base_addr = val_to_id_addr.at(val);
-  auto struct_type = llvm_util_.GetLLVMType(mem_expr.expr->type);
+  auto struct_type = llvm_util_.GetLLVMType(*(mem_expr.expr->type));
   auto* record_type = dynamic_cast<RecordType*>(mem_expr.expr->type.get());
   assert(record_type);
 
   auto res_addr = builder_->CreateStructGEP(
       struct_type, base_addr, record_type->MemberIndex(mem_expr.id));
   auto res_val = builder_->CreateLoad(
-      llvm_util_.GetLLVMType(record_type->MemberType(mem_expr.id)), res_addr);
+      llvm_util_.GetLLVMType(*(record_type->MemberType(mem_expr.id))),
+      res_addr);
   val_to_id_addr[res_val] = res_addr;
   val_recorder.Record(res_val);
 }
