@@ -266,10 +266,9 @@ llvm::Type* LLVMIRGenerator::GetParamType_(
 }
 
 void LLVMIRGenerator::Visit(const FuncDefNode& func_def) {
-  std::vector<llvm::Type*> param_types(func_def.parameters.size(),
-                                       llvm_util_.IntType());
-  auto func_type =
-      llvm::FunctionType::get(llvm_util_.IntType(), param_types, false);
+  // Explicit cast to llvm::FunctionType to avoid compiler error.
+  auto func_type = llvm::dyn_cast<llvm::FunctionType>(
+      llvm_util_.GetLLVMType(*(func_def.type)));
   auto func = llvm::Function::Create(func_type,
                                      func_def.id == "main"
                                          ? llvm::Function::ExternalLinkage
@@ -574,12 +573,16 @@ void LLVMIRGenerator::Visit(const IdExprNode& id_expr) {
   assert(id_to_val.count(id_expr.id) != 0);
   auto id_val = id_to_val.at(id_expr.id);
 
+  // TODO: Remove this
   if (id_expr.type->IsPtr() || id_expr.type->IsFunc()) {
-    auto res = builder_->CreateLoad(llvm_util_.IntPtrType(), id_val);
+    // auto res = builder_->CreateLoad(llvm_util_.IntPtrType(), id_val);
+    auto res =
+        builder_->CreateLoad(llvm_util_.GetLLVMType(*(id_expr.type)), id_val);
     val_recorder.Record(res);
     val_to_id_addr[res] = id_val;
   } else {
-    auto res = builder_->CreateLoad(llvm_util_.IntType(), id_val);
+    auto res =
+        builder_->CreateLoad(llvm_util_.GetLLVMType(*(id_expr.type)), id_val);
     val_recorder.Record(res);
     val_to_id_addr[res] = id_val;
   }
