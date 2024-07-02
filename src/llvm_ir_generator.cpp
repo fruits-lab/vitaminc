@@ -226,35 +226,6 @@ void LLVMIRGenerator::Visit(const ParamNode& parameter) {
   /* Do nothing */
 }
 
-// TODO: Remove this function after refactoring GetLLVMType
-llvm::Type* LLVMIRGenerator::GetParamType_(
-    const std::unique_ptr<ParamNode>& parameter) {
-  llvm::Type* param_type = nullptr;
-  if (auto ptr_type = dynamic_cast<PtrType*>(parameter->type.get())) {
-    auto base_type = ptr_type->base_type().Clone();
-    if (auto func_type = dynamic_cast<FuncType*>(base_type.get())) {
-      auto return_type = func_type->return_type().IsPtr() == true
-                             ? (llvm::Type*)llvm_util_.IntPtrType()
-                             : (llvm::Type*)llvm_util_.IntType();
-      std::vector<llvm::Type*> func_params;
-      for (auto& func_param : func_type->param_types()) {
-        func_params.push_back(func_param->IsPtr()
-                                  ? (llvm::Type*)llvm_util_.IntPtrType()
-                                  : (llvm::Type*)llvm_util_.IntType());
-      }
-      auto func_ptr_type =
-          llvm::FunctionType::get(return_type, func_params, false);
-      param_type = func_ptr_type;
-    } else {
-      param_type = llvm_util_.IntPtrType();
-    }
-  } else {
-    param_type = llvm_util_.IntType();
-  }
-
-  return param_type;
-}
-
 void LLVMIRGenerator::Visit(const FuncDefNode& func_def) {
   // Explicit cast to llvm::FunctionType to avoid compiler error.
   auto func_type = llvm::dyn_cast<llvm::FunctionType>(
@@ -273,24 +244,15 @@ void LLVMIRGenerator::Visit(const FuncDefNode& func_def) {
     parameter->Accept(*this);
     args_iter->setName(parameter->id);
 
-    llvm::Type* param_type = GetParamType_(parameter);
-    // Get FunctionType instead of Ptr type
-    // llvm::Type* param_type2 = llvm_util_.GetLLVMType(*(parameter->type));
-    //   TODO: Refactor this after finishing GetLLVMType
+    llvm::Type* param_type = llvm_util_.GetLLVMType(*(parameter->type));
+    // Update type from FunctionType to PointerType for function pointer.
     if (param_type->isFunctionTy()) {
-      // auto func_type = param_type;
-      // function pointer
       param_type = param_type->getPointerTo();
-      args_iter->mutateType(param_type);
-      auto addr = builder_->CreateAlloca(param_type);
-      builder_->CreateStore(args_iter, addr);
-      id_to_val[parameter->id] = addr;
-    } else {
-      args_iter->mutateType(param_type);
-      auto addr = builder_->CreateAlloca(param_type);
-      builder_->CreateStore(args_iter, addr);
-      id_to_val[parameter->id] = addr;
     }
+    args_iter->mutateType(param_type);
+    auto addr = builder_->CreateAlloca(param_type);
+    builder_->CreateStore(args_iter, addr);
+    id_to_val[parameter->id] = addr;
     ++args_iter;
   }
 
