@@ -178,7 +178,7 @@ void LLVMIRGenerator::Visit(const VarDeclNode& decl) {
 
 void LLVMIRGenerator::Visit(const ArrDeclNode& arr_decl) {
   auto arr_type = llvm_util_.GetLLVMType(*(arr_decl.type));
-  auto base_addr = builder_->CreateAlloca(arr_type, nullptr);
+  auto base_addr = builder_->CreateAlloca(arr_type);
   id_to_val[arr_decl.id] = base_addr;
 
   auto arr_decl_type = dynamic_cast<ArrType*>(arr_decl.type.get());
@@ -214,11 +214,11 @@ void LLVMIRGenerator::Visit(const RecordVarDeclNode& record_var_decl) {
   auto* record_type = dynamic_cast<RecordType*>(record_var_decl.type.get());
   assert(record_type);
   auto type = llvm_util_.GetLLVMType(*(record_var_decl.type));
-  auto base_addr = builder_->CreateAlloca(type, nullptr);
+  auto base_addr = builder_->CreateAlloca(type);
   id_to_val[record_var_decl.id] = base_addr;
 
   // NOTE: This predicate will make sure that we don't initialize members that
-  // exceed the total number of members in a record. Also, it gurantees
+  // exceed the total number of members in a record. Also, it guarantees
   // that accessing element in the initializers will not go out of bound.
   for (auto i = std::size_t{0}, e = record_var_decl.inits.size(),
             slot_count = record_type->SlotCount();
@@ -240,11 +240,8 @@ void LLVMIRGenerator::Visit(const FuncDefNode& func_def) {
   // Explicit cast to llvm::FunctionType to avoid compiler error.
   auto func_type = llvm::dyn_cast<llvm::FunctionType>(
       llvm_util_.GetLLVMType(*(func_def.type)));
-  auto func = llvm::Function::Create(func_type,
-                                     func_def.id == "main"
-                                         ? llvm::Function::ExternalLinkage
-                                         : llvm::Function::InternalLinkage,
-                                     func_def.id, *module_);
+  auto func = llvm::Function::Create(
+      func_type, llvm::GlobalValue::ExternalLinkage, func_def.id, *module_);
 
   auto body = llvm::BasicBlock::Create(*context_, "body", func);
   builder_->SetInsertPoint(body);
@@ -292,7 +289,7 @@ void LLVMIRGenerator::Visit(const TransUnitNode& trans_unit) {
   llvm::Function::Create(builtin_print, llvm::Function::ExternalLinkage,
                          "__builtin_print", *module_);
 
-  // Generate printf function for LLVM interpreter.
+  // Generate printf function.
   auto args =
       llvm::ArrayRef<llvm::Type*>{builder_->getPtrTy(), builder_->getInt32Ty()};
   auto printf = llvm::FunctionType::get(builder_->getInt32Ty(), args, false);
