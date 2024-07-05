@@ -17,11 +17,6 @@ namespace util {
 /// @brief A collection of wrappers of LLVM types and functions.
 class LLVMIRBuilderHelper {
  public:
-  /// @brief LLVM Integer type
-  llvm::IntegerType* IntType();
-  /// @brief LLVM Pointer type
-  llvm::PointerType* IntPtrType();
-
   /// @brief Every LLVM basic block can only have one terminator instruction.
   /// This function can check if there are terminator instructions before the
   /// current insert point. If no, then it will create an unconditional branch

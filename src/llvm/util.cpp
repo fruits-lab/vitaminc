@@ -4,8 +4,6 @@
 #include <llvm/IR/DerivedTypes.h>
 #include <llvm/IR/Function.h>
 #include <llvm/IR/IRBuilder.h>
-#include <llvm/IR/LLVMContext.h>
-#include <llvm/IR/Module.h>
 #include <llvm/IR/Type.h>
 
 #include <cassert>
@@ -17,14 +15,6 @@
 #include "type.hpp"
 
 using namespace util;
-
-llvm::IntegerType* LLVMIRBuilderHelper::IntType() {
-  return builder_.getInt32Ty();
-}
-
-llvm::PointerType* LLVMIRBuilderHelper::IntPtrType() {
-  return builder_.getPtrTy();
-}
 
 void LLVMIRBuilderHelper::CreateBrIfNoBrBefore(llvm::BasicBlock* next_bb) {
   auto bb = builder_.GetInsertBlock();
@@ -80,7 +70,7 @@ llvm::Function* LLVMIRBuilderHelper::CurrFunc() {
 llvm::Type* LLVMIRBuilderHelper::GetLLVMType(const Type& type) {
   if (type.IsPrim()) {
     if (type.IsEqual(PrimitiveType::kInt)) {
-      return IntType();
+      return builder_.getInt32Ty();
     }
 
     throw std::runtime_error{"unknown type in GetLLVMType!"};
@@ -92,8 +82,7 @@ llvm::Type* LLVMIRBuilderHelper::GetLLVMType(const Type& type) {
     if (llvm_base_type->isFunctionTy()) {
       return llvm_base_type;
     }
-
-    return IntPtrType();
+    return builder_.getPtrTy();
   } else if (type.IsArr()) {
     auto arr_type = dynamic_cast<const ArrType*>(&type);
     return llvm::ArrayType::get(GetLLVMType(arr_type->element_type()),
