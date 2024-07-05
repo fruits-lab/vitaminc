@@ -15,7 +15,7 @@
 
 using namespace util;
 
-bool LLVMIRBuilderHelper::HasTerminator(llvm::BasicBlock* bb) {
+bool util::HasTerminator(llvm::BasicBlock* bb) {
   for (auto& it : *bb) {
     if (it.isTerminator()) {
       return true;
