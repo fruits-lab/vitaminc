@@ -25,10 +25,10 @@ extern FILE*
 extern void yylex_destroy();  // NOLINT(readability-identifier-naming): extern
                               // from flex generated code.
 
-int QbeBuilder(std::unique_ptr<AstNode> trans_unit, std::string& input_basename,
+int CompileQbe(std::unique_ptr<AstNode> trans_unit, std::string& input_basename,
                std::string& output_name);
 
-int LLVMBuilder(std::unique_ptr<AstNode> trans_unit,
+int CompileLLVM(std::unique_ptr<AstNode> trans_unit,
                 std::string& input_basename, std::string& output_name);
 
 int main(  // NOLINT(bugprone-exception-escape): Using a big try-catch block to
@@ -76,7 +76,7 @@ int main(  // NOLINT(bugprone-exception-escape): Using a big try-catch block to
     std::exit(0);
   }
 
-  /// @brief The root node of the trans_unit.
+  /// @brief The root node of the translation unit.
   auto trans_unit = std::unique_ptr<AstNode>{};
   yy::parser parser{trans_unit};
   int ret = parser.parse();
@@ -105,9 +105,9 @@ int main(  // NOLINT(bugprone-exception-escape): Using a big try-catch block to
   auto output = opts["output"].as<std::string>();
   // generate intermediate representation based on target option
   if (opts["target"].as<std::string>() == "qbe") {
-    return QbeBuilder(std::move(trans_unit), input_basename, output);
+    return CompileQbe(std::move(trans_unit), input_basename, output);
   } else if (opts["target"].as<std::string>() == "llvm") {
-    return LLVMBuilder(std::move(trans_unit), input_basename, output);
+    return CompileLLVM(std::move(trans_unit), input_basename, output);
   } else {
     std::cerr << "unknown target" << '\n';
     std::exit(0);
@@ -116,7 +116,7 @@ int main(  // NOLINT(bugprone-exception-escape): Using a big try-catch block to
   return 0;
 }
 
-int QbeBuilder(std::unique_ptr<AstNode> trans_unit, std::string& input_basename,
+int CompileQbe(std::unique_ptr<AstNode> trans_unit, std::string& input_basename,
                std::string& output_name) {
   auto output_ir = std::ofstream{fmt::format("{}.ssa", input_basename)};
   QbeIrGenerator code_generator{output_ir};
@@ -143,7 +143,7 @@ int QbeBuilder(std::unique_ptr<AstNode> trans_unit, std::string& input_basename,
   return 0;
 }
 
-int LLVMBuilder(std::unique_ptr<AstNode> trans_unit,
+int CompileLLVM(std::unique_ptr<AstNode> trans_unit,
                 std::string& input_basename, std::string& output_name) {
   auto output_ir = std::ofstream{fmt::format("{}.ll", input_basename)};
   LLVMIRGenerator code_generator{output_ir, input_basename};
