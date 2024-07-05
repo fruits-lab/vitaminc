@@ -671,7 +671,7 @@ void LLVMIRGenerator::Visit(const RecordMemExprNode& mem_expr) {
   auto res_addr = builder_.CreateStructGEP(
       llvm_type, base_addr, record_type->MemberIndex(mem_expr.id));
   auto res_val = builder_.CreateLoad(
-      builder_helper_.GetLLVMType(*(record_type->MemberType(mem_expr.id))),
+      builder_helper_.GetLLVMType(record_type->MemberType(mem_expr.id)),
       res_addr);
   val_to_id_addr[res_val] = res_addr;
   val_recorder.Record(res_val);

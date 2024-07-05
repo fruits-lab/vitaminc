@@ -194,10 +194,9 @@ class RecordType : public Type {
       const noexcept = 0;
   /// @brief Checks if `id` is a member of the record type.
   virtual bool IsMember(const std::string& id) const noexcept = 0;
-  /// @return The type of a member in struct or union. The unknown type if the
-  /// `id` is not a member of the record type.
-  virtual std::unique_ptr<Type> MemberType(
-      const std::string& id) const noexcept = 0;
+  /// @return The type of a member in struct or union.
+  /// @throw `std::runtime_error` if the `id` is not a member of the record.
+  virtual const Type& MemberType(const std::string& id) const = 0;
   /// @note Every member in union shares the same index 0.
   /// @return The index of a member in struct or union.
   /// @throw `std::runtime_error` if the `id` is not a member of the record.
@@ -227,8 +226,7 @@ class StructType : public RecordType {
   }
   std::string id() const noexcept override;
   bool IsMember(const std::string& id) const noexcept override;
-  std::unique_ptr<Type> MemberType(
-      const std::string& id) const noexcept override;
+  const Type& MemberType(const std::string& id) const override;
   std::size_t MemberIndex(const std::string& id) const override;
   std::size_t OffsetOf(const std::string& id) const override;
   std::size_t OffsetOf(std::size_t index) const override;
@@ -260,8 +258,7 @@ class UnionType : public RecordType {
   }
   std::string id() const noexcept override;
   bool IsMember(const std::string& id) const noexcept override;
-  std::unique_ptr<Type> MemberType(
-      const std::string& id) const noexcept override;
+  const Type& MemberType(const std::string& id) const override;
   std::size_t MemberIndex(const std::string& id) const override;
   std::size_t OffsetOf(const std::string& id) const override;
   std::size_t OffsetOf(std::size_t index) const override;

@@ -171,15 +171,14 @@ bool StructType::IsMember(const std::string& id) const noexcept {
   return false;
 }
 
-std::unique_ptr<Type> StructType::MemberType(
-    const std::string& id) const noexcept {
+const Type& StructType::MemberType(const std::string& id) const {
   for (const auto& field : fields_) {
     if (field->id == id) {
-      return field->type->Clone();
+      return *field->type;
     }
   }
 
-  return std::make_unique<PrimType>(PrimitiveType::kUnknown);
+  throw std::runtime_error{"member not found in struct!"};
 }
 
 std::size_t StructType::MemberIndex(const std::string& id) const {
@@ -277,15 +276,14 @@ bool UnionType::IsMember(const std::string& id) const noexcept {
   return false;
 }
 
-std::unique_ptr<Type> UnionType::MemberType(
-    const std::string& id) const noexcept {
+const Type& UnionType::MemberType(const std::string& id) const {
   for (const auto& field : fields_) {
     if (field->id == id) {
-      return field->type->Clone();
+      return *field->type;
     }
   }
 
-  return std::make_unique<PrimType>(PrimitiveType::kUnknown);
+  throw std::runtime_error{"member not found in union!"};
 }
 
 std::size_t UnionType::MemberIndex(const std::string& id) const {

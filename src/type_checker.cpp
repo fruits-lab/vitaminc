@@ -497,7 +497,7 @@ void TypeChecker::Visit(RecordMemExprNode& mem_expr) {
   if (auto* record_type =
           dynamic_cast<RecordType*>((mem_expr.expr->type).get())) {
     if (record_type->IsMember(mem_expr.id)) {
-      mem_expr.type = record_type->MemberType(mem_expr.id);
+      mem_expr.type = record_type->MemberType(mem_expr.id).Clone();
     } else {
       assert(false);
       // TODO: Throw error if mem_expr.id is not a symbol's member.
