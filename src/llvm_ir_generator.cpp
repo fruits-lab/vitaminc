@@ -530,16 +530,16 @@ void LLVMIRGenerator::Visit(const IdExprNode& id_expr) {
   assert(id_to_val.count(id_expr.id) != 0);
   auto id_val = id_to_val.at(id_expr.id);
 
+  llvm::Type* id_type = nullptr;
+  // LLVM requires the function to have pointer type when being referenced.
   if (id_expr.type->IsPtr() || id_expr.type->IsFunc()) {
-    auto res = builder_->CreateLoad(builder_->getPtrTy(), id_val);
-    val_recorder.Record(res);
-    val_to_id_addr[res] = id_val;
+    id_type = builder_->getPtrTy();
   } else {
-    auto res =
-        builder_->CreateLoad(llvm_util_.GetLLVMType(*(id_expr.type)), id_val);
-    val_recorder.Record(res);
-    val_to_id_addr[res] = id_val;
+    id_type = llvm_util_.GetLLVMType(*(id_expr.type));
   }
+  auto res = builder_->CreateLoad(id_type, id_val);
+  val_recorder.Record(res);
+  val_to_id_addr[res] = id_val;
 }
 
 void LLVMIRGenerator::Visit(const IntConstExprNode& int_expr) {
