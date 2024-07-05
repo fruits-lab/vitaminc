@@ -25,11 +25,13 @@ extern FILE*
 extern void yylex_destroy();  // NOLINT(readability-identifier-naming): extern
                               // from flex generated code.
 
-int CompileQbe(std::unique_ptr<AstNode> trans_unit, std::string& input_basename,
-               std::string& output_name);
+int CompileQbe(std::unique_ptr<AstNode> trans_unit,
+               const std::string& input_basename,
+               const std::string& output_name);
 
 int CompileLLVM(std::unique_ptr<AstNode> trans_unit,
-                std::string& input_basename, std::string& output_name);
+                const std::string& input_basename,
+                const std::string& output_name);
 
 int main(  // NOLINT(bugprone-exception-escape): Using a big try-catch block to
            // catch all exceptions isn't reasonable.
@@ -116,8 +118,9 @@ int main(  // NOLINT(bugprone-exception-escape): Using a big try-catch block to
   return 0;
 }
 
-int CompileQbe(std::unique_ptr<AstNode> trans_unit, std::string& input_basename,
-               std::string& output_name) {
+int CompileQbe(std::unique_ptr<AstNode> trans_unit,
+               const std::string& input_basename,
+               const std::string& output_name) {
   auto output_ir = std::ofstream{fmt::format("{}.ssa", input_basename)};
   QbeIrGenerator code_generator{output_ir};
   trans_unit->Accept(code_generator);
@@ -144,7 +147,8 @@ int CompileQbe(std::unique_ptr<AstNode> trans_unit, std::string& input_basename,
 }
 
 int CompileLLVM(std::unique_ptr<AstNode> trans_unit,
-                std::string& input_basename, std::string& output_name) {
+                const std::string& input_basename,
+                const std::string& output_name) {
   auto output_ir = std::ofstream{fmt::format("{}.ll", input_basename)};
   LLVMIRGenerator code_generator{output_ir, input_basename};
   trans_unit->Accept(code_generator);
