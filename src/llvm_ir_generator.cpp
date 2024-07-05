@@ -138,22 +138,22 @@ auto
                   // a data member introduces unnecessary dependency.
     = PrevValueRecorder{};
 
-struct LabelViewInfo {
+struct LabelInfo {
   llvm::BasicBlock* entry;
   llvm::BasicBlock* exit;
   /// @brief This vector stores every `case` and `default` basic blocks of
   /// a switch case.
-  /// This first element of a pair is the expression value
-  /// of a case statement.
-  /// This second element of a pair is the label's basic block.
+  /// The first element of a pair is the expression value
+  /// of a case statement. It will be a `nullptr` if this is a default case.
+  /// The second element of a pair is the label's basic block.
   std::vector<std::pair<llvm::Value*, llvm::BasicBlock*>> cases{};
 };
 
 /// @note Blocks that allows jumping within or out of it should add its labels
 /// to this list.
 auto
-    label_views_of_jumpable_blocks  // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
-    = std::vector<LabelViewInfo>{};
+    labels_of_jumpable_blocks  // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
+    = std::vector<LabelInfo>{};
 
 }  // namespace
 
@@ -360,9 +360,9 @@ void LLVMIRGenerator::Visit(const WhileStmtNode& while_stmt) {
     builder_->CreateBr(body_bb);
   }
   builder_->SetInsertPoint(body_bb);
-  label_views_of_jumpable_blocks.push_back({.entry = pred_bb, .exit = end_bb});
+  labels_of_jumpable_blocks.push_back({.entry = pred_bb, .exit = end_bb});
   while_stmt.loop_body->Accept(*this);
-  label_views_of_jumpable_blocks.pop_back();
+  labels_of_jumpable_blocks.pop_back();
   llvm_util_.CreateBrIfNoBrBefore(pred_bb);
 
   if (while_stmt.is_do_while) {
@@ -391,9 +391,9 @@ void LLVMIRGenerator::Visit(const ForStmtNode& for_stmt) {
   }
 
   builder_->SetInsertPoint(body_bb);
-  label_views_of_jumpable_blocks.push_back({.entry = step_bb, .exit = end_bb});
+  labels_of_jumpable_blocks.push_back({.entry = step_bb, .exit = end_bb});
   for_stmt.loop_body->Accept(*this);
-  label_views_of_jumpable_blocks.pop_back();
+  labels_of_jumpable_blocks.pop_back();
   llvm_util_.CreateBrIfNoBrBefore(step_bb);
 
   builder_->SetInsertPoint(step_bb);
@@ -421,13 +421,13 @@ void LLVMIRGenerator::Visit(const GotoStmtNode& goto_stmt) {
 }
 
 void LLVMIRGenerator::Visit(const BreakStmtNode& break_stmt) {
-  assert(!label_views_of_jumpable_blocks.empty());
-  llvm_util_.CreateBrIfNoBrBefore(label_views_of_jumpable_blocks.back().exit);
+  assert(!labels_of_jumpable_blocks.empty());
+  llvm_util_.CreateBrIfNoBrBefore(labels_of_jumpable_blocks.back().exit);
 }
 
 void LLVMIRGenerator::Visit(const ContinueStmtNode& continue_stmt) {
-  assert(!label_views_of_jumpable_blocks.empty());
-  llvm_util_.CreateBrIfNoBrBefore(label_views_of_jumpable_blocks.back().entry);
+  assert(!labels_of_jumpable_blocks.empty());
+  llvm_util_.CreateBrIfNoBrBefore(labels_of_jumpable_blocks.back().entry);
 }
 
 void LLVMIRGenerator::Visit(const SwitchStmtNode& switch_stmt) {
@@ -436,10 +436,10 @@ void LLVMIRGenerator::Visit(const SwitchStmtNode& switch_stmt) {
   auto end_bb =
       llvm::BasicBlock::Create(*context_, "switch_end", llvm_util_.CurrFunc());
   auto sw = builder_->CreateSwitch(ctrl, nullptr);
-  label_views_of_jumpable_blocks.push_back({.entry = end_bb, .exit = end_bb});
+  labels_of_jumpable_blocks.push_back({.entry = end_bb, .exit = end_bb});
   switch_stmt.stmt->Accept(*this);
   // Update cases and default label.
-  auto switch_infos = label_views_of_jumpable_blocks.back();
+  auto switch_infos = labels_of_jumpable_blocks.back();
   for (auto i = std::size_t{0}, e = switch_infos.cases.size(); i < e; ++i) {
     auto case_info = switch_infos.cases.at(i);
     auto curr_bb = case_info.second;
@@ -460,7 +460,7 @@ void LLVMIRGenerator::Visit(const SwitchStmtNode& switch_stmt) {
       llvm_util_.CurrBBFallThroughNextBB(curr_bb, switch_infos.exit);
     }
   }
-  label_views_of_jumpable_blocks.pop_back();
+  labels_of_jumpable_blocks.pop_back();
   llvm_util_.CreateBrIfNoBrBefore(end_bb);
   builder_->SetInsertPoint(end_bb);
 }
@@ -492,9 +492,9 @@ void LLVMIRGenerator::Visit(const CaseStmtNode& case_stmt) {
   builder_->SetInsertPoint(case_bb);
   case_stmt.stmt->Accept(*this);
 
-  assert(!label_views_of_jumpable_blocks.empty());
+  assert(!labels_of_jumpable_blocks.empty());
   std::pair<llvm::Value*, llvm::BasicBlock*> p{val, case_bb};
-  label_views_of_jumpable_blocks.back().cases.push_back(p);
+  labels_of_jumpable_blocks.back().cases.push_back(p);
 }
 
 void LLVMIRGenerator::Visit(const DefaultStmtNode& default_stmt) {
@@ -503,9 +503,9 @@ void LLVMIRGenerator::Visit(const DefaultStmtNode& default_stmt) {
   builder_->SetInsertPoint(default_bb);
   default_stmt.stmt->Accept(*this);
 
-  assert(!label_views_of_jumpable_blocks.empty());
+  assert(!labels_of_jumpable_blocks.empty());
   std::pair<llvm::Value*, llvm::BasicBlock*> p{nullptr, default_bb};
-  label_views_of_jumpable_blocks.back().cases.push_back(p);
+  labels_of_jumpable_blocks.back().cases.push_back(p);
 }
 
 void LLVMIRGenerator::Visit(const ExprStmtNode& expr_stmt) {
