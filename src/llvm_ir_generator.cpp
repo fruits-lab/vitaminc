@@ -627,7 +627,8 @@ void LLVMIRGenerator::Visit(const FuncCallExprNode& call_expr) {
       assert(print_format);
       print_args.push_back(print_format);
       print_args.insert(print_args.end(), arg_vals.begin(), arg_vals.end());
-      builder_->CreateCall(printf, print_args);
+      auto return_res = builder_->CreateCall(printf, print_args);
+      val_recorder.Record(return_res);
     } else {
       auto called_func = module_->getFunction(func->getName());
       auto return_res = builder_->CreateCall(called_func, arg_vals);
