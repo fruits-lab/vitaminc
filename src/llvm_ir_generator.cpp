@@ -667,12 +667,12 @@ void LLVMIRGenerator::Visit(const RecordMemExprNode& mem_expr) {
   mem_expr.expr->Accept(*this);
   auto val = val_recorder.ValOfPrevExpr();
   auto base_addr = val_to_id_addr.at(val);
-  auto struct_type = llvm_util_.GetLLVMType(*(mem_expr.expr->type));
+  auto llvm_type = llvm_util_.GetLLVMType(*(mem_expr.expr->type));
   auto* record_type = dynamic_cast<RecordType*>(mem_expr.expr->type.get());
   assert(record_type);
 
   auto res_addr = builder_->CreateStructGEP(
-      struct_type, base_addr, record_type->MemberIndex(mem_expr.id));
+      llvm_type, base_addr, record_type->MemberIndex(mem_expr.id));
   auto res_val = builder_->CreateLoad(
       llvm_util_.GetLLVMType(*(record_type->MemberType(mem_expr.id))),
       res_addr);
