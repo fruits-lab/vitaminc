@@ -18,16 +18,16 @@
 
 using namespace util;
 
-llvm::IntegerType* LLVMIRUtil::IntType() {
-  return builder_->getInt32Ty();
+llvm::IntegerType* LLVMIRBuilderHelper::IntType() {
+  return builder_.getInt32Ty();
 }
 
-llvm::PointerType* LLVMIRUtil::IntPtrType() {
-  return builder_->getPtrTy();
+llvm::PointerType* LLVMIRBuilderHelper::IntPtrType() {
+  return builder_.getPtrTy();
 }
 
-void LLVMIRUtil::CreateBrIfNoBrBefore(llvm::BasicBlock* next_bb) {
-  auto bb = builder_->GetInsertBlock();
+void LLVMIRBuilderHelper::CreateBrIfNoBrBefore(llvm::BasicBlock* next_bb) {
+  auto bb = builder_.GetInsertBlock();
   bool has_terminator = false;
   for (auto it = bb->begin(); it != bb->end();) {
     if (it->isTerminator()) {
@@ -39,12 +39,12 @@ void LLVMIRUtil::CreateBrIfNoBrBefore(llvm::BasicBlock* next_bb) {
   }
 
   if (!has_terminator) {
-    builder_->CreateBr(next_bb);
+    builder_.CreateBr(next_bb);
   }
 }
 
-void LLVMIRUtil::CurrBBFallThroughNextBB(llvm::BasicBlock* curr_bb,
-                                         llvm::BasicBlock* next_bb) {
+void LLVMIRBuilderHelper::CurrBBFallThroughNextBB(llvm::BasicBlock* curr_bb,
+                                                  llvm::BasicBlock* next_bb) {
   auto bb = curr_bb;
   bool has_terminator = false;
   for (auto it = bb->begin(); it != bb->end();) {
@@ -57,13 +57,13 @@ void LLVMIRUtil::CurrBBFallThroughNextBB(llvm::BasicBlock* curr_bb,
   }
 
   if (!has_terminator) {
-    builder_->SetInsertPoint(curr_bb);
-    builder_->CreateBr(next_bb);
+    builder_.SetInsertPoint(curr_bb);
+    builder_.CreateBr(next_bb);
   }
 }
 
-llvm::BasicBlock* LLVMIRUtil::FindBBWithNameOf(const std::string& id) {
-  auto func = builder_->GetInsertBlock()->getParent();
+llvm::BasicBlock* LLVMIRBuilderHelper::FindBBWithNameOf(const std::string& id) {
+  auto func = builder_.GetInsertBlock()->getParent();
   for (auto& bb_iter : *func) {
     if (bb_iter.getName() == id) {
       return &(bb_iter);
@@ -73,11 +73,11 @@ llvm::BasicBlock* LLVMIRUtil::FindBBWithNameOf(const std::string& id) {
   return nullptr;
 }
 
-llvm::Function* LLVMIRUtil::CurrFunc() {
-  return builder_->GetInsertBlock()->getParent();
+llvm::Function* LLVMIRBuilderHelper::CurrFunc() {
+  return builder_.GetInsertBlock()->getParent();
 }
 
-llvm::Type* LLVMIRUtil::GetLLVMType(const Type& type) {
+llvm::Type* LLVMIRBuilderHelper::GetLLVMType(const Type& type) {
   if (type.IsPrim()) {
     if (type.IsEqual(PrimitiveType::kInt)) {
       return IntType();
@@ -107,7 +107,7 @@ llvm::Type* LLVMIRUtil::GetLLVMType(const Type& type) {
       field_types.push_back(GetLLVMType(*(field->type)));
     }
 
-    return llvm::StructType::create(builder_->getContext(), field_types,
+    return llvm::StructType::create(builder_.getContext(), field_types,
                                     record_prefix + record_type->id());
   } else if (type.IsFunc()) {
     auto func_type = dynamic_cast<const FuncType*>(&type);
