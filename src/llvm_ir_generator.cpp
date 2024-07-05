@@ -162,7 +162,7 @@ void LLVMIRGenerator::Visit(const DeclStmtNode& decl_stmt) {
 }
 
 void LLVMIRGenerator::Visit(const VarDeclNode& decl) {
-  auto var_type = llvm_util_.GetLLVMType(*(decl.type));
+  auto var_type = builder_helper_.GetLLVMType(*(decl.type));
   // For function pointer, we need to change from FunctionType to PointerType
   var_type = var_type->isFunctionTy() ? var_type->getPointerTo() : var_type;
   auto addr = builder_->CreateAlloca(var_type);
@@ -175,7 +175,7 @@ void LLVMIRGenerator::Visit(const VarDeclNode& decl) {
 }
 
 void LLVMIRGenerator::Visit(const ArrDeclNode& arr_decl) {
-  auto arr_type = llvm_util_.GetLLVMType(*(arr_decl.type));
+  auto arr_type = builder_helper_.GetLLVMType(*(arr_decl.type));
   auto base_addr = builder_->CreateAlloca(arr_type);
   id_to_val[arr_decl.id] = base_addr;
 
@@ -211,7 +211,7 @@ void LLVMIRGenerator::Visit(const FieldNode& field) {
 void LLVMIRGenerator::Visit(const RecordVarDeclNode& record_var_decl) {
   auto* record_type = dynamic_cast<RecordType*>(record_var_decl.type.get());
   assert(record_type);
-  auto type = llvm_util_.GetLLVMType(*(record_var_decl.type));
+  auto type = builder_helper_.GetLLVMType(*(record_var_decl.type));
   auto base_addr = builder_->CreateAlloca(type);
   id_to_val[record_var_decl.id] = base_addr;
 
@@ -237,7 +237,7 @@ void LLVMIRGenerator::Visit(const ParamNode& parameter) {
 void LLVMIRGenerator::Visit(const FuncDefNode& func_def) {
   // Explicit cast to llvm::FunctionType to avoid compiler error.
   auto func_type = llvm::dyn_cast<llvm::FunctionType>(
-      llvm_util_.GetLLVMType(*(func_def.type)));
+      builder_helper_.GetLLVMType(*(func_def.type)));
   auto func = llvm::Function::Create(
       func_type, llvm::GlobalValue::ExternalLinkage, func_def.id, *module_);
 
@@ -249,7 +249,7 @@ void LLVMIRGenerator::Visit(const FuncDefNode& func_def) {
     parameter->Accept(*this);
     args_iter->setName(parameter->id);
 
-    llvm::Type* param_type = llvm_util_.GetLLVMType(*(parameter->type));
+    llvm::Type* param_type = builder_helper_.GetLLVMType(*(parameter->type));
     // Update type from FunctionType to PointerType for function pointer.
     if (param_type->isFunctionTy()) {
       param_type = param_type->getPointerTo();
@@ -305,7 +305,7 @@ void LLVMIRGenerator::Visit(const TransUnitNode& trans_unit) {
 void LLVMIRGenerator::Visit(const IfStmtNode& if_stmt) {
   if_stmt.predicate->Accept(*this);
   auto predicate_val = val_recorder.ValOfPrevExpr();
-  auto func = llvm_util_.CurrFunc();
+  auto func = builder_helper_.CurrFunc();
   auto then_bb = llvm::BasicBlock::Create(*context_, "if_then", func);
   auto else_bb = if_stmt.or_else != nullptr
                      ? llvm::BasicBlock::Create(*context_, "if_else", func)
@@ -318,7 +318,7 @@ void LLVMIRGenerator::Visit(const IfStmtNode& if_stmt) {
                          if_stmt.or_else != nullptr ? else_bb : end_bb);
   builder_->SetInsertPoint(then_bb);
   if_stmt.then->Accept(*this);
-  llvm_util_.CreateBrIfNoBrBefore(end_bb);
+  builder_helper_.CreateBrIfNoBrBefore(end_bb);
 
   if (if_stmt.or_else) {
     builder_->SetInsertPoint(else_bb);
@@ -330,7 +330,7 @@ void LLVMIRGenerator::Visit(const IfStmtNode& if_stmt) {
 
 void LLVMIRGenerator::Visit(const WhileStmtNode& while_stmt) {
   auto label_prefix = std::string{while_stmt.is_do_while ? "do_" : "while_"};
-  auto func = llvm_util_.CurrFunc();
+  auto func = builder_helper_.CurrFunc();
   auto body_bb =
       llvm::BasicBlock::Create(*context_, label_prefix + "body", func);
   auto pred_bb =
@@ -358,7 +358,7 @@ void LLVMIRGenerator::Visit(const WhileStmtNode& while_stmt) {
   labels_of_jumpable_blocks.push_back({.entry = pred_bb, .exit = end_bb});
   while_stmt.loop_body->Accept(*this);
   labels_of_jumpable_blocks.pop_back();
-  llvm_util_.CreateBrIfNoBrBefore(pred_bb);
+  builder_helper_.CreateBrIfNoBrBefore(pred_bb);
 
   if (while_stmt.is_do_while) {
     builder_->SetInsertPoint(pred_bb);
@@ -370,7 +370,7 @@ void LLVMIRGenerator::Visit(const WhileStmtNode& while_stmt) {
 }
 
 void LLVMIRGenerator::Visit(const ForStmtNode& for_stmt) {
-  auto func = llvm_util_.CurrFunc();
+  auto func = builder_helper_.CurrFunc();
   auto pred_bb = llvm::BasicBlock::Create(*context_, "for_pred", func);
   auto body_bb = llvm::BasicBlock::Create(*context_, "for_body", func);
   auto step_bb = llvm::BasicBlock::Create(*context_, "for_step", func);
@@ -389,7 +389,7 @@ void LLVMIRGenerator::Visit(const ForStmtNode& for_stmt) {
   labels_of_jumpable_blocks.push_back({.entry = step_bb, .exit = end_bb});
   for_stmt.loop_body->Accept(*this);
   labels_of_jumpable_blocks.pop_back();
-  llvm_util_.CreateBrIfNoBrBefore(step_bb);
+  builder_helper_.CreateBrIfNoBrBefore(step_bb);
 
   builder_->SetInsertPoint(step_bb);
   for_stmt.step->Accept(*this);
@@ -404,32 +404,33 @@ void LLVMIRGenerator::Visit(const ReturnStmtNode& ret_stmt) {
 }
 
 void LLVMIRGenerator::Visit(const GotoStmtNode& goto_stmt) {
-  llvm::BasicBlock* target_bb = llvm_util_.FindBBWithNameOf(goto_stmt.label);
+  llvm::BasicBlock* target_bb =
+      builder_helper_.FindBBWithNameOf(goto_stmt.label);
 
   if (target_bb) {
     builder_->CreateBr(target_bb);
   } else {
     target_bb = llvm::BasicBlock::Create(*context_, goto_stmt.label,
-                                         llvm_util_.CurrFunc());
+                                         builder_helper_.CurrFunc());
     builder_->CreateBr(target_bb);
   }
 }
 
 void LLVMIRGenerator::Visit(const BreakStmtNode& break_stmt) {
   assert(!labels_of_jumpable_blocks.empty());
-  llvm_util_.CreateBrIfNoBrBefore(labels_of_jumpable_blocks.back().exit);
+  builder_helper_.CreateBrIfNoBrBefore(labels_of_jumpable_blocks.back().exit);
 }
 
 void LLVMIRGenerator::Visit(const ContinueStmtNode& continue_stmt) {
   assert(!labels_of_jumpable_blocks.empty());
-  llvm_util_.CreateBrIfNoBrBefore(labels_of_jumpable_blocks.back().entry);
+  builder_helper_.CreateBrIfNoBrBefore(labels_of_jumpable_blocks.back().entry);
 }
 
 void LLVMIRGenerator::Visit(const SwitchStmtNode& switch_stmt) {
   switch_stmt.ctrl->Accept(*this);
   auto ctrl = val_recorder.ValOfPrevExpr();
-  auto end_bb =
-      llvm::BasicBlock::Create(*context_, "switch_end", llvm_util_.CurrFunc());
+  auto end_bb = llvm::BasicBlock::Create(*context_, "switch_end",
+                                         builder_helper_.CurrFunc());
   auto sw = builder_->CreateSwitch(ctrl, nullptr);
   labels_of_jumpable_blocks.push_back({.entry = end_bb, .exit = end_bb});
   switch_stmt.stmt->Accept(*this);
@@ -450,23 +451,23 @@ void LLVMIRGenerator::Visit(const SwitchStmtNode& switch_stmt) {
     // BB. If BB is the last BB, then branch to switch exit.
     if (i + 1 != e) {
       auto next_bb = switch_infos.cases.at(i + 1).second;
-      llvm_util_.CurrBBFallThroughNextBB(curr_bb, next_bb);
+      builder_helper_.CurrBBFallThroughNextBB(curr_bb, next_bb);
     } else {
-      llvm_util_.CurrBBFallThroughNextBB(curr_bb, switch_infos.exit);
+      builder_helper_.CurrBBFallThroughNextBB(curr_bb, switch_infos.exit);
     }
   }
   labels_of_jumpable_blocks.pop_back();
-  llvm_util_.CreateBrIfNoBrBefore(end_bb);
+  builder_helper_.CreateBrIfNoBrBefore(end_bb);
   builder_->SetInsertPoint(end_bb);
 }
 
 void LLVMIRGenerator::Visit(const IdLabeledStmtNode& id_labeled_stmt) {
   llvm::BasicBlock* target_bb =
-      llvm_util_.FindBBWithNameOf(id_labeled_stmt.label);
+      builder_helper_.FindBBWithNameOf(id_labeled_stmt.label);
 
   if (!target_bb) {
     target_bb = llvm::BasicBlock::Create(*context_, id_labeled_stmt.label,
-                                         llvm_util_.CurrFunc());
+                                         builder_helper_.CurrFunc());
     builder_->SetInsertPoint(target_bb);
   } else {
     builder_->SetInsertPoint(target_bb);
@@ -482,8 +483,8 @@ void LLVMIRGenerator::Visit(const CaseStmtNode& case_stmt) {
   assert(int_expr);
 
   auto case_label = "case_" + std::to_string(int_expr->val);
-  auto case_bb =
-      llvm::BasicBlock::Create(*context_, case_label, llvm_util_.CurrFunc());
+  auto case_bb = llvm::BasicBlock::Create(*context_, case_label,
+                                          builder_helper_.CurrFunc());
 
   builder_->SetInsertPoint(case_bb);
   case_stmt.stmt->Accept(*this);
@@ -493,8 +494,8 @@ void LLVMIRGenerator::Visit(const CaseStmtNode& case_stmt) {
 }
 
 void LLVMIRGenerator::Visit(const DefaultStmtNode& default_stmt) {
-  auto default_bb =
-      llvm::BasicBlock::Create(*context_, "default", llvm_util_.CurrFunc());
+  auto default_bb = llvm::BasicBlock::Create(*context_, "default",
+                                             builder_helper_.CurrFunc());
   builder_->SetInsertPoint(default_bb);
   default_stmt.stmt->Accept(*this);
 
@@ -533,7 +534,7 @@ void LLVMIRGenerator::Visit(const IdExprNode& id_expr) {
   if (id_expr.type->IsPtr() || id_expr.type->IsFunc()) {
     id_type = builder_->getPtrTy();
   } else {
-    id_type = llvm_util_.GetLLVMType(*(id_expr.type));
+    id_type = builder_helper_.GetLLVMType(*(id_expr.type));
   }
   auto res = builder_->CreateLoad(id_type, id_val);
   val_recorder.Record(res);
@@ -555,7 +556,7 @@ void LLVMIRGenerator::Visit(const ArrSubExprNode& arr_sub_expr) {
   arr_sub_expr.arr->Accept(*this);
   auto val = val_recorder.ValOfPrevExpr();
   auto base_addr = val_to_id_addr.at(val);
-  auto arr_type = llvm_util_.GetLLVMType(*(arr_sub_expr.arr->type));
+  auto arr_type = builder_helper_.GetLLVMType(*(arr_sub_expr.arr->type));
   arr_sub_expr.index->Accept(*this);
   auto index = dynamic_cast<IntConstExprNode*>(arr_sub_expr.index.get());
   assert(index);
@@ -571,7 +572,7 @@ void LLVMIRGenerator::Visit(const ArrSubExprNode& arr_sub_expr) {
 void LLVMIRGenerator::Visit(const CondExprNode& cond_expr) {
   cond_expr.predicate->Accept(*this);
   auto predicate_val = val_recorder.ValOfPrevExpr();
-  auto func = llvm_util_.CurrFunc();
+  auto func = builder_helper_.CurrFunc();
   // The second operand is evaluated only if the first compares unequal to
   // 0; the third operand is evaluated only if the first compares equal to
   // 0; the result is the value of the second or third operand (whichever is
@@ -634,7 +635,7 @@ void LLVMIRGenerator::Visit(const FuncCallExprNode& call_expr) {
     }
   } else if (val->getType()->isPointerTy()) {
     // function pointer
-    auto type = llvm_util_.GetLLVMType(*(call_expr.func_expr->type));
+    auto type = builder_helper_.GetLLVMType(*(call_expr.func_expr->type));
     if (auto func_type = llvm::dyn_cast<llvm::FunctionType>(type)) {
       auto return_res = builder_->CreateCall(func_type, val, arg_vals);
       val_recorder.Record(return_res);
@@ -665,14 +666,14 @@ void LLVMIRGenerator::Visit(const RecordMemExprNode& mem_expr) {
   mem_expr.expr->Accept(*this);
   auto val = val_recorder.ValOfPrevExpr();
   auto base_addr = val_to_id_addr.at(val);
-  auto llvm_type = llvm_util_.GetLLVMType(*(mem_expr.expr->type));
+  auto llvm_type = builder_helper_.GetLLVMType(*(mem_expr.expr->type));
   auto* record_type = dynamic_cast<RecordType*>(mem_expr.expr->type.get());
   assert(record_type);
 
   auto res_addr = builder_->CreateStructGEP(
       llvm_type, base_addr, record_type->MemberIndex(mem_expr.id));
   auto res_val = builder_->CreateLoad(
-      llvm_util_.GetLLVMType(*(record_type->MemberType(mem_expr.id))),
+      builder_helper_.GetLLVMType(*(record_type->MemberType(mem_expr.id))),
       res_addr);
   val_to_id_addr[res_val] = res_addr;
   val_recorder.Record(res_val);
@@ -736,7 +737,7 @@ void LLVMIRGenerator::Visit(const UnaryExprNode& unary_expr) {
 
       auto operand = val_recorder.ValOfPrevExpr();
       auto res = builder_->CreateLoad(
-          llvm_util_.GetLLVMType(*(unary_expr.type)), operand);
+          builder_helper_.GetLLVMType(*(unary_expr.type)), operand);
       val_recorder.Record(res);
       val_to_id_addr[res] = operand;
     } break;
@@ -759,7 +760,7 @@ void LLVMIRGenerator::Visit(const BinaryExprNode& bin_expr) {
   }
   if (bin_expr.op == BinaryOperator::kLand ||
       bin_expr.op == BinaryOperator::kLor) {
-    auto func = llvm_util_.CurrFunc();
+    auto func = builder_helper_.CurrFunc();
     auto rhs_bb = llvm::BasicBlock::Create(*context_, "logic_rhs", func);
     auto short_circuit_bb =
         llvm::BasicBlock::Create(*context_, "short_circuit", func);

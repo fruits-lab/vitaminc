@@ -57,12 +57,12 @@ class LLVMIRGenerator : public NonModifyingVisitor {
   void Visit(const BinaryExprNode&) override;
   void Visit(const SimpleAssignmentExprNode&) override;
 
-  LLVMIRGenerator(std::ostream& output, std::string& filename)
+  LLVMIRGenerator(std::ostream& output, const std::string& filename)
       : output_{output},
         context_{std::make_unique<llvm::LLVMContext>()},
         builder_{std::make_unique<llvm::IRBuilder<>>(*context_)},
         module_{std::make_unique<llvm::Module>(filename, *context_)},
-        llvm_util_{util::LLVMIRBuilderHelper(*builder_)} {}
+        builder_helper_{util::LLVMIRBuilderHelper(*builder_)} {}
 
   /// @brief Print LLVM IR to output.
   void PrintIR() {
@@ -80,8 +80,9 @@ class LLVMIRGenerator : public NonModifyingVisitor {
   std::unique_ptr<llvm::IRBuilder<>> builder_;
   /// @brief Stores global variables, function lists, and the constructed IR.
   std::unique_ptr<llvm::Module> module_;
-  /// @brief Handy LLVM types and functions for code generation.
-  util::LLVMIRBuilderHelper llvm_util_;
+  /// @brief Wrapping IR builder to provide handy LLVM types and functions for
+  /// IR generation.
+  util::LLVMIRBuilderHelper builder_helper_;
 };
 
 #endif  // LLVM_IR_GENERATOR_HPP_
