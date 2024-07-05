@@ -37,7 +37,7 @@
 
 namespace {
 
-/// @throw `std::runtime_error` if there's unrecognize binary operator
+/// @throw `std::runtime_error` if there's unrecognized binary operator.
 llvm::Instruction::BinaryOps GetBinaryOperator(BinaryOperator op) {
   switch (op) {
     case BinaryOperator::kAdd:
@@ -64,12 +64,13 @@ llvm::Instruction::BinaryOps GetBinaryOperator(BinaryOperator op) {
     case BinaryOperator::kShr:
       return llvm::BinaryOperator::AShr;
     default:
-      throw std::runtime_error{"unrecognize binary operator!"};
+      throw std::runtime_error{"unrecognized binary operator!"};
   }
 }
 
 /// @note Comparison operators are not categorized as operator in LLVM. Thus, we
 /// have this helper function to get the predicate of our comparison operator.
+/// @throw `std::runtime_error` if there's unrecognized comparison operator.
 llvm::CmpInst::Predicate GetCmpPredicate(BinaryOperator op) {
   switch (op) {
     case BinaryOperator::kGt:
@@ -85,7 +86,7 @@ llvm::CmpInst::Predicate GetCmpPredicate(BinaryOperator op) {
     case BinaryOperator::kNeq:
       return llvm::CmpInst::Predicate::ICMP_NE;
     default:
-      return llvm::CmpInst::Predicate::BAD_ICMP_PREDICATE;
+      throw std::runtime_error{"unrecognized comparison operator!"};
   }
 }
 
