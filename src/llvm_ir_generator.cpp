@@ -411,9 +411,9 @@ void LLVMIRGenerator::Visit(const GotoStmtNode& goto_stmt) {
   if (target_bb) {
     builder_->CreateBr(target_bb);
   } else {
-    auto label_bb = llvm::BasicBlock::Create(*context_, goto_stmt.label,
-                                             llvm_util_.CurrFunc());
-    builder_->CreateBr(label_bb);
+    target_bb = llvm::BasicBlock::Create(*context_, goto_stmt.label,
+                                         llvm_util_.CurrFunc());
+    builder_->CreateBr(target_bb);
   }
 }
 
@@ -467,9 +467,9 @@ void LLVMIRGenerator::Visit(const IdLabeledStmtNode& id_labeled_stmt) {
       llvm_util_.FindBBWithNameOf(id_labeled_stmt.label);
 
   if (!target_bb) {
-    auto label_bb = llvm::BasicBlock::Create(*context_, id_labeled_stmt.label,
-                                             llvm_util_.CurrFunc());
-    builder_->SetInsertPoint(label_bb);
+    target_bb = llvm::BasicBlock::Create(*context_, id_labeled_stmt.label,
+                                         llvm_util_.CurrFunc());
+    builder_->SetInsertPoint(target_bb);
   } else {
     builder_->SetInsertPoint(target_bb);
   }
@@ -483,15 +483,15 @@ void LLVMIRGenerator::Visit(const CaseStmtNode& case_stmt) {
   auto int_expr = dynamic_cast<IntConstExprNode*>(case_stmt.expr.get());
   assert(int_expr);
 
-  auto case_bb = llvm::BasicBlock::Create(
-      *context_, "case" + std::to_string(int_expr->val), llvm_util_.CurrFunc());
+  auto case_label = "case_" + std::to_string(int_expr->val);
+  auto case_bb =
+      llvm::BasicBlock::Create(*context_, case_label, llvm_util_.CurrFunc());
 
   builder_->SetInsertPoint(case_bb);
   case_stmt.stmt->Accept(*this);
 
   assert(!labels_of_jumpable_blocks.empty());
-  std::pair<llvm::Value*, llvm::BasicBlock*> p{val, case_bb};
-  labels_of_jumpable_blocks.back().cases.push_back(p);
+  labels_of_jumpable_blocks.back().cases.emplace_back(val, case_bb);
 }
 
 void LLVMIRGenerator::Visit(const DefaultStmtNode& default_stmt) {
@@ -501,8 +501,7 @@ void LLVMIRGenerator::Visit(const DefaultStmtNode& default_stmt) {
   default_stmt.stmt->Accept(*this);
 
   assert(!labels_of_jumpable_blocks.empty());
-  std::pair<llvm::Value*, llvm::BasicBlock*> p{nullptr, default_bb};
-  labels_of_jumpable_blocks.back().cases.push_back(p);
+  labels_of_jumpable_blocks.back().cases.emplace_back(nullptr, default_bb);
 }
 
 void LLVMIRGenerator::Visit(const ExprStmtNode& expr_stmt) {
