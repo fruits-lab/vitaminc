@@ -5,7 +5,6 @@
 #include <llvm/ADT/Twine.h>
 #include <llvm/IR/Argument.h>
 #include <llvm/IR/BasicBlock.h>
-#include <llvm/IR/Constant.h>
 #include <llvm/IR/Constants.h>
 #include <llvm/IR/DerivedTypes.h>
 #include <llvm/IR/Function.h>
@@ -20,7 +19,6 @@
 #include <llvm/IR/Value.h>
 #include <llvm/Support/Casting.h>
 
-#include <algorithm>
 #include <cassert>
 #include <cstddef>
 #include <map>
