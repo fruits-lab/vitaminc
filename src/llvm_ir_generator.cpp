@@ -737,10 +737,8 @@ void LLVMIRGenerator::Visit(const UnaryExprNode& unary_expr) {
       }
 
       auto operand = val_recorder.ValOfPrevExpr();
-      auto res = builder_->CreateLoad(unary_expr.type->IsPtr()
-                                          ? (llvm::Type*)builder_->getPtrTy()
-                                          : (llvm::Type*)builder_->getInt32Ty(),
-                                      operand);
+      auto res = builder_->CreateLoad(
+          llvm_util_.GetLLVMType(*(unary_expr.type)), operand);
       val_recorder.Record(res);
       val_to_id_addr[res] = operand;
     } break;
