@@ -7,7 +7,6 @@
 #include <llvm/IR/Type.h>
 
 #include <cassert>
-#include <memory>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -17,8 +16,8 @@
 using namespace util;
 
 bool LLVMIRBuilderHelper::HasTerminator(llvm::BasicBlock* bb) {
-  for (auto it = bb->begin(); it != bb->end(); ++it) {
-    if (it->isTerminator()) {
+  for (auto& it : *bb) {
+    if (it.isTerminator()) {
       return true;
     }
   }
