@@ -15,7 +15,7 @@
 namespace util {
 
 /// @brief A collection of wrappers of LLVM types and functions.
-class LLVMIRUtil {
+class LLVMIRBuilderHelper {
  public:
   /// @brief LLVM Integer type
   llvm::IntegerType* IntType();
@@ -50,11 +50,11 @@ class LLVMIRUtil {
   /// @throw `std::runtime_error` if the `type` is not unknown.
   llvm::Type* GetLLVMType(const Type& type);
 
-  LLVMIRUtil(std::unique_ptr<llvm::IRBuilder<>>& builder) : builder_{builder} {}
+  LLVMIRBuilderHelper(llvm::IRBuilder<>& builder) : builder_{builder} {}
 
  private:
   /// @brief Stores a reference from the original builder.
-  std::unique_ptr<llvm::IRBuilder<>>&  // XXX: Ignore check until refactor.
+  llvm::IRBuilder<>&
       builder_;  // NOLINT(cppcoreguidelines-avoid-const-or-ref-data-members)
 };
 
