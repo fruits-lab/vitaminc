@@ -7,7 +7,6 @@
 #include <llvm/IR/Type.h>
 #include <llvm/Support/raw_os_ostream.h>
 
-#include <memory>
 #include <ostream>
 #include <string>
 
@@ -59,27 +58,27 @@ class LLVMIRGenerator : public NonModifyingVisitor {
 
   LLVMIRGenerator(std::ostream& output, const std::string& filename)
       : output_{output},
-        context_{std::make_unique<llvm::LLVMContext>()},
-        builder_{std::make_unique<llvm::IRBuilder<>>(*context_)},
-        module_{std::make_unique<llvm::Module>(filename, *context_)},
-        builder_helper_{util::LLVMIRBuilderHelper(*builder_)} {}
+        context_{},
+        builder_{llvm::IRBuilder<>(context_)},
+        module_{llvm::Module(filename, context_)},
+        builder_helper_{util::LLVMIRBuilderHelper(builder_)} {}
 
   /// @brief Print LLVM IR to output.
   void PrintIR() {
-    module_->print(output_, nullptr);
+    module_.print(output_, nullptr);
   }
 
  private:
   /// @brief A LLVM ostream wrapper for writing to output.
   llvm::raw_os_ostream output_;
   /// @brief A LLVM object that includes core LLVM infrastructure.
-  std::unique_ptr<llvm::LLVMContext> context_;
+  llvm::LLVMContext context_;
   /// @brief Provides LLVM Builder API for constructing IR. By default, Constant
   /// folding is enabled and we have more flexibility for inserting
   /// instructions.
-  std::unique_ptr<llvm::IRBuilder<>> builder_;
+  llvm::IRBuilder<> builder_;
   /// @brief Stores global variables, function lists, and the constructed IR.
-  std::unique_ptr<llvm::Module> module_;
+  llvm::Module module_;
   /// @brief Wrapping IR builder to provide handy LLVM types and functions for
   /// IR generation.
   util::LLVMIRBuilderHelper builder_helper_;
