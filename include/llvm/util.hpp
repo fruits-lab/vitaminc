@@ -12,13 +12,13 @@
 
 namespace util {
 
+/// @brief Check if a basic block has a terminator instruction.
+/// @return `true` if terminator instruction is found, `false` otherwise.
+bool HasTerminator(llvm::BasicBlock* bb);
+
 /// @brief A collection of wrappers of LLVM types and functions.
 class LLVMIRBuilderHelper {
  public:
-  /// @brief Check if a basic block has a terminator instruction.
-  /// @return `true` if terminator instruction is found, `false` otherwise.
-  bool HasTerminator(llvm::BasicBlock* bb);
-
   /// @brief Every LLVM basic block can only have one terminator instruction.
   /// This function can check if there are terminator instructions before the
   /// current insert point. If no, then it will create an unconditional branch
