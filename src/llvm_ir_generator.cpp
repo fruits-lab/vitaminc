@@ -163,8 +163,6 @@ void LLVMIRGenerator::Visit(const DeclStmtNode& decl_stmt) {
 
 void LLVMIRGenerator::Visit(const VarDeclNode& decl) {
   auto var_type = builder_helper_.GetLLVMType(*(decl.type));
-  // For function pointer, we need to change from FunctionType to PointerType
-  var_type = var_type->isFunctionTy() ? var_type->getPointerTo() : var_type;
   auto addr = builder_.CreateAlloca(var_type);
   if (decl.init) {
     decl.init->Accept(*this);
@@ -249,13 +247,7 @@ void LLVMIRGenerator::Visit(const FuncDefNode& func_def) {
     parameter->Accept(*this);
     args_iter->setName(parameter->id);
 
-    llvm::Type* param_type = builder_helper_.GetLLVMType(*(parameter->type));
-    // Update type from FunctionType to PointerType for function pointer.
-    if (param_type->isFunctionTy()) {
-      param_type = param_type->getPointerTo();
-    }
-    args_iter->mutateType(param_type);
-    auto addr = builder_.CreateAlloca(param_type);
+    auto addr = builder_.CreateAlloca(args_iter->getType());
     builder_.CreateStore(args_iter, addr);
     id_to_val[parameter->id] = addr;
     ++args_iter;
@@ -528,13 +520,7 @@ void LLVMIRGenerator::Visit(const IdExprNode& id_expr) {
   assert(id_to_val.count(id_expr.id) != 0);
   auto id_val = id_to_val.at(id_expr.id);
 
-  llvm::Type* id_type = nullptr;
-  // LLVM requires the function to have pointer type when being referenced.
-  if (id_expr.type->IsPtr() || id_expr.type->IsFunc()) {
-    id_type = builder_.getPtrTy();
-  } else {
-    id_type = builder_helper_.GetLLVMType(*(id_expr.type));
-  }
+  auto id_type = builder_helper_.GetLLVMType(*(id_expr.type));
   auto res = builder_.CreateLoad(id_type, id_val);
   val_recorder.Record(res);
   val_to_id_addr[res] = id_val;
@@ -632,9 +618,19 @@ void LLVMIRGenerator::Visit(const FuncCallExprNode& call_expr) {
       val_recorder.Record(return_res);
     }
   } else if (val->getType()->isPointerTy()) {
-    // function pointer
-    auto type = builder_helper_.GetLLVMType(*(call_expr.func_expr->type));
-    if (auto func_type = llvm::dyn_cast<llvm::FunctionType>(type)) {
+    llvm::Type* expr_type = nullptr;
+    if (auto ptr_type =
+            dynamic_cast<PtrType*>((call_expr.func_expr->type).get())) {
+      expr_type = builder_helper_.GetLLVMType(ptr_type->base_type());
+    } else {
+      // If the expression is a dereferenced function pointer, the type of the
+      // value diverges from the type of the expression, with the former being a
+      // pointer type and the latter being a function type.
+      assert(call_expr.func_expr->type->IsFunc());
+      expr_type = builder_helper_.GetLLVMType(*(call_expr.func_expr->type));
+    }
+
+    if (auto func_type = llvm::dyn_cast<llvm::FunctionType>(expr_type)) {
       auto return_res = builder_.CreateCall(func_type, val, arg_vals);
       val_recorder.Record(return_res);
     } else {
@@ -716,7 +712,7 @@ void LLVMIRGenerator::Visit(const UnaryExprNode& unary_expr) {
     } break;
     case UnaryOperator::kAddr: {
       if (unary_expr.operand->type->IsFunc()) {
-        // No-op; the function itself already evaluates to the address.
+        // No-op; the value is still the function itself.
         break;
       }
       auto operand = val_recorder.ValOfPrevExpr();
@@ -729,7 +725,7 @@ void LLVMIRGenerator::Visit(const UnaryExprNode& unary_expr) {
           dynamic_cast<PtrType*>((unary_expr.operand->type).get())
               ->base_type()
               .IsFunc()) {
-        // No-op; the function itself also evaluates to the address.
+        // No-op; the value is still the function itself.
         break;
       }
 

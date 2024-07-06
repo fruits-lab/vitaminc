@@ -60,13 +60,6 @@ llvm::Type* LLVMIRBuilderHelper::GetLLVMType(const Type& type) {
     }
     throw std::runtime_error{"unknown type in GetLLVMType!"};
   } else if (type.IsPtr()) {
-    auto ptr_type = dynamic_cast<const PtrType*>(&type);
-    auto base_type = ptr_type->base_type().Clone();
-    auto llvm_base_type = GetLLVMType(*base_type);
-    // Function pointers
-    if (llvm_base_type->isFunctionTy()) {
-      return llvm_base_type;
-    }
     return builder_.getPtrTy();
   } else if (type.IsArr()) {
     auto arr_type = dynamic_cast<const ArrType*>(&type);
