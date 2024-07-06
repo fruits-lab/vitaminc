@@ -1084,11 +1084,24 @@ void QbeIrGenerator::Visit(const SimpleAssignmentExprNode& assign_expr) {
   int rhs_num = num_recorder.NumOfPrevExpr();
   if (assign_expr.lhs->type->IsPtr()) {
     // Assign pointer address to another pointer.
-    WriteInstr_("storel {}, {}", FuncScopeTemp{rhs_num},
-                FuncScopeTemp{reg_num_to_id_num.at(lhs_num)});
+    if (assign_expr.lhs->is_global) {
+      WriteInstr_("storel {}, {}", FuncScopeTemp{rhs_num},
+                  user_defined::GlobalPointer{reg_num_to_id.at(lhs_num)});
+    } else {
+      WriteInstr_("storel {}, {}", FuncScopeTemp{rhs_num},
+                  FuncScopeTemp{reg_num_to_id_num.at(lhs_num)});
+    }
   } else {
-    WriteInstr_("storew {}, {}", FuncScopeTemp{rhs_num},
-                FuncScopeTemp{reg_num_to_id_num.at(lhs_num)});
+    // Global array subscripting will return the target address instead of the
+    // address of `id`.
+    if (assign_expr.lhs->is_global &&
+        !dynamic_cast<ArrSubExprNode*>(assign_expr.lhs.get())) {
+      WriteInstr_("storew {}, {}", FuncScopeTemp{rhs_num},
+                  user_defined::GlobalPointer{reg_num_to_id.at(lhs_num)});
+    } else {
+      WriteInstr_("storew {}, {}", FuncScopeTemp{rhs_num},
+                  FuncScopeTemp{reg_num_to_id_num.at(lhs_num)});
+    }
   }
   num_recorder.Record(rhs_num);
 }
