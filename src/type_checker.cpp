@@ -465,9 +465,7 @@ void TypeChecker::Visit(ArrSubExprNode& arr_sub_expr) {
   assert(arr_type);
   // arr_sub_expr should have the element type of the array.
   arr_sub_expr.type = arr_type->element_type().Clone();
-  if (arr_sub_expr.arr->is_global) {
-    arr_sub_expr.is_global = true;
-  }
+  arr_sub_expr.is_global = arr_sub_expr.arr->is_global;
 }
 
 void TypeChecker::Visit(CondExprNode& cond_expr) {
