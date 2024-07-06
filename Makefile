@@ -26,7 +26,8 @@ DEPS = $(OBJS:.o=.d)
 all: $(TARGET)
 
 test: $(TARGET)
-	$(MAKE) -C test/ test
+	$(MAKE) -C test/ test-all
+	@echo "NOTE: If you want to run individual tests, check 'test/Makefile'."
 
 $(TARGET): $(OBJS)
 	$(CXX) $(CXXFLAGS) $(OBJS) -o $@ $(LDLIBS)
