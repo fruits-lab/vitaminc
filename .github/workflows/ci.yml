@@ -47,6 +47,7 @@ jobs:
     strategy:
       matrix:
         cxx: [g++, clang++]
+        test: [typecheck, qbe, llvm]
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v3
@@ -64,5 +65,7 @@ jobs:
         run: scripts/install-fmt.sh
       - name: Install Turnt
         run: pip install turnt
-      - name: Run tests
-        run: make test CXX=${{ matrix.cxx }}
+      - name: Build
+        run: make
+      - name: Run ${{ matrix.test }} test
+        run: make -C test/ -j test-${{ matrix.test }} CXX=${{ matrix.cxx }}
