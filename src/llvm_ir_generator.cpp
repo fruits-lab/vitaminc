@@ -190,27 +190,21 @@ void LLVMIRGenerator::Visit(const VarDeclNode& decl) {
 
 void LLVMIRGenerator::Visit(const ArrDeclNode& arr_decl) {
   auto type = builder_helper_.GetLLVMType(*(arr_decl.type));
-  llvm::AllocaInst* base_addr = nullptr;
   if (arr_decl.is_global) {
     auto global_arr = module_.getOrInsertGlobal(arr_decl.id, type);
     id_to_val[arr_decl.id] = global_arr;
   } else {
     auto addr = builder_.CreateAlloca(type);
     id_to_val[arr_decl.id] = addr;
-    base_addr = addr;
   }
 
   auto arr_decl_type = dynamic_cast<ArrType*>(arr_decl.type.get());
+  // This vector stores the initialize values for an array.
   std::vector<llvm::Constant*> arr_elems{};
   for (auto i = std::size_t{0}, e = arr_decl_type->len(); i < e; ++i) {
     if (i < arr_decl.init_list.size()) {
       auto& arr_init = arr_decl.init_list.at(i);
       arr_init->Accept(*this);
-    }
-
-    llvm::Value* res_addr = nullptr;
-    if (!arr_decl.is_global) {
-      res_addr = builder_.CreateConstInBoundsGEP2_32(type, base_addr, 0, i);
     }
 
     if (i < arr_decl.init_list.size()) {
@@ -219,6 +213,8 @@ void LLVMIRGenerator::Visit(const ArrDeclNode& arr_decl) {
         auto const_val = llvm::dyn_cast<llvm::Constant>(init_val);
         arr_elems.push_back(const_val);
       } else {
+        auto res_addr = builder_.CreateConstInBoundsGEP2_32(
+            type, id_to_val.at(arr_decl.id), 0, i);
         builder_.CreateStore(init_val, res_addr);
       }
     } else {
@@ -227,6 +223,8 @@ void LLVMIRGenerator::Visit(const ArrDeclNode& arr_decl) {
       if (arr_decl.is_global) {
         arr_elems.push_back(zero);
       } else {
+        auto res_addr = builder_.CreateConstInBoundsGEP2_32(
+            type, id_to_val.at(arr_decl.id), 0, i);
         builder_.CreateStore(zero, res_addr);
       }
     }
@@ -234,7 +232,7 @@ void LLVMIRGenerator::Visit(const ArrDeclNode& arr_decl) {
 
   if (arr_decl.is_global) {
     auto arr_type = llvm::dyn_cast<llvm::ArrayType>(type);
-    llvm::Constant* arr_init = llvm::ConstantArray::get(arr_type, arr_elems);
+    auto arr_init = llvm::ConstantArray::get(arr_type, arr_elems);
     auto global_arr = module_.getGlobalVariable(arr_decl.id);
     global_arr->setInitializer(arr_init);
   }
