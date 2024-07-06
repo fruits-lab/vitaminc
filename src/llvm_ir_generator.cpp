@@ -164,9 +164,8 @@ void LLVMIRGenerator::Visit(const DeclStmtNode& decl_stmt) {
 void LLVMIRGenerator::Visit(const VarDeclNode& decl) {
   auto var_type = builder_helper_.GetLLVMType(*(decl.type));
   if (decl.is_global) {
-    auto global_var = new llvm::GlobalVariable(
-        module_, var_type, true,
-        llvm::GlobalValue::LinkageTypes::ExternalLinkage, nullptr, decl.id);
+    auto global = module_.getOrInsertGlobal(decl.id, var_type);
+    auto global_var = llvm::dyn_cast<llvm::GlobalVariable>(global);
     llvm::Constant* const_val = nullptr;
     if (decl.init) {
       decl.init->Accept(*this);
@@ -193,9 +192,7 @@ void LLVMIRGenerator::Visit(const ArrDeclNode& arr_decl) {
   auto type = builder_helper_.GetLLVMType(*(arr_decl.type));
   llvm::AllocaInst* base_addr = nullptr;
   if (arr_decl.is_global) {
-    auto global_arr = new llvm::GlobalVariable(
-        module_, type, true, llvm::GlobalValue::LinkageTypes::ExternalLinkage,
-        nullptr, arr_decl.id);
+    auto global_arr = module_.getOrInsertGlobal(arr_decl.id, type);
     id_to_val[arr_decl.id] = global_arr;
   } else {
     auto addr = builder_.CreateAlloca(type);
