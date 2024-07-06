@@ -163,38 +163,83 @@ void LLVMIRGenerator::Visit(const DeclStmtNode& decl_stmt) {
 
 void LLVMIRGenerator::Visit(const VarDeclNode& decl) {
   auto var_type = builder_helper_.GetLLVMType(*(decl.type));
-  auto addr = builder_.CreateAlloca(var_type);
-  if (decl.init) {
-    decl.init->Accept(*this);
-    auto val = val_recorder.ValOfPrevExpr();
-    builder_.CreateStore(val, addr);
+  if (decl.is_global) {
+    auto global_var = new llvm::GlobalVariable(
+        module_, var_type, true,
+        llvm::GlobalValue::LinkageTypes::ExternalLinkage, nullptr, decl.id);
+    llvm::Constant* const_val = nullptr;
+    if (decl.init) {
+      decl.init->Accept(*this);
+      auto val = val_recorder.ValOfPrevExpr();
+      const_val = llvm::dyn_cast<llvm::Constant>(val);
+      assert(const_val);
+    } else {
+      const_val = llvm::ConstantInt::get(builder_.getInt32Ty(), 0, true);
+    }
+    global_var->setInitializer(const_val);
+    id_to_val[decl.id] = global_var;
+  } else {
+    auto addr = builder_.CreateAlloca(var_type);
+    if (decl.init) {
+      decl.init->Accept(*this);
+      auto val = val_recorder.ValOfPrevExpr();
+      builder_.CreateStore(val, addr);
+    }
+    id_to_val[decl.id] = addr;
   }
-  id_to_val[decl.id] = addr;
 }
 
 void LLVMIRGenerator::Visit(const ArrDeclNode& arr_decl) {
-  auto arr_type = builder_helper_.GetLLVMType(*(arr_decl.type));
-  auto base_addr = builder_.CreateAlloca(arr_type);
-  id_to_val[arr_decl.id] = base_addr;
+  auto type = builder_helper_.GetLLVMType(*(arr_decl.type));
+  llvm::AllocaInst* base_addr = nullptr;
+  if (arr_decl.is_global) {
+    auto global_arr = new llvm::GlobalVariable(
+        module_, type, true, llvm::GlobalValue::LinkageTypes::ExternalLinkage,
+        nullptr, arr_decl.id);
+    id_to_val[arr_decl.id] = global_arr;
+  } else {
+    auto addr = builder_.CreateAlloca(type);
+    id_to_val[arr_decl.id] = addr;
+    base_addr = addr;
+  }
 
   auto arr_decl_type = dynamic_cast<ArrType*>(arr_decl.type.get());
+  std::vector<llvm::Constant*> arr_elems{};
   for (auto i = std::size_t{0}, e = arr_decl_type->len(); i < e; ++i) {
     if (i < arr_decl.init_list.size()) {
       auto& arr_init = arr_decl.init_list.at(i);
       arr_init->Accept(*this);
     }
 
-    auto res_addr =
-        builder_.CreateConstInBoundsGEP2_32(arr_type, base_addr, 0, i);
+    llvm::Value* res_addr = nullptr;
+    if (!arr_decl.is_global) {
+      res_addr = builder_.CreateConstInBoundsGEP2_32(type, base_addr, 0, i);
+    }
 
     if (i < arr_decl.init_list.size()) {
       auto init_val = val_recorder.ValOfPrevExpr();
-      builder_.CreateStore(init_val, res_addr);
+      if (arr_decl.is_global) {
+        auto const_val = llvm::dyn_cast<llvm::Constant>(init_val);
+        arr_elems.push_back(const_val);
+      } else {
+        builder_.CreateStore(init_val, res_addr);
+      }
     } else {
       // set remaining elements as 0
       auto zero = llvm::ConstantInt::get(builder_.getInt32Ty(), 0, true);
-      builder_.CreateStore(zero, res_addr);
+      if (arr_decl.is_global) {
+        arr_elems.push_back(zero);
+      } else {
+        builder_.CreateStore(zero, res_addr);
+      }
     }
+  }
+
+  if (arr_decl.is_global) {
+    auto arr_type = llvm::dyn_cast<llvm::ArrayType>(type);
+    llvm::Constant* arr_init = llvm::ConstantArray::get(arr_type, arr_elems);
+    auto global_arr = module_.getGlobalVariable(arr_decl.id);
+    global_arr->setInitializer(arr_init);
   }
 }
 
