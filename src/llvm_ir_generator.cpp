@@ -199,7 +199,7 @@ void LLVMIRGenerator::Visit(const ArrDeclNode& arr_decl) {
   }
 
   auto arr_decl_type = dynamic_cast<ArrType*>(arr_decl.type.get());
-  // This vector stores the initialize values for an array.
+  // This vector stores the initialize values for a global array.
   std::vector<llvm::Constant*> arr_elems{};
   for (auto i = std::size_t{0}, e = arr_decl_type->len(),
             init_len = arr_decl.init_list.size();
@@ -220,13 +220,12 @@ void LLVMIRGenerator::Visit(const ArrDeclNode& arr_decl) {
         builder_.CreateStore(init_val, res_addr);
       }
     } else {
-      // set remaining elements as 0
       auto zero = llvm::ConstantInt::get(builder_.getInt32Ty(), 0, true);
+      // A global array is always initialized to 0,
+      // but a local array remains uninitialized if no values are provided.
       if (arr_decl.is_global) {
         arr_elems.push_back(zero);
-      } else if (!arr_decl.is_global && 0 < init_len) {
-        // If array is in local scope and its initialized values is not
-        // declared, then compiler will not set element values to 0.
+      } else if (!arr_decl.is_global && init_len != 0) {
         auto res_addr = builder_.CreateConstInBoundsGEP2_32(
             type, id_to_val.at(arr_decl.id), 0, i);
         builder_.CreateStore(zero, res_addr);
