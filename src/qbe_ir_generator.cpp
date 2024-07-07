@@ -257,8 +257,14 @@ void QbeIrGenerator::Visit(const ArrDeclNode& arr_decl) {
                 arr_decl.type->size());
     id_to_num[arr_decl.id] = base_addr_num;
 
-    for (auto i = std::size_t{0}, e = arr_type->len(); i < e; ++i) {
-      if (i < arr_decl.init_list.size()) {
+    // NOTE: Compiler will not set elements to 0 if `init_len` is 0.
+    // 6.7.9 Initialization
+    // 10. If an object that has automatic storage duration is not initialized
+    // explicitly, its value is indeterminate.
+    for (auto i = std::size_t{0}, e = arr_type->len(),
+              init_len = arr_decl.init_list.size();
+         i < e && 0 < init_len; ++i) {
+      if (i < init_len) {
         auto& arr_init = arr_decl.init_list.at(i);
         arr_init->Accept(*this);
       }
@@ -271,7 +277,7 @@ void QbeIrGenerator::Visit(const ArrDeclNode& arr_decl) {
       WriteInstr_("{} =l add {}, {}", FuncScopeTemp{res_addr_num},
                   FuncScopeTemp{base_addr_num}, FuncScopeTemp{offset});
 
-      if (i < arr_decl.init_list.size()) {
+      if (i < init_len) {
         int init_val_num = num_recorder.NumOfPrevExpr();
         WriteInstr_("storew {}, {}", FuncScopeTemp{init_val_num},
                     FuncScopeTemp{res_addr_num});
