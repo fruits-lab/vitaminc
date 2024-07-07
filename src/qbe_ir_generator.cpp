@@ -224,25 +224,30 @@ void QbeIrGenerator::Visit(const ArrDeclNode& arr_decl) {
   if (arr_decl.is_global) {
     const auto* arr_type = dynamic_cast<ArrType*>((arr_decl.type).get());
     assert(arr_type);
-    if (arr_decl.init_list.size() != 0) {
-      global_var_init_vals.clear();
-      Write_("export data {} = align {} {{ ",
-             user_defined::GlobalPointer{arr_decl.id},
-             arr_type->element_type().size());
-      for (auto i = std::size_t{0}, e = arr_type->len(); i < e; ++i) {
-        auto& arr_init = arr_decl.init_list.at(i);
-        arr_init->Accept(*this);
-        Write_("{}", GenerateQBEInit(global_var_init_vals.at(i)));
-        if (i != e - 1) {
-          Write_(", ");
-        }
+    Write_("export data {} = align {} {{ ",
+           user_defined::GlobalPointer{arr_decl.id},
+           arr_type->element_type().size());
+
+    global_var_init_vals.clear();
+    auto arr_size = arr_type->len();
+    auto init_len = arr_decl.init_list.size();
+    // The predicate of this loop guarantees that it doesn't go out of bound if
+    // the number of initialized elements is less than the array declaration
+    // size.
+    for (auto i = std::size_t{0}; i < arr_size && i < init_len; ++i) {
+      auto& arr_init = arr_decl.init_list.at(i);
+      arr_init->Accept(*this);
+      Write_("{}", GenerateQBEInit(global_var_init_vals.at(i)));
+      if (i != arr_size - 1) {
+        Write_(", ");
       }
-      Write_(" }}\n");
-    } else {
-      Write_("export data {} = align {} {{ z {} }}\n",
-             user_defined::GlobalPointer{arr_decl.id},
-             arr_type->element_type().size(), arr_decl.type->size());
     }
+
+    // set remaining elements as 0
+    if (init_len < arr_size) {
+      Write_("z {}", (arr_size - init_len) * arr_type->element_type().size());
+    }
+    Write_(" }}\n");
   } else {
     int base_addr_num = NextLocalNum();
     assert(arr_decl.type->IsArr());
