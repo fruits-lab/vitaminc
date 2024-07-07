@@ -231,10 +231,8 @@ void QbeIrGenerator::Visit(const ArrDeclNode& arr_decl) {
     global_var_init_vals.clear();
     auto arr_size = arr_type->len();
     auto init_len = arr_decl.init_list.size();
-    // The predicate of this loop guarantees that it doesn't go out of bound if
-    // the number of initialized elements is less than the array declaration
-    // size.
-    for (auto i = std::size_t{0}; i < arr_size && i < init_len; ++i) {
+    assert(init_len <= arr_size);
+    for (auto i = std::size_t{0}; i < init_len; ++i) {
       auto& arr_init = arr_decl.init_list.at(i);
       arr_init->Accept(*this);
       Write_("{}", GenerateQBEInit(global_var_init_vals.at(i)));
@@ -263,7 +261,7 @@ void QbeIrGenerator::Visit(const ArrDeclNode& arr_decl) {
     // explicitly, its value is indeterminate.
     for (auto i = std::size_t{0}, e = arr_type->len(),
               init_len = arr_decl.init_list.size();
-         i < e && 0 < init_len; ++i) {
+         i < e && init_len != 0; ++i) {
       if (i < init_len) {
         auto& arr_init = arr_decl.init_list.at(i);
         arr_init->Accept(*this);
