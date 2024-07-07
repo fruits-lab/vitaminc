@@ -22,5 +22,6 @@ int main() {
   __builtin_print(e[1]);
   __builtin_print(e[2]);
 
+  int f[2];
   return 0;
 }

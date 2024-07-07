@@ -201,13 +201,15 @@ void LLVMIRGenerator::Visit(const ArrDeclNode& arr_decl) {
   auto arr_decl_type = dynamic_cast<ArrType*>(arr_decl.type.get());
   // This vector stores the initialize values for an array.
   std::vector<llvm::Constant*> arr_elems{};
-  for (auto i = std::size_t{0}, e = arr_decl_type->len(); i < e; ++i) {
-    if (i < arr_decl.init_list.size()) {
+  for (auto i = std::size_t{0}, e = arr_decl_type->len(),
+            init_len = arr_decl.init_list.size();
+       i < e; ++i) {
+    if (i < init_len) {
       auto& arr_init = arr_decl.init_list.at(i);
       arr_init->Accept(*this);
     }
 
-    if (i < arr_decl.init_list.size()) {
+    if (i < init_len) {
       auto init_val = val_recorder.ValOfPrevExpr();
       if (arr_decl.is_global) {
         auto const_val = llvm::dyn_cast<llvm::Constant>(init_val);
@@ -222,7 +224,9 @@ void LLVMIRGenerator::Visit(const ArrDeclNode& arr_decl) {
       auto zero = llvm::ConstantInt::get(builder_.getInt32Ty(), 0, true);
       if (arr_decl.is_global) {
         arr_elems.push_back(zero);
-      } else {
+      } else if (!arr_decl.is_global && 0 < init_len) {
+        // If array is in local scope and its initialized values is not
+        // declared, then compiler will not set element values to 0.
         auto res_addr = builder_.CreateConstInBoundsGEP2_32(
             type, id_to_val.at(arr_decl.id), 0, i);
         builder_.CreateStore(zero, res_addr);
