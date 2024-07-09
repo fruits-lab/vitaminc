@@ -222,14 +222,13 @@ void QbeIrGenerator::Visit(const VarDeclNode& decl) {
 
 void QbeIrGenerator::Visit(const ArrDeclNode& arr_decl) {
   if (arr_decl.is_global) {
-    const auto* arr_type = dynamic_cast<ArrType*>((arr_decl.type).get());
-    assert(arr_type);
+    const auto& arr_type = dynamic_cast<ArrType&>(*arr_decl.type);
     Write_("export data {} = align {} {{ ",
            user_defined::GlobalPointer{arr_decl.id},
-           arr_type->element_type().size());
+           arr_type.element_type().size());
 
     global_var_init_vals.clear();
-    auto arr_size = arr_type->len();
+    auto arr_size = arr_type.len();
     auto init_len = arr_decl.init_list.size();
     assert(init_len <= arr_size);
     for (auto i = std::size_t{0}; i < init_len; ++i) {
@@ -243,14 +242,14 @@ void QbeIrGenerator::Visit(const ArrDeclNode& arr_decl) {
 
     // set remaining elements as 0
     if (init_len < arr_size) {
-      Write_("z {}", (arr_size - init_len) * arr_type->element_type().size());
+      Write_("z {}", (arr_size - init_len) * arr_type.element_type().size());
     }
     Write_(" }}\n");
   } else {
     int base_addr_num = NextLocalNum();
     assert(arr_decl.type->IsArr());
-    const auto* arr_type = dynamic_cast<ArrType*>((arr_decl.type).get());
-    auto element_size = arr_type->element_type().size();
+    const auto& arr_type = dynamic_cast<ArrType&>(*arr_decl.type);
+    auto element_size = arr_type.element_type().size();
     WriteInstr_("{} =l alloc{} {}", FuncScopeTemp{base_addr_num}, element_size,
                 arr_decl.type->size());
     id_to_num[arr_decl.id] = base_addr_num;
@@ -259,7 +258,7 @@ void QbeIrGenerator::Visit(const ArrDeclNode& arr_decl) {
     // 6.7.9 Initialization
     // 10. If an object that has automatic storage duration is not initialized
     // explicitly, its value is indeterminate.
-    for (auto i = std::size_t{0}, e = arr_type->len(),
+    for (auto i = std::size_t{0}, e = arr_type.len(),
               init_len = arr_decl.init_list.size();
          i < e && init_len != 0; ++i) {
       if (i < init_len) {
@@ -302,13 +301,12 @@ void QbeIrGenerator::Visit(const RecordVarDeclNode& record_var_decl) {
               record_var_decl.type->size());
   id_to_num[record_var_decl.id] = base_addr;
 
-  auto* record_type = dynamic_cast<RecordType*>(record_var_decl.type.get());
-  assert(record_type);
+  auto& record_type = dynamic_cast<RecordType&>(*record_var_decl.type);
   // NOTE: This predicate will make sure that we don't initialize members that
-  // exceed the total number of members in a record. Also, it gurantees
+  // exceed the total number of members in a record. Also, it guarantees
   // that accessing element in the initializers will not go out of bound.
   for (auto i = std::size_t{0}, e = record_var_decl.inits.size(),
-            slot_count = record_type->SlotCount();
+            slot_count = record_type.SlotCount();
        i < slot_count && i < e; ++i) {
     const auto& init = record_var_decl.inits.at(i);
     init->Accept(*this);
@@ -316,7 +314,7 @@ void QbeIrGenerator::Visit(const RecordVarDeclNode& record_var_decl) {
 
     // res_addr = base_addr + offset
     const int res_addr_num = NextLocalNum();
-    const auto offset = record_type->OffsetOf(i);
+    const auto offset = record_type.OffsetOf(i);
     WriteInstr_("{} =l add {}, {}", FuncScopeTemp{res_addr_num},
                 FuncScopeTemp{base_addr}, offset);
     WriteInstr_("storew {}, {}", FuncScopeTemp{init_num},
@@ -780,10 +778,9 @@ void QbeIrGenerator::Visit(const ArrSubExprNode& arr_sub_expr) {
   // e.g. int a[3]
   // a[1]'s offset = 1 * 4 (int size)
   const int offset = NextLocalNum();
-  const auto* arr_type = dynamic_cast<ArrType*>((arr_sub_expr.arr->type).get());
-  assert(arr_type);
+  const auto& arr_type = dynamic_cast<ArrType&>(*arr_sub_expr.arr->type);
   WriteInstr_("{} =l mul {}, {}", FuncScopeTemp{offset},
-              FuncScopeTemp{extended_num}, arr_type->element_type().size());
+              FuncScopeTemp{extended_num}, arr_type.element_type().size());
 
   // res_addr = base_addr + offset
   const int res_addr_num = NextLocalNum();
@@ -896,22 +893,20 @@ void QbeIrGenerator::Visit(const PostfixArithExprNode& postfix_expr) {
   // TODO: support pointer arithmetic
   WriteInstr_("{} =w {} {}, 1", FuncScopeTemp{res_num},
               GetBinaryOperator(arith_op), FuncScopeTemp{expr_num});
-  const auto* id_expr = dynamic_cast<IdExprNode*>((postfix_expr.operand).get());
-  assert(id_expr);
+  const auto& id_expr = dynamic_cast<IdExprNode&>(*postfix_expr.operand);
   WriteInstr_("storew {}, {}", FuncScopeTemp{res_num},
-              FuncScopeTemp{id_to_num.at(id_expr->id)});
+              FuncScopeTemp{id_to_num.at(id_expr.id)});
 }
 
 void QbeIrGenerator::Visit(const RecordMemExprNode& mem_expr) {
   mem_expr.expr->Accept(*this);
   const auto num = num_recorder.NumOfPrevExpr();
   const auto id_num = reg_num_to_id_num.at(num);
-  auto* record_type = dynamic_cast<RecordType*>(mem_expr.expr->type.get());
-  assert(record_type);
+  auto& record_type = dynamic_cast<RecordType&>(*mem_expr.expr->type);
 
   const auto res_addr_num = NextLocalNum();
   WriteInstr_("{} =l add {}, {}", FuncScopeTemp{res_addr_num},
-              FuncScopeTemp{id_num}, record_type->OffsetOf(mem_expr.id));
+              FuncScopeTemp{id_num}, record_type.OffsetOf(mem_expr.id));
 
   const int res_num = NextLocalNum();
   WriteInstr_("{} =w loadw {}", FuncScopeTemp{res_num},
@@ -933,11 +928,9 @@ void QbeIrGenerator::Visit(const UnaryExprNode& unary_expr) {
                                 : BinaryOperator::kSub;
       WriteInstr_("{} =w {} {}, 1", FuncScopeTemp{res_num},
                   GetBinaryOperator(arith_op), FuncScopeTemp{expr_num});
-      const auto* id_expr =
-          dynamic_cast<IdExprNode*>((unary_expr.operand).get());
-      assert(id_expr);
+      const auto& id_expr = dynamic_cast<IdExprNode&>(*unary_expr.operand);
       WriteInstr_("storew {}, {}", FuncScopeTemp{res_num},
-                  FuncScopeTemp{id_to_num.at(id_expr->id)});
+                  FuncScopeTemp{id_to_num.at(id_expr.id)});
       num_recorder.Record(res_num);
     } break;
     case UnaryOperator::kPos:
@@ -974,11 +967,9 @@ void QbeIrGenerator::Visit(const UnaryExprNode& unary_expr) {
         // No-op; the function itself already evaluates to the address.
         break;
       }
-      const auto* id_expr =
-          dynamic_cast<IdExprNode*>((unary_expr.operand).get());
       // NOTE: The operand of the address-of operator must be an lvalue, and we
       // do not support arrays now, so it must have been backed by an id.
-      assert(id_expr);
+      assert(dynamic_cast<IdExprNode*>(unary_expr.operand.get()));
       // The address of the id is the id itself.
       const int reg_num = num_recorder.NumOfPrevExpr();
       const int id_num = reg_num_to_id_num.at(reg_num);
@@ -993,8 +984,8 @@ void QbeIrGenerator::Visit(const UnaryExprNode& unary_expr) {
     case UnaryOperator::kDeref: {
       // Is function pointer.
       if (unary_expr.operand->type->IsPtr() &&
-          dynamic_cast<PtrType*>((unary_expr.operand->type).get())
-              ->base_type()
+          dynamic_cast<PtrType&>(*unary_expr.operand->type)
+              .base_type()
               .IsFunc()) {
         // No-op; the function itself also evaluates to the address.
         break;

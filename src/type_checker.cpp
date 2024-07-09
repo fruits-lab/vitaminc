@@ -157,8 +157,7 @@ void TypeChecker::Visit(RecordVarDeclNode& record_var_decl) {
     // struct birth bd1 { .date = 1 }; // RecordVarDeclNode -> search type entry
     // to update its type.
     // record_type_id is "struct_birth" in the above example.
-    auto record_type_id =
-        dynamic_cast<RecordType*>(record_var_decl.type.get())->id();
+    auto record_type_id = dynamic_cast<RecordType&>(*record_var_decl.type).id();
     auto record_type = env_.LookUpType(
         MangleRecordTypeId(record_type_id, record_var_decl.type));
     assert(record_type);
@@ -191,7 +190,7 @@ void TypeChecker::Visit(ParamNode& parameter) {
     if (parameter.type->IsArr()) {
       // Decay to simple pointer type.
       parameter.type = std::make_unique<PtrType>(
-          dynamic_cast<ArrType*>(parameter.type.get())->element_type().Clone());
+          dynamic_cast<ArrType&>(*parameter.type).element_type().Clone());
     } else if (parameter.type->IsFunc()) {
       // Decay to function pointer type.
       parameter.type = std::make_unique<PtrType>(parameter.type->Clone());
@@ -233,7 +232,7 @@ void TypeChecker::Visit(FuncDefNode& func_def) {
     decayed_param_types.push_back(parameter->type->Clone());
   }
   auto return_type =
-      dynamic_cast<FuncType*>(func_def.type.get())->return_type().Clone();
+      dynamic_cast<FuncType&>(*func_def.type).return_type().Clone();
   func_def.type = std::make_unique<FuncType>(std::move(return_type),
                                              std::move(decayed_param_types));
   auto symbol =
@@ -461,10 +460,9 @@ void TypeChecker::Visit(ArgExprNode& arg_expr) {
 void TypeChecker::Visit(ArrSubExprNode& arr_sub_expr) {
   arr_sub_expr.arr->Accept(*this);
   arr_sub_expr.index->Accept(*this);
-  const auto* arr_type = dynamic_cast<ArrType*>((arr_sub_expr.arr->type).get());
-  assert(arr_type);
+  const auto& arr_type = dynamic_cast<ArrType&>(*arr_sub_expr.arr->type);
   // arr_sub_expr should have the element type of the array.
-  arr_sub_expr.type = arr_type->element_type().Clone();
+  arr_sub_expr.type = arr_type.element_type().Clone();
   arr_sub_expr.is_global = arr_sub_expr.arr->is_global;
 }
 
@@ -565,9 +563,8 @@ void TypeChecker::Visit(UnaryExprNode& unary_expr) {
       if (!unary_expr.operand->type->IsPtr()) {
         // TODO: the operand of unary '*' shall have pointer type
       }
-      unary_expr.type = dynamic_cast<PtrType*>(unary_expr.operand->type.get())
-                            ->base_type()
-                            .Clone();
+      unary_expr.type =
+          dynamic_cast<PtrType&>(*unary_expr.operand->type).base_type().Clone();
       break;
     default:
       unary_expr.type = unary_expr.operand->type->Clone();

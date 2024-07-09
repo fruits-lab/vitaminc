@@ -184,16 +184,16 @@ func_def: declaration_specifiers declarator compound_stmt {
     auto func_def = $2;
     assert(dynamic_cast<FuncDefNode*>(func_def.get()));
     assert(func_def->type->IsFunc());
-    const auto* func_type = static_cast<FuncType*>(func_def->type.get());
+    const auto& func_type = dynamic_cast<FuncType&>(*func_def->type);
     auto type = std::get<std::unique_ptr<Type>>($1);
-    auto resolved_return_type = ResolveType(std::move(type), func_type->return_type().Clone());
+    auto resolved_return_type = ResolveType(std::move(type), func_type.return_type().Clone());
     auto param_types = std::vector<std::unique_ptr<Type>>{};
-    for (auto& param : func_type->param_types()) {
+    for (auto& param : func_type.param_types()) {
       param_types.push_back(param->Clone());
     }
     func_def->type = std::make_unique<FuncType>(std::move(resolved_return_type), std::move(param_types));
-    static_cast<FuncDefNode*>(func_def.get())->body = $3;
-    $$ = std::unique_ptr<FuncDefNode>(static_cast<FuncDefNode*>(func_def.release()));
+    dynamic_cast<FuncDefNode&>(*func_def).body = $3;
+    $$ = std::unique_ptr<FuncDefNode>(dynamic_cast<FuncDefNode*>(func_def.release()));
   }
   ;
 
@@ -425,11 +425,11 @@ decl: declaration_specifiers init_declarator_list_opt SEMICOLON {
         decl_list.push_back(std::move(decl));
       }
 
-      auto* rec_decl = dynamic_cast<RecordDeclNode*>(decl.get());
+      auto& rec_decl = dynamic_cast<RecordDeclNode&>(*decl);
       // Initialize record variable.
       for (auto& init_decl : init_decl_list) {
         if (init_decl) {
-          init_decl->type = ResolveType(rec_decl->type->Clone(), std::move(init_decl->type));
+          init_decl->type = ResolveType(rec_decl.type->Clone(), std::move(init_decl->type));
         }
         decl_list.push_back(std::move(init_decl));
       }
@@ -469,10 +469,9 @@ init_declarator: declarator { $$ = $1; }
     auto decl = $1;
     auto init = $3;
     if (std::holds_alternative<std::unique_ptr<InitExprNode>>(init)) {
-      auto* var_decl = dynamic_cast<VarDeclNode*>(decl.get());
-      assert(var_decl);
+      auto& var_decl = dynamic_cast<VarDeclNode&>(*decl);
       auto initializer = std::move(std::get<std::unique_ptr<InitExprNode>>(init));
-      var_decl->init = std::move(initializer->expr);
+      var_decl.init = std::move(initializer->expr);
     } else { // The initializer is a list of expressions.
       auto init_expr_list = std::move(std::get<std::vector<std::unique_ptr<InitExprNode>>>(init));
       if (auto* arr_decl = dynamic_cast<ArrDeclNode*>(decl.get())) {
@@ -801,21 +800,21 @@ std::unique_ptr<Type> ResolveType(std::unique_ptr<Type> resolved_type,
   }
   // Since we cannot change the internal state of a type, we construct a new one.
   if (unknown_type->IsPtr()) {
-    auto ptr_type = static_cast<PtrType*>(unknown_type.get());
-    resolved_type = ResolveType(std::move(resolved_type), ptr_type->base_type().Clone());
+    auto& ptr_type = static_cast<PtrType&>(*unknown_type);
+    resolved_type = ResolveType(std::move(resolved_type), ptr_type.base_type().Clone());
     return std::make_unique<PtrType>(std::move(resolved_type));
   }
   if (unknown_type->IsArr()) {
-    auto arr_type = static_cast<ArrType*>(unknown_type.get());
-    resolved_type = ResolveType(std::move(resolved_type), arr_type->element_type().Clone());
-    return std::make_unique<ArrType>(std::move(resolved_type), arr_type->len());
+    auto& arr_type = dynamic_cast<ArrType&>(*unknown_type);
+    resolved_type = ResolveType(std::move(resolved_type), arr_type.element_type().Clone());
+    return std::make_unique<ArrType>(std::move(resolved_type), arr_type.len());
   }
   if (unknown_type->IsFunc()) {
     // NOTE: Due to the structure of the grammar, the return type of a function is to be resolved.
-    auto func_type = static_cast<FuncType*>(unknown_type.get());
-    resolved_type = ResolveType(std::move(resolved_type), func_type->return_type().Clone());
+    auto& func_type = dynamic_cast<FuncType&>(*unknown_type);
+    resolved_type = ResolveType(std::move(resolved_type), func_type.return_type().Clone());
     auto param_types = std::vector<std::unique_ptr<Type>>{};
-    for (const auto& param : func_type->param_types()) {
+    for (const auto& param : func_type.param_types()) {
       param_types.push_back(param->Clone());
     }
     return std::make_unique<FuncType>(std::move(resolved_type), std::move(param_types));
