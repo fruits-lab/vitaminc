@@ -198,10 +198,10 @@ void LLVMIRGenerator::Visit(const ArrDeclNode& arr_decl) {
     id_to_val[arr_decl.id] = addr;
   }
 
-  auto arr_decl_type = dynamic_cast<ArrType*>(arr_decl.type.get());
+  auto& arr_decl_type = dynamic_cast<ArrType&>(*arr_decl.type);
   // This vector stores the initialize values for a global array.
   std::vector<llvm::Constant*> arr_elems{};
-  for (auto i = std::size_t{0}, e = arr_decl_type->len(),
+  for (auto i = std::size_t{0}, e = arr_decl_type.len(),
             init_len = arr_decl.init_list.size();
        i < e; ++i) {
     if (i < init_len) {
@@ -250,8 +250,7 @@ void LLVMIRGenerator::Visit(const FieldNode& field) {
 }
 
 void LLVMIRGenerator::Visit(const RecordVarDeclNode& record_var_decl) {
-  auto* record_type = dynamic_cast<RecordType*>(record_var_decl.type.get());
-  assert(record_type);
+  auto& record_type = dynamic_cast<RecordType&>(*record_var_decl.type);
   auto type = builder_helper_.GetLLVMType(*(record_var_decl.type));
   auto base_addr = builder_.CreateAlloca(type);
   id_to_val[record_var_decl.id] = base_addr;
@@ -260,7 +259,7 @@ void LLVMIRGenerator::Visit(const RecordVarDeclNode& record_var_decl) {
   // exceed the total number of members in a record. Also, it guarantees
   // that accessing element in the initializers will not go out of bound.
   for (auto i = std::size_t{0}, e = record_var_decl.inits.size(),
-            slot_count = record_type->SlotCount();
+            slot_count = record_type.SlotCount();
        i < slot_count && i < e; ++i) {
     auto& init = record_var_decl.inits.at(i);
     init->Accept(*this);
@@ -513,10 +512,9 @@ void LLVMIRGenerator::Visit(const IdLabeledStmtNode& id_labeled_stmt) {
 void LLVMIRGenerator::Visit(const CaseStmtNode& case_stmt) {
   case_stmt.expr->Accept(*this);
   auto val = val_recorder.ValOfPrevExpr();
-  auto int_expr = dynamic_cast<IntConstExprNode*>(case_stmt.expr.get());
-  assert(int_expr);
+  auto& int_expr = dynamic_cast<IntConstExprNode&>(*case_stmt.expr);
 
-  auto case_label = "case_" + std::to_string(int_expr->val);
+  auto case_label = "case_" + std::to_string(int_expr.val);
   auto case_bb = llvm::BasicBlock::Create(context_, case_label,
                                           builder_helper_.CurrFunc());
 
@@ -586,11 +584,10 @@ void LLVMIRGenerator::Visit(const ArrSubExprNode& arr_sub_expr) {
   auto base_addr = val_to_id_addr.at(val);
   auto arr_type = builder_helper_.GetLLVMType(*(arr_sub_expr.arr->type));
   arr_sub_expr.index->Accept(*this);
-  auto index = dynamic_cast<IntConstExprNode*>(arr_sub_expr.index.get());
-  assert(index);
+  auto& index = dynamic_cast<IntConstExprNode&>(*arr_sub_expr.index);
 
   auto res_addr = builder_.CreateConstInBoundsGEP2_32(arr_type, base_addr, 0,
-                                                      (unsigned int)index->val);
+                                                      (unsigned int)index.val);
   auto res_val = builder_.CreateLoad(arr_type->getArrayElementType(), res_addr);
   val_to_id_addr[res_val] = res_addr;
   val_recorder.Record(res_val);
@@ -694,9 +691,8 @@ void LLVMIRGenerator::Visit(const PostfixArithExprNode& postfix_expr) {
 
   auto one = llvm::ConstantInt::get(builder_.getInt32Ty(), 1, true);
   auto res = builder_.CreateBinOp(arith_op, val, one);
-  const auto* id_expr = dynamic_cast<IdExprNode*>((postfix_expr.operand).get());
-  assert(id_expr);
-  builder_.CreateStore(res, id_to_val.at(id_expr->id));
+  const auto& id_expr = dynamic_cast<IdExprNode&>(*postfix_expr.operand);
+  builder_.CreateStore(res, id_to_val.at(id_expr.id));
 }
 
 void LLVMIRGenerator::Visit(const RecordMemExprNode& mem_expr) {
@@ -704,13 +700,12 @@ void LLVMIRGenerator::Visit(const RecordMemExprNode& mem_expr) {
   auto val = val_recorder.ValOfPrevExpr();
   auto base_addr = val_to_id_addr.at(val);
   auto llvm_type = builder_helper_.GetLLVMType(*(mem_expr.expr->type));
-  auto* record_type = dynamic_cast<RecordType*>(mem_expr.expr->type.get());
-  assert(record_type);
+  auto& record_type = dynamic_cast<RecordType&>(*mem_expr.expr->type);
 
   auto res_addr = builder_.CreateStructGEP(
-      llvm_type, base_addr, record_type->MemberIndex(mem_expr.id));
+      llvm_type, base_addr, record_type.MemberIndex(mem_expr.id));
   auto res_val = builder_.CreateLoad(
-      builder_helper_.GetLLVMType(record_type->MemberType(mem_expr.id)),
+      builder_helper_.GetLLVMType(record_type.MemberType(mem_expr.id)),
       res_addr);
   val_to_id_addr[res_val] = res_addr;
   val_recorder.Record(res_val);
@@ -765,8 +760,8 @@ void LLVMIRGenerator::Visit(const UnaryExprNode& unary_expr) {
     case UnaryOperator::kDeref: {
       // Is function pointer.
       if (unary_expr.operand->type->IsPtr() &&
-          dynamic_cast<PtrType*>((unary_expr.operand->type).get())
-              ->base_type()
+          dynamic_cast<PtrType&>(*unary_expr.operand->type)
+              .base_type()
               .IsFunc()) {
         // No-op; the value is still the function itself.
         break;
