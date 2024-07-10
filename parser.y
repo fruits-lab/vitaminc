@@ -423,15 +423,15 @@ decl: declaration_specifiers init_declarator_list_opt SEMICOLON {
       // A record declaration that doesn't declare any identifier, e.g., `struct point {int x, int y};`.
       if (init_decl_list.empty()) {
         decl_list.push_back(std::move(decl));
-      }
-
-      auto& rec_decl = dynamic_cast<RecordDeclNode&>(*decl);
-      // Initialize record variable.
-      for (auto& init_decl : init_decl_list) {
-        if (init_decl) {
-          init_decl->type = ResolveType(rec_decl.type->Clone(), std::move(init_decl->type));
+      } else {
+        auto& rec_decl = dynamic_cast<RecordDeclNode&>(*decl);
+        // Initialize record variable.
+        for (auto& init_decl : init_decl_list) {
+          if (init_decl) {
+            init_decl->type = ResolveType(rec_decl.type->Clone(), std::move(init_decl->type));
+          }
+          decl_list.push_back(std::move(init_decl));
         }
-        decl_list.push_back(std::move(init_decl));
       }
     }
     $$ = std::make_unique<DeclStmtNode>(Loc(@1), std::move(decl_list));
