@@ -165,11 +165,13 @@ std::string GenerateQBEInit(const GlobalVarInitVal& init) {
       init.value);
 }
 
+auto
+    record_des_vals  // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
+    = std::vector<std::variant<std::string, int>>{};
+
 }  // namespace
 
 void QbeIrGenerator::Visit(const DeclStmtNode& decl_stmt) {
-  // TODO: code generation for global variables, VarDeclNode, ArrDeclNode,
-  // RecordVarDeclNode
   for (const auto& decl : decl_stmt.decls) {
     decl->Accept(*this);
   }
@@ -309,12 +311,24 @@ void QbeIrGenerator::Visit(const RecordVarDeclNode& record_var_decl) {
             slot_count = record_type.SlotCount();
        i < slot_count && i < e; ++i) {
     const auto& init = record_var_decl.inits.at(i);
+    record_des_vals.clear();
     init->Accept(*this);
     const auto init_num = num_recorder.NumOfPrevExpr();
 
+    auto offset = 0;
+    if (record_des_vals.empty()) {
+      offset = record_type.OffsetOf(i);
+    } else {
+      // TODO: consider array index designators.
+      // NOTE: Only consider identifer designators for now.
+      assert(record_des_vals.size() == 1);
+      auto mem_index =
+          record_type.MemberIndex(std::get<std::string>(record_des_vals.at(0)));
+      offset = record_type.OffsetOf(mem_index);
+    }
+
     // res_addr = base_addr + offset
     const int res_addr_num = NextLocalNum();
-    const auto offset = record_type.OffsetOf(i);
     WriteInstr_("{} =l add {}, {}", FuncScopeTemp{res_addr_num},
                 FuncScopeTemp{base_addr}, offset);
     WriteInstr_("storew {}, {}", FuncScopeTemp{init_num},
@@ -701,12 +715,22 @@ void QbeIrGenerator::Visit(const ExprStmtNode& expr_stmt) {
 }
 
 void QbeIrGenerator::Visit(const InitExprNode& init_expr) {
+  for (const auto& des : init_expr.des) {
+    des->Accept(*this);
+  }
+  // TODO: get designated index
   init_expr.expr->Accept(*this);
 }
 
-void QbeIrGenerator::Visit(const ArrDesNode& arr_des) {}
+void QbeIrGenerator::Visit(const ArrDesNode& arr_des) {
+  arr_des.index->Accept(*this);
+  auto& index_expr = dynamic_cast<IntConstExprNode&>(*arr_des.index);
+  record_des_vals.push_back(index_expr.val);
+}
 
-void QbeIrGenerator::Visit(const IdDesNode& id_des) {}
+void QbeIrGenerator::Visit(const IdDesNode& id_des) {
+  record_des_vals.push_back(id_des.id);
+}
 
 void QbeIrGenerator::Visit(const NullExprNode& null_expr) {
   /* do nothing */
