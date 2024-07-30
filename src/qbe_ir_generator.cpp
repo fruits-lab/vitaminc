@@ -321,7 +321,7 @@ void QbeIrGenerator::Visit(const RecordVarDeclNode& record_var_decl) {
     init->Accept(*this);
     const auto init_num = num_recorder.NumOfPrevExpr();
 
-    auto offset = 0;
+    std::size_t offset = 0;
     if (record_des_vals.empty()) {
       offset = record_type.OffsetOf(i);
     } else {
@@ -730,11 +730,11 @@ void QbeIrGenerator::Visit(const InitExprNode& init_expr) {
 void QbeIrGenerator::Visit(const ArrDesNode& arr_des) {
   arr_des.index->Accept(*this);
   auto& index_expr = dynamic_cast<IntConstExprNode&>(*arr_des.index);
-  record_des_vals.push_back(index_expr.val);
+  record_des_vals.emplace_back(index_expr.val);
 }
 
 void QbeIrGenerator::Visit(const IdDesNode& id_des) {
-  record_des_vals.push_back(id_des.id);
+  record_des_vals.emplace_back(id_des.id);
 }
 
 void QbeIrGenerator::Visit(const NullExprNode& null_expr) {

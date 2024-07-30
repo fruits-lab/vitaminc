@@ -570,11 +570,11 @@ void LLVMIRGenerator::Visit(const InitExprNode& init_expr) {
 void LLVMIRGenerator::Visit(const ArrDesNode& arr_des) {
   arr_des.index->Accept(*this);
   auto& index_expr = dynamic_cast<IntConstExprNode&>(*arr_des.index);
-  record_des_vals.push_back(index_expr.val);
+  record_des_vals.emplace_back(index_expr.val);
 }
 
 void LLVMIRGenerator::Visit(const IdDesNode& id_des) {
-  record_des_vals.push_back(id_des.id);
+  record_des_vals.emplace_back(id_des.id);
 }
 
 void LLVMIRGenerator::Visit(const NullExprNode& null_expr) {
