@@ -153,6 +153,10 @@ auto
     labels_of_jumpable_blocks  // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
     = std::vector<LabelInfo>{};
 
+auto
+    record_des_vals  // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
+    = std::vector<std::variant<std::string, int>>{};
+
 }  // namespace
 
 void LLVMIRGenerator::Visit(const DeclStmtNode& decl_stmt) {
@@ -262,10 +266,21 @@ void LLVMIRGenerator::Visit(const RecordVarDeclNode& record_var_decl) {
             slot_count = record_type.SlotCount();
        i < slot_count && i < e; ++i) {
     auto& init = record_var_decl.inits.at(i);
+    record_des_vals.clear();
     init->Accept(*this);
     auto init_val = val_recorder.ValOfPrevExpr();
 
-    auto res_addr = builder_.CreateStructGEP(type, base_addr, i);
+    llvm::Value* res_addr = nullptr;
+    if (record_des_vals.empty()) {
+      res_addr = builder_.CreateStructGEP(type, base_addr, i);
+    } else {
+      // TODO: consider array index designators.
+      // NOTE: Only consider identifer designators for now.
+      assert(record_des_vals.size() == 1);
+      auto mem_index =
+          record_type.MemberIndex(std::get<std::string>(record_des_vals.at(0)));
+      res_addr = builder_.CreateStructGEP(type, base_addr, mem_index);
+    }
     builder_.CreateStore(init_val, res_addr);
   }
 }
@@ -540,12 +555,21 @@ void LLVMIRGenerator::Visit(const ExprStmtNode& expr_stmt) {
 }
 
 void LLVMIRGenerator::Visit(const InitExprNode& init_expr) {
+  for (const auto& des : init_expr.des) {
+    des->Accept(*this);
+  }
   init_expr.expr->Accept(*this);
 }
 
-void LLVMIRGenerator::Visit(const ArrDesNode& arr_des) {}
+void LLVMIRGenerator::Visit(const ArrDesNode& arr_des) {
+  arr_des.index->Accept(*this);
+  auto& index_expr = dynamic_cast<IntConstExprNode&>(*arr_des.index);
+  record_des_vals.push_back(index_expr.val);
+}
 
-void LLVMIRGenerator::Visit(const IdDesNode& id_des) {}
+void LLVMIRGenerator::Visit(const IdDesNode& id_des) {
+  record_des_vals.push_back(id_des.id);
+}
 
 void LLVMIRGenerator::Visit(const NullExprNode& null_expr) {
   /* do nothing */
