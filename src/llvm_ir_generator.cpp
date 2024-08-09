@@ -153,8 +153,8 @@ auto
     labels_of_jumpable_blocks  // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
     = std::vector<LabelInfo>{};
 
-/// @note Designator values that allows struct and union designate the correct
-/// member for initialization.
+/// @note Designator values that allows struct and union to designate the
+/// correct member or index for initialization
 auto
     record_des_vals  // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
     = std::vector<std::variant<std::string, int>>{};
@@ -268,8 +268,8 @@ void LLVMIRGenerator::Visit(const RecordVarDeclNode& record_var_decl) {
             slot_count = record_type.SlotCount();
        i < slot_count && i < e; ++i) {
     // TODO: consider the case for union when there are multiple designators. It
-    // seems that both Clang and gcc have initialized the following union with
-    // the value 6.
+    // seems that both Clang and gcc initialized with the last one.
+    // For example, following union is initialized with the value 6.
     // union shape s = {.circle = 5, .triangle = 6};
     auto& init = record_var_decl.inits.at(i);
     record_des_vals.clear();
