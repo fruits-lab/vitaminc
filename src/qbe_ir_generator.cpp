@@ -321,10 +321,8 @@ void QbeIrGenerator::Visit(const RecordVarDeclNode& record_var_decl) {
     init->Accept(*this);
     const auto init_num = num_recorder.NumOfPrevExpr();
 
-    std::size_t offset = 0;
-    if (record_des_vals.empty()) {
-      offset = record_type.OffsetOf(i);
-    } else {
+    std::size_t offset = record_type.OffsetOf(i);
+    if (!record_des_vals.empty()) {
       // TODO: consider array index designators.
       // NOTE: Only consider identifer designators for now.
       assert(record_des_vals.size() == 1);
