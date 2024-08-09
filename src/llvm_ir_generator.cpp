@@ -277,16 +277,15 @@ void LLVMIRGenerator::Visit(const RecordVarDeclNode& record_var_decl) {
     auto init_val = val_recorder.ValOfPrevExpr();
 
     llvm::Value* res_addr = nullptr;
-    if (record_des_vals.empty()) {
-      res_addr = builder_.CreateStructGEP(type, base_addr, i);
-    } else {
+    auto init_index = i;
+    if (!record_des_vals.empty()) {
       // TODO: consider array index designators.
       // NOTE: Only consider identifer designators for now.
       assert(record_des_vals.size() == 1);
-      auto mem_index =
+      init_index =
           record_type.MemberIndex(std::get<std::string>(record_des_vals.at(0)));
-      res_addr = builder_.CreateStructGEP(type, base_addr, mem_index);
     }
+    res_addr = builder_.CreateStructGEP(type, base_addr, init_index);
     builder_.CreateStore(init_val, res_addr);
   }
 }
