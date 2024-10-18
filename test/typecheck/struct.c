@@ -27,5 +27,21 @@ int main() {
 
   bd1.date;
 
+  struct animal {
+    int lion;
+    int tiger;
+    int giraffe;
+  } zoo;
+
+  struct book {
+    int fiction;
+    int sci_fi;
+    int history;
+  } library = {
+    .fiction = 100,
+    .sci_fi = 50,
+    .history = 500,
+  };
+
   return 0;
 }
