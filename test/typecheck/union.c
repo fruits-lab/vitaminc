@@ -26,5 +26,19 @@ int main() {
 
   s.circle;
 
+  union gender {
+    int male;
+    int female;
+  } girl = {
+    .female = 1,
+  };
+
+  union birth_place {
+    int tw;
+    int us;
+  } yt = {
+    .tw = 1,
+  };
+
   return 0;
 }
