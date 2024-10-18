@@ -31,6 +31,7 @@ std::unique_ptr<Type> ResolveType(std::unique_ptr<Type> resolved_type,
 // inserts verbatim to the header file.
 %code requires {
   #include <memory>
+  #include <set>
   #include <string>
   #include <variant>
   #include <vector>
@@ -47,6 +48,9 @@ std::unique_ptr<Type> ResolveType(std::unique_ptr<Type> resolved_type,
   Location Loc(const yy::location& loc) {
     return Location{loc.begin.line, loc.begin.column};
   }
+
+  /// @brief A set that stores unique custom types for every file.
+  std::set<std::string> custom_types;
 }
 
 %skeleton "lalr1.cc"
@@ -420,18 +424,24 @@ decl: declaration_specifiers init_declarator_list_opt SEMICOLON {
       }
     } else {
       auto decl = std::move(std::get<std::unique_ptr<DeclNode>>(decl_specifiers));
-      // A record declaration that doesn't declare any identifier, e.g., `struct point {int x, int y};`.
-      if (init_decl_list.empty()) {
-        decl_list.push_back(std::move(decl));
-      } else {
-        auto& rec_decl = dynamic_cast<RecordDeclNode&>(*decl);
-        // Initialize record variable.
+      auto& rec_decl = dynamic_cast<RecordDeclNode&>(*decl);
+
+      if (!init_decl_list.empty()) {
         for (auto& init_decl : init_decl_list) {
           if (init_decl) {
             init_decl->type = ResolveType(rec_decl.type->Clone(), std::move(init_decl->type));
           }
           decl_list.push_back(std::move(init_decl));
         }
+      }
+
+      auto rec_type_id = dynamic_cast<RecordType&>(*rec_decl.type).id();
+      // Insert RecordDeclNode if it is a newly create type.
+      if (custom_types.find(rec_type_id) == custom_types.end()) {
+        // To dump type declarations in front of variable declarations,
+        // insert decl at the beginning of the vector.
+        decl_list.insert(decl_list.begin(), std::move(decl));
+        custom_types.insert(rec_type_id);
       }
     }
     $$ = std::make_unique<DeclStmtNode>(Loc(@1), std::move(decl_list));

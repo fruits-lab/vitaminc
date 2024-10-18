@@ -53,5 +53,21 @@ TransUnitNode <1:1>
         ExprStmtNode <27:3>
           RecordMemExprNode <27:3> .circle: int
             IdExprNode <27:3> s: union shape
-        ReturnStmtNode <29:3>
-          IntConstExprNode <29:10> 0: int
+        DeclStmtNode <29:3>
+          RecordDeclNode <29:9> union gender definition
+            FieldNode <30:9> male: int
+            FieldNode <31:9> female: int
+          RecordVarDeclNode <32:5> girl: union gender
+            InitExprNode <33:5> int
+              IdDesNode <33:6> female
+              IntConstExprNode <33:15> 1: int
+        DeclStmtNode <36:3>
+          RecordDeclNode <36:9> union birth_place definition
+            FieldNode <37:9> tw: int
+            FieldNode <38:9> us: int
+          RecordVarDeclNode <39:5> yt: union birth_place
+            InitExprNode <40:5> int
+              IdDesNode <40:6> tw
+              IntConstExprNode <40:11> 1: int
+        ReturnStmtNode <43:3>
+          IntConstExprNode <43:10> 0: int
