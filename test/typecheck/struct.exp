@@ -52,5 +52,26 @@ TransUnitNode <1:1>
         ExprStmtNode <28:3>
           RecordMemExprNode <28:3> .date: int
             IdExprNode <28:3> bd1: struct birth
-        ReturnStmtNode <30:3>
-          IntConstExprNode <30:10> 0: int
+        DeclStmtNode <30:3>
+          RecordDeclNode <30:10> struct animal definition
+            FieldNode <31:9> lion: int
+            FieldNode <32:9> tiger: int
+            FieldNode <33:9> giraffe: int
+          VarDeclNode <34:5> zoo: struct animal
+        DeclStmtNode <36:3>
+          RecordDeclNode <36:10> struct book definition
+            FieldNode <37:9> fiction: int
+            FieldNode <38:9> sci_fi: int
+            FieldNode <39:9> history: int
+          RecordVarDeclNode <40:5> library: struct book
+            InitExprNode <41:5> int
+              IdDesNode <41:6> fiction
+              IntConstExprNode <41:16> 100: int
+            InitExprNode <41:5> int
+              IdDesNode <42:6> sci_fi
+              IntConstExprNode <42:15> 50: int
+            InitExprNode <41:5> int
+              IdDesNode <43:6> history
+              IntConstExprNode <43:16> 500: int
+        ReturnStmtNode <46:3>
+          IntConstExprNode <46:10> 0: int
