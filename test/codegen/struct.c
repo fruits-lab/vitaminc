@@ -18,5 +18,19 @@ int main() {
   bd1.date = bd1.date + 2;
   __builtin_print(bd1.date);
 
+  struct book {
+    int fiction;
+    int sci_fi;
+    int history;
+  } library = {
+    .fiction = 100,
+    .sci_fi = 50,
+    .history = 500,
+  };
+
+  __builtin_print(library.fiction);
+  __builtin_print(library.sci_fi);
+  __builtin_print(library.history);
+
   return 0;
 }

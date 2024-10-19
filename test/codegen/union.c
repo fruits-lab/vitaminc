@@ -21,5 +21,14 @@ int main() {
   __builtin_print(s.circle);
   __builtin_print(s.triangle);
 
+  union gender {
+    int male;
+    int female;
+  } girl = {
+    .female = 1,
+  };
+
+  __builtin_print(girl.female);
+
   return 0;
 }
