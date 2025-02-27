@@ -4,6 +4,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <memory>
+#include <optional>
 #include <string>
 #include <utility>
 #include <vector>
@@ -34,6 +35,9 @@ class Type {
     return false;
   }
   virtual bool IsUnion() const noexcept {
+    return false;
+  }
+  virtual bool IsEnum() const noexcept {
     return false;
   }
 
@@ -276,6 +280,56 @@ class UnionType : public RecordType {
  private:
   std::string id_;
   std::vector<std::unique_ptr<Field>> fields_;
+};
+
+/// @brief An enumerator of an enumeration, i.e., an enumeration constant.
+struct EnumConst {
+  std::string id;
+  int value;
+
+  EnumConst(std::string id, int value) : id{std::move(id)}, value{value} {}
+};
+
+/// @brief An enumeration constant may or may not have an explicit value.
+/// @note Should only be used in the construction of an enumeration type.
+struct OptEnumConst {
+  std::string id;
+  std::optional<int> value;
+
+  OptEnumConst(std::string id, std::optional<int> value)
+      : id{std::move(id)}, value{value} {}
+};
+
+class EnumType : public Type {
+ public:
+  /// @param id The identifier of the enumeration type. May be empty ("") for
+  /// unnamed enums.
+  EnumType(std::string id,
+           const std::vector<std::unique_ptr<OptEnumConst>>& opt_enumerators);
+  EnumType(std::string id, std::vector<std::unique_ptr<EnumConst>> enumerators)
+      : id_{std::move(id)}, enumerators_{std::move(enumerators)} {}
+
+  /// @return The type id.
+  std::string id() const noexcept;  // NOLINT(readability-identifier-naming);
+  /// @brief Checks if `id` is an enumeration constant of the enumeration.
+  bool IsEnumConst(const std::string& id) const noexcept;
+  /// @brief The value of the enumeration constant with the given id.
+  /// @throw `std::runtime_error` if the `id` is not a enumeration constant of
+  /// the enumeration.
+  int ValueOf(const std::string& id) const;
+
+  bool IsEnum() const noexcept override {
+    return true;
+  }
+
+  bool IsEqual(const Type& that) const noexcept override;
+  std::size_t size() const override;
+  std::string ToString() const override;
+  std::unique_ptr<Type> Clone() const override;
+
+ private:
+  std::string id_;
+  std::vector<std::unique_ptr<EnumConst>> enumerators_;
 };
 
 #endif  // TYPE_HPP_

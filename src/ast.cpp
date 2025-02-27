@@ -100,6 +100,22 @@ void RecordVarDeclNode::Accept(ModifyingVisitor& v) {
   v.Visit(*this);
 }
 
+void EnumConstDeclNode::Accept(NonModifyingVisitor& v) const {
+  v.Visit(*this);
+}
+
+void EnumConstDeclNode::Accept(ModifyingVisitor& v) {
+  v.Visit(*this);
+}
+
+void EnumDeclNode::Accept(NonModifyingVisitor& v) const {
+  v.Visit(*this);
+}
+
+void EnumDeclNode::Accept(ModifyingVisitor& v) {
+  v.Visit(*this);
+}
+
 void ParamNode::Accept(NonModifyingVisitor& v) const {
   v.Visit(*this);
 }

@@ -3,6 +3,7 @@
 #include <cassert>
 #include <iostream>
 #include <memory>
+#include <optional>
 #include <utility>
 #include <vector>
 
@@ -97,6 +98,7 @@ std::unique_ptr<Type> ResolveType(std::unique_ptr<Type> resolved_type,
 %token CONTINUE BREAK RETURN
 %token GOTO
 %token STRUCT UNION
+%token ENUM
 // increment (INCR: ++) and decrement (DECR: --)
 %token INCR DECR
 %token LOGIC_OR LOGIC_AND OR XOR
@@ -120,7 +122,9 @@ std::unique_ptr<Type> ResolveType(std::unique_ptr<Type> resolved_type,
 %nterm <std::unique_ptr<Type>> struct_or_union specifier_qualifier_list
 // Type specifier can be a primitive type (int) or an user defined type (struct, union)
 // The followings also construct types, but they are not yet fully resolved.
-%nterm <std::variant<std::unique_ptr<Type>, std::unique_ptr<DeclNode>>> type_specifier declaration_specifiers struct_or_union_specifier
+%nterm <std::variant<std::unique_ptr<Type>, std::unique_ptr<DeclNode>>> type_specifier declaration_specifiers struct_or_union_specifier enum_specifier
+%nterm <std::vector<std::unique_ptr<EnumConstDeclNode>>> enumerator_list
+%nterm <std::unique_ptr<EnumConstDeclNode>> enumerator enum_const
 // The number of '*'s.
 %nterm <int> pointer_opt pointer
 // The initializer of a simple variable is an expression, whereas that of an array or complex object is a list of expressions.
@@ -503,7 +507,7 @@ init_declarator: declarator { $$ = $1; }
 /* TODO: support multiple data types */
 type_specifier: INT { $$ = std::make_unique<PrimType>(PrimitiveType::kInt); }
   | struct_or_union_specifier { $$ = $1; }
-  /* TODO: enum specifier */
+  | enum_specifier { $$ = $1; }
   /* TODO: typedef name */
   ;
 
@@ -596,6 +600,44 @@ struct_or_union: STRUCT {
     $$ = std::make_unique<UnionType>("", std::move(fields));
   }
   ;
+
+enum_specifier: ENUM id_opt LEFT_CURLY enumerator_list comma_opt RIGHT_CURLY {
+    auto decl_id = $2;
+    auto enum_list = $4;
+    auto enums = std::vector<std::unique_ptr<OptEnumConst>>{};
+    for (const auto& enum_const : enum_list) {
+      enums.push_back(std::make_unique<OptEnumConst>(enum_const->id, enum_const->int_const ? std::optional{enum_const->int_const->val} : std::nullopt));
+    }
+    auto type_id = decl_id ? decl_id->id : "";
+    auto type = std::make_unique<EnumType>(type_id, std::move(enums));
+    $$ = std::make_unique<EnumDeclNode>(Loc(@2), std::move(type_id), std::move(type), std::move(enum_list));
+  }
+  | ENUM ID {
+    auto enums = std::vector<std::unique_ptr<OptEnumConst>>{};
+    $$ = std::make_unique<EnumType>($2, std::move(enums));
+  }
+  ;
+
+enumerator_list: enumerator {
+    $$ = std::vector<std::unique_ptr<EnumConstDeclNode>>{};
+    $$.push_back($1);
+  }
+  | enumerator_list COMMA enumerator {
+    auto enum_list = $1;
+    enum_list.push_back($3);
+    $$ = std::move(enum_list);
+  }
+  ;
+
+enumerator: enum_const { $$ = $1; }
+  | enum_const ASSIGN const_expr {
+    auto enum_const = $1;
+    enum_const->int_const = std::unique_ptr<IntConstExprNode>(dynamic_cast<IntConstExprNode*>($3.release()));
+    $$ = std::move(enum_const);
+  }
+  ;
+
+enum_const: ID { $$ = std::make_unique<EnumConstDeclNode>(Loc(@1), $1); }
 
 /* 6.7.5 Declarators */
 /* A declarator declares an identifier, and may be followed by a single
