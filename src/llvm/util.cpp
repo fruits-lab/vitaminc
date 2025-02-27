@@ -75,6 +75,8 @@ llvm::Type* LLVMIRBuilderHelper::GetLLVMType(const Type& type) {
     std::string record_prefix = type.IsStruct() ? "struct_" : "union_";
     return llvm::StructType::create(builder_.getContext(), field_types,
                                     record_prefix + record_type->id());
+  } else if (type.IsEnum()) {
+    return builder_.getInt32Ty();
   } else if (type.IsFunc()) {
     auto func_type = dynamic_cast<const FuncType*>(&type);
     auto return_type = GetLLVMType(func_type->return_type());

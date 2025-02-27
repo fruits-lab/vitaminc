@@ -749,6 +749,11 @@ void QbeIrGenerator::Visit(const IdExprNode& id_expr) {
     num_recorder.Record(res_num);
     return;
   }
+  // The id expression acts as a constant expression.
+  if (id_expr.const_expr) {
+    id_expr.const_expr->Accept(*this);
+    return;
+  }
   if (id_expr.is_global) {
     int reg_num = NextLocalNum();
     WriteInstr_("{} =w loadw {}", FuncScopeTemp{reg_num},
