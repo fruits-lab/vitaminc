@@ -587,6 +587,10 @@ void LLVMIRGenerator::Visit(const IdExprNode& id_expr) {
     val_recorder.Record(func);
     return;
   }
+  if (id_expr.const_expr) {
+    id_expr.const_expr->Accept(*this);
+    return;
+  }
   assert(id_to_val.count(id_expr.id) != 0);
   auto id_val = id_to_val.at(id_expr.id);
 
