@@ -481,6 +481,18 @@ struct NullExprNode : public ExprNode {
   void Accept(ModifyingVisitor&) override;
 };
 
+/// @note This is an abstract class.
+struct ConstExprNode  // NOLINT(cppcoreguidelines-special-member-functions)
+    : public ExprNode {
+  using ExprNode::ExprNode;
+
+  void Accept(NonModifyingVisitor&) const override;
+  void Accept(ModifyingVisitor&) override;
+
+  /// @note To make the class abstract.
+  ~ConstExprNode() override = 0;
+};
+
 struct IdExprNode : public ExprNode {
   IdExprNode(Location loc, std::string id) : ExprNode{loc}, id{std::move(id)} {}
 
@@ -488,10 +500,13 @@ struct IdExprNode : public ExprNode {
   void Accept(ModifyingVisitor&) override;
 
   std::string id;
+  /// @brief Not null if it is a constant expression such as an enumeration
+  /// constant.
+  std::unique_ptr<ConstExprNode> const_expr;
 };
 
-struct IntConstExprNode : public ExprNode {
-  IntConstExprNode(Location loc, int val) : ExprNode{loc}, val{val} {}
+struct IntConstExprNode : public ConstExprNode {
+  IntConstExprNode(Location loc, int val) : ConstExprNode{loc}, val{val} {}
 
   void Accept(NonModifyingVisitor&) const override;
   void Accept(ModifyingVisitor&) override;

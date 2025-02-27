@@ -330,6 +330,8 @@ class EnumType : public Type {
  private:
   std::string id_;
   std::vector<std::unique_ptr<EnumConst>> enumerators_;
+
+  bool ConvertibleHook_(const Type& that) const noexcept override;
 };
 
 #endif  // TYPE_HPP_
