@@ -17,6 +17,8 @@ struct ArrDeclNode;
 struct RecordDeclNode;
 struct FieldNode;
 struct RecordVarDeclNode;
+struct EnumConstDeclNode;
+struct EnumDeclNode;
 struct ParamNode;
 struct FuncDefNode;
 struct LoopInitNode;
@@ -80,6 +82,8 @@ class Visitor {
   virtual void Visit(CondMut<RecordDeclNode>&) {}
   virtual void Visit(CondMut<FieldNode>&) {}
   virtual void Visit(CondMut<RecordVarDeclNode>&) {}
+  virtual void Visit(CondMut<EnumConstDeclNode>&) {}
+  virtual void Visit(CondMut<EnumDeclNode>&) {}
   virtual void Visit(CondMut<ParamNode>&) {}
   virtual void Visit(CondMut<FuncDefNode>&) {}
   virtual void Visit(CondMut<LoopInitNode>&) {}

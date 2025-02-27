@@ -14,6 +14,8 @@ class AstDumper : public NonModifyingVisitor {
   void Visit(const RecordDeclNode&) override;
   void Visit(const FieldNode&) override;
   void Visit(const RecordVarDeclNode&) override;
+  void Visit(const EnumConstDeclNode&) override;
+  void Visit(const EnumDeclNode&) override;
   void Visit(const ParamNode&) override;
   void Visit(const FuncDefNode&) override;
   void Visit(const CompoundStmtNode&) override;

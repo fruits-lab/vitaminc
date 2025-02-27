@@ -155,6 +155,28 @@ void AstDumper::Visit(const FieldNode& field) {
             << field.id << ": " << field.type->ToString() << '\n';
 }
 
+void AstDumper::Visit(const EnumDeclNode& enum_decl) {
+  std::cout << indenter_.Indent() << "EnumDeclNode <" << enum_decl.loc << "> "
+            << enum_decl.id << '\n';
+
+  indenter_.IncreaseLevel();
+  for (const auto& enum_const_decl : enum_decl.enum_consts) {
+    enum_const_decl->Accept(*this);
+  }
+  indenter_.DecreaseLevel();
+}
+
+void AstDumper::Visit(const EnumConstDeclNode& enum_const_decl) {
+  std::cout << indenter_.Indent() << "EnumConstDeclNode <"
+            << enum_const_decl.loc << "> " << enum_const_decl.id << ": "
+            << enum_const_decl.type->ToString() << '\n';
+  if (enum_const_decl.int_const) {
+    indenter_.IncreaseLevel();
+    enum_const_decl.int_const->Accept(*this);
+    indenter_.DecreaseLevel();
+  }
+}
+
 void AstDumper::Visit(const ParamNode& parameter) {
   std::cout << indenter_.Indent() << "ParamNode <" << parameter.loc << "> "
             << parameter.id << ": " << parameter.type->ToString() << '\n';

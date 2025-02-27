@@ -342,3 +342,69 @@ std::unique_ptr<Type> UnionType::Clone() const {
   }
   return std::make_unique<UnionType>(id_, std::move(cloned_fields));
 }
+
+EnumType::EnumType(
+    std::string id,
+    const std::vector<std::unique_ptr<OptEnumConst>>& opt_enumerators)
+    : id_{std::move(id)} {
+  // If the first enumerator has no value, the value of its enumeration constant
+  // is 0. Each subsequent enumerator with no value defines its enumeration
+  // constant as the value of the constant expression obtained by adding 1 to
+  // the value of the previous enumeration constant.
+  int next_value = 0;
+  for (const auto& opt_enum : opt_enumerators) {
+    if (opt_enum->value) {
+      next_value = *opt_enum->value;
+    }
+    enumerators_.push_back(
+        std::make_unique<EnumConst>(opt_enum->id, next_value++));
+  }
+}
+
+std::string EnumType::id() const noexcept {
+  return id_;
+}
+
+bool EnumType::IsEnumConst(const std::string& id) const noexcept {
+  for (const auto& enumerator : enumerators_) {
+    if (enumerator->id == id) {
+      return true;
+    }
+  }
+  return false;
+}
+
+int EnumType::ValueOf(const std::string& id) const {
+  for (const auto& enumerator : enumerators_) {
+    if (enumerator->id == id) {
+      return enumerator->value;
+    }
+  }
+  throw std::runtime_error{"enumerator not found in enum!"};
+}
+
+bool EnumType::IsEqual(const Type& that) const noexcept {
+  if (const auto* that_enum = dynamic_cast<const EnumType*>(&that)) {
+    return that_enum->id_ == id_;
+  }
+  return false;
+}
+
+std::size_t EnumType::size() const {
+  return PrimType{PrimitiveType::kInt}.size();
+}
+
+std::string EnumType::ToString() const {
+  if (id_ == "") {
+    return "enum";
+  }
+  return "enum " + id_;
+}
+
+std::unique_ptr<Type> EnumType::Clone() const {
+  auto cloned_enumerators = std::vector<std::unique_ptr<EnumConst>>{};
+  for (const auto& enumerator : enumerators_) {
+    cloned_enumerators.push_back(std::make_unique<EnumConst>(*enumerator));
+  }
+  return std::make_unique<EnumType>(id_, std::move(cloned_enumerators));
+}

@@ -175,6 +175,33 @@ struct RecordVarDeclNode : public DeclNode {
   std::vector<std::unique_ptr<InitExprNode>> inits;
 };
 
+/// @brief An enumeration constant in an enumeration.
+struct EnumConstDeclNode : public DeclNode {
+  EnumConstDeclNode(Location loc, std::string id,
+                    std::unique_ptr<IntConstExprNode> int_const = {})
+      : DeclNode{loc, std::move(id),
+                 std::make_unique<PrimType>(PrimitiveType::kInt)},
+        int_const{std::move(int_const)} {}
+
+  void Accept(NonModifyingVisitor&) const override;
+  void Accept(ModifyingVisitor&) override;
+
+  std::unique_ptr<IntConstExprNode> int_const;
+};
+
+/// @brief This holds the declaration of enumeration type.
+struct EnumDeclNode : public DeclNode {
+  EnumDeclNode(Location loc, std::string id, std::unique_ptr<Type> type,
+               std::vector<std::unique_ptr<EnumConstDeclNode>> enum_consts)
+      : DeclNode{loc, std::move(id), std::move(type)},
+        enum_consts{std::move(enum_consts)} {}
+
+  void Accept(NonModifyingVisitor&) const override;
+  void Accept(ModifyingVisitor&) override;
+
+  std::vector<std::unique_ptr<EnumConstDeclNode>> enum_consts;
+};
+
 struct ParamNode : public DeclNode {
   using DeclNode::DeclNode;
 
