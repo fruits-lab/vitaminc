@@ -426,25 +426,48 @@ decl: declaration_specifiers init_declarator_list_opt SEMICOLON {
         decl_list.push_back(std::move(init_decl));
       }
     } else {
+      // A new type is declared, which may be one of struct, union, or enum.
       auto decl = std::move(std::get<std::unique_ptr<DeclNode>>(decl_specifiers));
-      auto& rec_decl = dynamic_cast<RecordDeclNode&>(*decl);
-
-      if (!init_decl_list.empty()) {
+      if (auto *enum_decl = dynamic_cast<EnumDeclNode*>(decl.get())) {
         for (auto& init_decl : init_decl_list) {
           if (init_decl) {
-            init_decl->type = ResolveType(rec_decl.type->Clone(), std::move(init_decl->type));
+            init_decl->type = ResolveType(enum_decl->type->Clone(), std::move(init_decl->type));
           }
           decl_list.push_back(std::move(init_decl));
         }
-      }
 
-      auto rec_type_id = dynamic_cast<RecordType&>(*rec_decl.type).id();
-      // Insert RecordDeclNode if it is a newly create type.
-      if (custom_types.find(rec_type_id) == custom_types.end()) {
-        // To dump type declarations in front of variable declarations,
-        // insert decl at the beginning of the vector.
-        decl_list.insert(decl_list.begin(), std::move(decl));
-        custom_types.insert(rec_type_id);
+        auto enum_type_id = dynamic_cast<EnumType&>(*enum_decl->type).id();
+        // Insert EnumDeclNode if it is a newly create type.
+        if (custom_types.find(enum_type_id) == custom_types.end()) {
+          // To dump type declarations in front of variable declarations,
+          // insert decl at the beginning of the vector.
+          decl_list.insert(decl_list.begin(), std::move(decl));
+	  // Only named enums introduce new types;
+	  // unamed enums merely introduce enumeration constants.
+          if (!enum_type_id.empty()) {
+            custom_types.insert(enum_type_id);
+          }
+        }
+      } else {
+        auto& rec_decl = dynamic_cast<RecordDeclNode&>(*decl);
+
+        if (!init_decl_list.empty()) {
+          for (auto& init_decl : init_decl_list) {
+            if (init_decl) {
+              init_decl->type = ResolveType(rec_decl.type->Clone(), std::move(init_decl->type));
+            }
+            decl_list.push_back(std::move(init_decl));
+          }
+        }
+
+        auto rec_type_id = dynamic_cast<RecordType&>(*rec_decl.type).id();
+        // Insert RecordDeclNode if it is a newly create type.
+        if (custom_types.find(rec_type_id) == custom_types.end()) {
+          // To dump type declarations in front of variable declarations,
+          // insert decl at the beginning of the vector.
+          decl_list.insert(decl_list.begin(), std::move(decl));
+          custom_types.insert(rec_type_id);
+        }
       }
     }
     $$ = std::make_unique<DeclStmtNode>(Loc(@1), std::move(decl_list));

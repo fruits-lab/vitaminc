@@ -310,6 +310,16 @@ void IdExprNode::Accept(ModifyingVisitor& v) {
   v.Visit(*this);
 }
 
+void ConstExprNode::Accept(NonModifyingVisitor& v) const {
+  v.Visit(*this);
+}
+
+void ConstExprNode::Accept(ModifyingVisitor& v) {
+  v.Visit(*this);
+}
+
+ConstExprNode::~ConstExprNode() = default;
+
 void IntConstExprNode::Accept(NonModifyingVisitor& v) const {
   v.Visit(*this);
 }

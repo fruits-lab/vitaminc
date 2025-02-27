@@ -43,6 +43,7 @@ struct ArrDesNode;
 struct IdDesNode;
 struct NullExprNode;
 struct IdExprNode;
+struct ConstExprNode;
 struct IntConstExprNode;
 struct ArgExprNode;
 struct ArrSubExprNode;
@@ -108,6 +109,7 @@ class Visitor {
   virtual void Visit(CondMut<IdDesNode>&) {}
   virtual void Visit(CondMut<NullExprNode>&) {}
   virtual void Visit(CondMut<IdExprNode>&) {}
+  virtual void Visit(CondMut<ConstExprNode>&) {}
   virtual void Visit(CondMut<IntConstExprNode>&) {}
   virtual void Visit(CondMut<ArgExprNode>&) {}
   virtual void Visit(CondMut<ArrSubExprNode>&) {}

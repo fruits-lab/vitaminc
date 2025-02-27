@@ -368,6 +368,11 @@ void AstDumper::Visit(const NullExprNode& null_expr) {
 void AstDumper::Visit(const IdExprNode& id_expr) {
   std::cout << indenter_.Indent() << "IdExprNode <" << id_expr.loc << "> "
             << id_expr.id << ": " << id_expr.type->ToString() << '\n';
+  if (id_expr.const_expr) {
+    indenter_.IncreaseLevel();
+    id_expr.const_expr->Accept(*this);
+    indenter_.DecreaseLevel();
+  }
 }
 
 void AstDumper::Visit(const IntConstExprNode& int_expr) {

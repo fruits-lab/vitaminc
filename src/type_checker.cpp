@@ -181,6 +181,42 @@ void TypeChecker::Visit(RecordVarDeclNode& record_var_decl) {
   }
 }
 
+void TypeChecker::Visit(EnumConstDeclNode& enum_const_decl) {
+  // Since the enum constant doesn't know its type, it has the enum declaration
+  // set its type.
+  if (enum_const_decl.int_const) {
+    enum_const_decl.int_const->Accept(*this);
+  }
+  if (env_.ProbeSymbol(enum_const_decl.id)) {
+    // TODO: redefinition of 'id'
+    assert(false);
+  }
+}
+
+void TypeChecker::Visit(EnumDeclNode& enum_decl) {
+  // NOTE: There's no forward declaration for enum.
+  if (env_.ProbeType(enum_decl.id)) {
+    // TODO: redefinition of 'id'
+    assert(false);
+  }
+  // Do not add the enum type to the type table if it's an unnamed enum, so that
+  // multiple unnamed enums can be declared in the same scope.
+  if (!enum_decl.id.empty()) {
+    auto decl_type =
+        std::make_unique<TypeEntry>(enum_decl.id, enum_decl.type->Clone());
+    env_.AddType(std::move(decl_type), env_.CurrentScopeKind());
+  }
+
+  for (auto& enum_const : enum_decl.enum_consts) {
+    enum_const->Accept(*this);
+    // The type of the enum constant is the enum type itself.
+    auto symbol =
+        std::make_unique<SymbolEntry>(enum_const->id, enum_decl.type->Clone());
+    // The enum constant is introduced as a symbol in the current scope.
+    env_.AddSymbol(std::move(symbol), env_.CurrentScopeKind());
+  }
+}
+
 void TypeChecker::Visit(ParamNode& parameter) {
   if (env_.ProbeSymbol(parameter.id)) {
     // TODO: redefinition of 'id'
@@ -441,6 +477,20 @@ void TypeChecker::Visit(IdExprNode& id_expr) {
     id_expr.type = symbol->type->Clone();
     if (id_is_global.count(id_expr.id) != 0) {
       id_expr.is_global = true;
+    }
+    // This identifier is one of the following:
+    // 1. An enumeration constant.
+    // 2. A variable.
+    if (id_expr.type->IsEnum()) {
+      const auto& enum_type = dynamic_cast<EnumType&>(*id_expr.type);
+      // 1. Hold the value of the constant if it is an enumeration constant.
+      if (enum_type.IsEnumConst(id_expr.id)) {
+        id_expr.const_expr = std::make_unique<IntConstExprNode>(
+            id_expr.loc, enum_type.ValueOf(id_expr.id));
+        id_expr.const_expr->Accept(*this);
+      } else {
+        // 2. Do nothing if is a variable. Do nothing.
+      }
     }
   } else {
     // TODO: 'id' undeclared

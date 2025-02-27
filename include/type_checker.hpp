@@ -17,6 +17,8 @@ class TypeChecker : public ModifyingVisitor {
   void Visit(RecordDeclNode&) override;
   void Visit(FieldNode&) override;
   void Visit(RecordVarDeclNode&) override;
+  void Visit(EnumConstDeclNode&) override;
+  void Visit(EnumDeclNode&) override;
   void Visit(ParamNode&) override;
   void Visit(FuncDefNode&) override;
   void Visit(CompoundStmtNode&) override;

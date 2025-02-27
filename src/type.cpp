@@ -408,3 +408,7 @@ std::unique_ptr<Type> EnumType::Clone() const {
   }
   return std::make_unique<EnumType>(id_, std::move(cloned_enumerators));
 }
+
+bool EnumType::ConvertibleHook_(const Type& that) const noexcept {
+  return that.IsEqual(PrimitiveType::kInt);
+}
