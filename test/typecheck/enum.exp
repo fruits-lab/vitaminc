@@ -1,7 +1,7 @@
 TransUnitNode <1:1>
   ExternDeclNode <1:1>
     DeclStmtNode <1:1>
-      EnumDeclNode <1:5>
+      EnumDeclNode <1:5> (unnamed)
         EnumConstDeclNode <2:3> FALSE: int
         EnumConstDeclNode <3:3> TRUE: int
   ExternDeclNode <6:1>
@@ -9,7 +9,7 @@ TransUnitNode <1:1>
       CompoundStmtNode <6:12>
         DeclStmtNode <7:3>
           VarDeclNode <7:7> f: int
-            IdExprNode <7:11> TRUE: enum
+            IdExprNode <7:11> TRUE: enum (unnamed)
               IntConstExprNode <7:11> 1: int
         DeclStmtNode <9:3>
           EnumDeclNode <9:8> Color
@@ -29,7 +29,7 @@ TransUnitNode <1:1>
           VarDeclNode <18:7> c: int
             IdExprNode <18:11> b: enum Color
         DeclStmtNode <22:3>
-          EnumDeclNode <22:7> 
+          EnumDeclNode <22:7> (unnamed)
             EnumConstDeclNode <23:5> MONDAY: int
               IntConstExprNode <23:14> 1: int
             EnumConstDeclNode <24:5> TUESDAY: int
@@ -39,12 +39,12 @@ TransUnitNode <1:1>
               IntConstExprNode <27:14> 5: int
             EnumConstDeclNode <28:5> SATURDAY: int
             EnumConstDeclNode <29:5> SUNDAY: int
-          VarDeclNode <30:5> w: enum
-            IdExprNode <30:9> MONDAY: enum
+          VarDeclNode <30:5> w: enum (unnamed)
+            IdExprNode <30:9> MONDAY: enum (unnamed)
               IntConstExprNode <30:9> 1: int
         DeclStmtNode <31:3>
           VarDeclNode <31:7> t: int
-            IdExprNode <31:11> TUESDAY: enum
+            IdExprNode <31:11> TUESDAY: enum (unnamed)
               IntConstExprNode <31:11> 2: int
         ReturnStmtNode <33:3>
           IntConstExprNode <33:10> 0: int

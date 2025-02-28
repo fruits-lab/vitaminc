@@ -396,7 +396,7 @@ std::size_t EnumType::size() const {
 
 std::string EnumType::ToString() const {
   if (id_ == "") {
-    return "enum";
+    return "enum (unnamed)";
   }
   return "enum " + id_;
 }

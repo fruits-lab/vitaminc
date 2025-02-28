@@ -156,9 +156,9 @@ void AstDumper::Visit(const FieldNode& field) {
 }
 
 void AstDumper::Visit(const EnumDeclNode& enum_decl) {
+  auto id = enum_decl.id.empty() ? "(unnamed)" : enum_decl.id;
   std::cout << indenter_.Indent() << "EnumDeclNode <" << enum_decl.loc << "> "
-            << enum_decl.id << '\n';
-
+            << id << '\n';
   indenter_.IncreaseLevel();
   for (const auto& enum_const_decl : enum_decl.enum_consts) {
     enum_const_decl->Accept(*this);
