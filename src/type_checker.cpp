@@ -39,20 +39,6 @@ bool IsInBodyOf(BodyType type) {
                      [type](auto&& t) { return t == type; });
 }
 
-/// @note Struct and union type id should be mangled when adding/looking up from
-/// the type table to avoid same name but different types.
-std::string MangleRecordTypeId(const std::string& id,
-                               const std::unique_ptr<Type>& type) {
-  // We simply prefix them with their record kind.
-  if (type->IsStruct()) {
-    return "struct_" + id;
-  } else if (type->IsUnion()) {
-    return "union_" + id;
-  } else {
-    throw "unknown record type";
-  }
-}
-
 auto
     id_is_global  // NOLINT(cppcoreguidelines-avoid-non-const-global-variables):
                   // Accessible only within this translation unit;
@@ -132,9 +118,8 @@ void TypeChecker::Visit(RecordDeclNode& record_decl) {
     // };
     // If no, then it is the redefinition of 'id'.
   } else {
-    auto type_id = MangleRecordTypeId(record_decl.id, record_decl.type);
     auto decl_type =
-        std::make_unique<TypeEntry>(type_id, record_decl.type->Clone());
+        std::make_unique<TypeEntry>(record_decl.id, record_decl.type->Clone());
 
     env_.AddType(std::move(decl_type), env_.CurrentScopeKind());
   }
@@ -156,10 +141,9 @@ void TypeChecker::Visit(RecordVarDeclNode& record_var_decl) {
     //
     // struct birth bd1 { .date = 1 }; // RecordVarDeclNode -> search type entry
     // to update its type.
-    // record_type_id is "struct_birth" in the above example.
+    // record_type_id is "birth" in the above example.
     auto record_type_id = dynamic_cast<RecordType&>(*record_var_decl.type).id();
-    auto record_type = env_.LookUpType(
-        MangleRecordTypeId(record_type_id, record_var_decl.type));
+    auto record_type = env_.LookUpType(record_type_id);
     assert(record_type);
     auto symbol = std::make_unique<SymbolEntry>(record_var_decl.id,
                                                 record_type->type->Clone());
