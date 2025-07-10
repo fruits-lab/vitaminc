@@ -12,8 +12,8 @@
 
 #include "ast.hpp"
 #include "ast_dumper.hpp"
-#include "llvm_ir_generator.hpp"
-#include "qbe_ir_generator.hpp"
+#include "llvm/ir_generator.hpp"
+#include "qbe/ir_generator.hpp"
 #include "scope.hpp"
 #include "type_checker.hpp"
 #include "util.hpp"

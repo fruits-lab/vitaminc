@@ -1,4 +1,4 @@
-#include "llvm_ir_generator.hpp"
+#include "llvm/ir_generator.hpp"
 
 #include <llvm/ADT/ArrayRef.h>
 #include <llvm/ADT/StringRef.h>
