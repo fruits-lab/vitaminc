@@ -1,4 +1,4 @@
-#include "qbe_ir_generator.hpp"
+#include "qbe/ir_generator.hpp"
 
 #include <fmt/core.h>
 #include <fmt/ostream.h>
